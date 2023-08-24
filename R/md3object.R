@@ -1,4 +1,4 @@
-require(data.table)
+suppressPackageStartupMessages(require(data.table,quietly = TRUE))
 
 
 
