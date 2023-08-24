@@ -1,0 +1,816 @@
+#setdiff(gsub('md0$','',methods(class = 'md0')),gsub('md3$','',methods(class = 'md3')))
+
+
+
+.couldbetimo= function(x) {
+  #x is a list, usually a dcsimp attribute
+  if (is.atomic(x)) { x =list(x)}
+  which(unlist(lapply(lapply(x, function(y) class(try(.char2timo(head(y,20)),silent=TRUE))),function(z) any(z=='timo'))))
+}
+
+#' @export
+as.zoo.md3 = function(x,...) {
+  if (!require('zoo')) stop('requires package zoo to be installed.')
+  ixt =.dn_findtime(.getdimnames(x)); if (ixt<1) stop('could not find a time dimension in X')
+
+  ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
+  x=.dt_class(x); colnames(x)[[ixt]] ='TIME'
+  dxts=data.table(dcast(x,TIME~ ..., sep='.', value.var= '_.obs_value'))
+
+
+  zoofnc=c('Q'=as.yearqtr.timo,'M'=as.yearmon.timo,'A'=data.table::year,'D'=as.Date.timo,'B'=as.Date.timo,'N'=as.POSIXct.timo,'H'=as.POSIXct.timo,'W'=as.Date,'S'=function(x) {(data.table::quarter(x)-1)/4+data.table::year(x)})
+  y=zoo::zoo(as.matrix(dxts[,2:NCOL(dxts),with=FALSE]), frequency=.cttim$basetbl()[ixf,'frqzoo'], order.by=zoofnc[[ixf]](dxts[['TIME']]))
+  #attr(y,'oclass') = 'md3'
+  y
+
+}
+
+#' @export
+as.md3.zoo = function (x, split = ".", name_for_cols = character(0))
+{
+  require(zoo)
+  xtime = as.timo(zoo::index(x))
+  x = as.data.frame(x, stringsAsFactors = FALSE)
+  #rownames(x) = .timo2char(xtime)
+  out = suppressWarnings(.df2md3(cbind(x,TIME=xtime), split = split, name_for_cols = name_for_cols))
+  nn = names(attr(out, "hihi"))
+  if (length(nn) > 1)
+    out = aperm.md3(out, c(nn[-1], "TIME"))
+  out
+}
+
+#' @export
+as.md3.ts = function(x, split = ".", name_for_cols = character(0), ...) {
+  as.md3.zoo(zoo:::as.zoo(x,...), split=split,name_for_cols=name_for_cols)
+}
+
+#' @export
+as.ts.md3 = function(x,...) {
+  ixt =.dn_findtime(x); if (ixt<1) stop('could not find a time dimension in X')
+
+  ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
+  x=.dt_class(x); colnames(x)[[ixt]] ='TIME'
+  dxts=dcast(x,TIME~ ..., sep='.', value.var= '_.obs_value')
+
+
+  tsfrq=c(N=1140,D=1,B=1,W=1/7,.namedvecfrommat(.cttim$basetbl(),'frqzoo'))[ixf]
+  if (tsfrq %in% c('N','B','D','W')) {
+    tsstart= as.Date.timo(min(x[[ixt]]))
+  } else{
+    tsstart = as.numeric(strsplit(as.character.timo(min(x[[ixt]])),split='[A-z]')[[1L]])
+  }
+  y=stats::ts(as.matrix(dxts[,-1,with=FALSE]), frequency=tsfrq, start=tsstart)
+  #attr(y,'oclass') = 'md3'
+  y
+
+}
+
+#' @export
+as.xts = function(x,...) {
+  if (!require('xts')) stop('requires package xts to be installed.')
+  xts::as.xts(as.ts.md3(x,...))
+}
+
+
+#' @export
+zapply = function (X, FUN, ..., apply2indiv=FALSE)
+{
+  require(zoo)
+  if (!.md3_is(X)) X=as.md3(X)
+  myf=unique(.timo_frq(time(euhpq)))
+    #mdin = as.md3(X)
+  zapply_perfrq = function(mdin, FUN, ...) {
+    y0 = as.zoo.md3(mdin)
+    FUN2 = FUN
+    if (is.function(FUN2)) {
+      FUN2 = deparse(substitute(FUN))
+
+    }
+
+
+
+    if (FUN2=="FUN") { yf=FUN} else { yf = getS3method(FUN2, "zooreg", optional = TRUE)}
+    if (is.null(yf)) { yf=FUN }
+
+    if (apply2indiv) {
+      y0[, ] = apply(y0, 2, FUN, ...)
+      y1 = y0
+    } else {
+      y1 = yf(y0, ...)
+    }
+
+    y2 = as.md3.zoo(y1, name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+    return(y2)
+  }
+
+  if (length(myf) == 0L)
+    stop("requires time series")
+  if (length(myf) == 1L)
+    return(zapply_perfrq(X, FUN, ...))
+
+
+  emptyrest = sapply(.dim(X), function(x) "")
+  for (ff in myf) {
+    mysel = emptyrest
+    mysel["FREQ"] = ff
+    mysel = paste0(mysel, collapse = ".")
+    temp = zapply_perfrq(X[mysel, drop = FALSE], FUN, ...)
+    X[.dimnames(temp)] = temp
+  }
+  return(X)
+}
+
+
+
+
+.melt_check = function (data, id.vars, measure.vars, variable.name, value.name)
+{
+  is.string = function(x) {
+    is.character(x) && length(x) == 1
+  }
+  varnames <- names(data)
+  if (!missing(id.vars) && is.numeric(id.vars)) {
+    id.vars <- varnames[id.vars]
+  }
+  if (!missing(measure.vars) && is.numeric(measure.vars)) {
+    measure.vars <- varnames[measure.vars]
+  }
+  if (!missing(id.vars)) {
+    unknown <- setdiff(id.vars, varnames)
+    if (length(unknown) > 0) {
+      vars <- paste(unknown, collapse = ", ")
+      stop("id variables not found in data: ", vars,
+           call. = FALSE)
+    }
+  }
+  if (!missing(measure.vars)) {
+    unknown <- setdiff(measure.vars, varnames)
+    if (length(unknown) > 0) {
+      vars <- paste(unknown, collapse = ", ")
+      stop("measure variables not found in data: ",
+           vars, call. = FALSE)
+    }
+  }
+  if (missing(id.vars) && missing(measure.vars)) {
+    discrete <- sapply(data, function(x) is.factor(x) ||
+                         is.character(x) || is.logical(x))
+    id.vars <- varnames[discrete]
+    measure.vars <- varnames[!discrete]
+    if (length(id.vars) != 0) {
+      message("Using ", paste(id.vars, collapse = ", "),
+              " as id variables")
+    }
+    else {
+      message("No id variables; using all as measure variables")
+    }
+  }
+  else if (missing(id.vars)) {
+    id.vars <- setdiff(varnames, measure.vars)
+  }
+  else if (missing(measure.vars)) {
+    measure.vars <- setdiff(varnames, id.vars)
+  }
+  if (!is.string(variable.name))
+    stop("'variable.name' should be a string", call. = FALSE)
+  if (!is.string(value.name))
+    stop("'value.name' should be a string", call. = FALSE)
+  list(id = id.vars, measure = measure.vars)
+}
+
+
+
+
+.df2md3 = function (data, id.vars, name_for_cols = NULL, split = NULL, ...) {
+  splitmissing=FALSE
+  if (!length(split)) {splitmissing=TRUE; split='.'}
+  require(data.table)
+  data = as.data.frame(data, stringsAsFactors = FALSE)
+  data = .fixfactors(data)
+  if (missing(id.vars)) {
+    id.vars = colnames(data)[sapply(data, function(x) {.timo_is(x) | is.character(x)})]
+  }
+  if (!length(id.vars)) {
+    data = cbind(as.character(rownames(data)), data, stringsAsFactors = FALSE)
+    colnames(data)[[1]] = "rownames"
+    id.vars = "rownames"
+  }
+  dcl = sapply(data, mode)
+  if (any(!(dcl %in% c("character", "logical",
+                       "numeric")))) {
+    stop("dsfdasdf")
+  }
+  if (ncol(data) - length(id.vars) < 2L & !missing(id.vars)) {
+    dd = data
+    tempdn = colnames(data)
+    names(tempdn) = tempdn
+    tempdn = .subset(tempdn, id.vars)
+  }
+  else {
+    if (missing(id.vars)) {
+      vars <- suppressMessages(data.table:::.melt_check(data, variable.name = .md3resnames('value'),
+                                           value.name = "value"))
+    }
+    else {
+      vars <- suppressMessages(.melt_check(data, id.vars,
+                                           variable.name = .md3resnames('value'),
+                                           value.name = "value", measure.vars = character(0)))
+    }
+    id.ind <- match(vars$id, names(data))
+    temp = apply(data[, id.ind, drop = FALSE], 1, paste,
+                 collapse = ".")
+    if (anyDuplicated(temp))
+      stop("The codes provided are not unique: There are duplicates when using columns ", paste(names(data)[id.ind],
+                                                 collapse = ","),"  to identify observations.")
+    dd = suppressMessages(as.data.frame(data.table::melt.data.table(data.table::as.data.table(data),
+                                                            id.vars = id.ind, na.rm = FALSE, value.name = .md3resnames('value'),
+                                                            variable.name = "_stuff_from_THEcolnames_", variable.factor = FALSE, value.factor = FALSE)))
+    dd = .fixfactors(dd)
+    if (split != "") {
+      ix0 = strsplit(dd[, "_stuff_from_THEcolnames_"], split = split,
+                     fixed = TRUE)
+      ix0lengths = unique(sapply(ix0, length))
+      if (length(ix0lengths) == 1L) {
+        if (ix0lengths > 1)
+          if (splitmissing & !length(name_for_cols)) message('Column names contain the delimiter "',split[1],'". This has been intepreted as denoting ', ix0lengths, ' different dimensions.')
+          dd = data.frame(dd[, vars$id, drop = FALSE],
+                          as.data.frame(matrix(unlist(ix0),ncol = ix0lengths,byrow = T),stringsAsFActors=FALSE),
+                          dd[, .md3resnames('value'),drop=FALSE], stringsAsFactors = FALSE)
+      }
+      else {
+        warning("did not manage to split column names")
+      }
+    }
+    if (!length(name_for_cols))
+      name_for_cols = LETTERS
+    tempdn = c(id.vars, name_for_cols[1:length(ix0[[1]])])
+    if (anyNA(tempdn))
+      tempdn[is.na(tempdn)] = LETTERS[0:sum(is.na(tempdn))]
+  }
+  #browser()
+  lix = list()
+  for (i in seq_along(tempdn)) {
+    lix[[tempdn[[i]]]] = unique(dd[, i])
+  }
+  #ixt = .dn_findtime(lix, TRUE, TRUE)
+  ixt=.couldbetimo(lix)
+  if (length(ixt)) {
+    if (length(ixt)>1) { warning('was not clear which dimension was the time dimension.'); ixt=ixt[[1L]]}
+
+    #in case name_for_cols named the wrong column TIME:
+    if (any(toupper(names(lix))=='TIME')) { if (which(toupper(names(lix))=='TIME')!=ixt) { names(lix)[which(toupper(names(lix))=='TIME')] = names(lix)[[ixt]]   }}
+    names(lix)[[ixt]] = "TIME"
+    dd[[ixt]] = as.timo(dd[[ixt]])
+
+    colnames(dd) = c(names(lix), .md3resnames('value'))
+    if (ixt<length(lix)) {
+      lix=lix[c(setdiff(seq_along(lix),ixt),ixt)]
+      dd=dd[,c(names(lix), .md3resnames('value'))]
+
+    }
+  } else {
+    colnames(dd) = c(names(lix), .md3resnames('value'))
+  }
+
+  if (anyNA(dd[[.md3resnames('value')]])) { dd=dd[!is.na(dd[[.md3resnames('value')]]),]}
+  dout=.stackeddf2md3(dd)
+  .setdimcodes(dout,lix)
+
+
+
+
+}
+
+#' @export
+anyNA.md3 = function(x, recursive = FALSE) {
+  if (length(x[[1]]) < prod(.dim(x))) {
+    return(TRUE)
+  }
+  return(FALSE)
+}
+
+
+
+as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
+  if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
+  if (length(obsattr)) {
+    if (!missing(split) | missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
+     return(.stackeddf2md3(x,isdf = FALSE))
+    }
+  return(.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split ))
+}
+
+as.md3.data.frame = as.md3.data.table
+
+
+as.md3.numeric = function(x,xnames=NULL,dimname=NULL) {
+  if (length(xnames)) {
+    if (length(xnames) == length(x)) {
+      names(x) = xnames
+    } else {
+      warning('xnames must have same length as x')
+    }
+  }
+  if (is.null(names(x))) {
+    names(x) = paste0('X',as.character(seq_along(x)))
+  }
+
+  if (!length(dimname)) { dimname='A'}
+  dout=data.table::data.table(names(x),x)
+
+  ldc = list(names(x));
+  if (length(.couldbetimo(ldc))) {
+    dimname='TIME'
+    if (is.character(ldc[[1]])) {
+      ldc[[1]]=as.timo.character(ldc[[1]])
+      dout[[1]] =as.timo(dout[[1]])
+    }
+
+  }
+  names(ldc)=dimname
+  #setattr(dout,'dcsimp',ldc)
+  setattr(dout,'dcstruct',.dimnamesrescue(ldc))
+
+  setnames(dout, c(dimname,.md3resnames('value')))
+  .md3_class(dout)
+}
+
+as.md3.integer64 = function(x,...) {
+  as.md3.numeric(as.numeric(x),...)
+}
+
+
+as.md3 = function(x,...) {
+  UseMethod('as.md3')
+}
+
+is.md3 = .md3_is
+#
+#
+# olag.md3 = function (x, k = 1, na.pad = TRUE, ...) {
+#   mytime=time.md3(x); mytimemink=mytime-k
+#   mydc=attr(x,'dcsimp')
+#   lix=list(); lix[[which(names(attr(x,'dcsimp'))=='TIME')]]= mytimemink
+#   dy=.md3get(x,lix,as = 'DT')
+#   dy$TIME = dy$TIME +k
+#   if (!na.pad) { browser();mydc$TIME=.timo_class(setdiff(mydc$TIME,setdiff(mytimemink,mytime)))}
+#    attr(dy,'dcsimp') = mydc
+#   .md3_class(dy)
+#
+# }
+#
+#
+
+.lagmd3time = function (x, k = 1, consttimerange=TRUE, na.pad = FALSE, ...) {
+  mytime=.timo_within(time.md3(x),referstoend = FALSE)
+  if (is.null(mytime)) return(x)
+
+  mydc=.getdimnames(x,TRUE)
+
+  #lix=list(); lix[[which(names(attr(x,'dcsimp'))=='TIME')]]= mytimemink
+  dy=.dt_class(x)
+  dy$TIME = .timo_within(dy$TIME +k,referstoend = FALSE)
+  mydc$TIME=.timo_within(mytime +k,referstoend = FALSE)
+
+  if (consttimerange | na.pad) { mydc$TIME=sort(c(.timo_class(setdiff(mytime,mydc$TIME)),mydc$TIME))}
+  if (consttimerange) {
+
+    addedobs=.timo_class(setdiff(mydc$TIME,mytime));
+    dy=dy[!(TIME %in% addedobs)]
+    mydc$TIME=.timo_class(setdiff(mydc$TIME,addedobs))
+    }
+
+  attr(dy,'dcstruct') = .dimcodesrescue(mydc,x)
+  .md3_class(dy)
+
+}
+
+.md3anylag=  function(x, k = 1, whichdim=length(dim(x)),constrange=TRUE,na.pad=TRUE,...) {
+  if (is.numeric(whichdim)) {whichdim=names(.getdimnames(x,TRUE))[[whichdim]]}
+  if (toupper(whichdim)=='TIME') { return(.lagmd3time(x,k = k,consttimerange = constrange,...) )}
+  mydn=.getdimnames(x,TRUE)
+  dx=.dt_class(x)
+  mydict = mydn[[whichdim]]; names(mydict)=data.table::shift(mydn[[whichdim]],k)
+
+  dx[[whichdim]]=mydict[dx[[whichdim]]]
+  dx=dx[!is.na(dx[[whichdim]])]
+
+
+  .md3_class(dx)
+}
+
+lag.md3= .md3anylag
+
+diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, differences = 1L,...) {
+  if (differences < 0) stop('argument differences has to be a positive integer')
+  differences=as.integer(differences)
+  if (differences > 1L) { x= diff.md3(x,lag=lag,differences = differences-1L,whichdim=whichdim,na.pad=na.pad)}
+  if (is.numeric(whichdim)) {whichdim=names(.getdimnames(x,TRUE))[[whichdim]]}
+   if (toupper(whichdim)=='TIME') {
+     xout=x-.lagmd3time(x,k = lag,consttimerange = TRUE)
+   } else {
+    xout=x-.md3anylag(x,k = lag,whichdim = whichdim,constrange = TRUE)
+   }
+
+  if (!na.pad) {warning('na.pad=FALSE does not work for now...')}
+  xout
+}
+growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
+   xlaggd=.md3anylag(x,k = lag,whichdim=whichdim)
+   yy=x/xlaggd
+   if (logcompounding) return(sign(yy)*log(abs(yy)))
+   yy-1
+   #yy=(log(abs(x))-log(abs(xlaggd)))*(sign(x)*sign(xlaggd))
+   #if (logcompounding) return(yy)
+   #exp(yy)-1
+}
+
+.adddim_md3 = function(x,.dimname='XY', .dimcodes=NULL,.fillall=FALSE,...) {
+  if (!.md3_is(x)) stop("needs md3")
+  if (length(.dimname)>1) stop('dimname needs to be a single string element')
+  #if (length(.dimcodes)>1) browser()
+  mydn=.getdimnames(x,TRUE); olddc=attr(x,'dcstruct')
+  if (!length(.dimcodes)) {.dimcodes=1}
+  if (.timo_is(.dimcodes)) {
+    .dimname='TIME'
+  } else {
+    .dimcodes = make.names(.dimcodes, unique = TRUE)
+    .dimname = tail(make.names(c(names(mydn), .dimname), unique = TRUE), 1)
+  }
+
+  temp = c(list(.dimcodes), mydn)
+  names(temp)[[1]] = .dimname
+  x=.dt_class(x)
+  if (.fillall) {
+    .dimcodes=unlist(lapply(as.list(.dimcodes),rep,NROW(x)))
+    if (.dimname=='TIME') {.dimcodes=.timo_class(.dimcodes)}
+  } else {
+    .dimcodes=.dimcodes[[1L]]
+  }
+  x=data.table:::cbind.data.table(.dimcodes,x)
+
+
+  names(x)[[1L]] =.dimname
+  attr(x,'dcstruct') = .dimcodesrescue(temp,olddc)
+  .md3_class(x)
+}
+
+
+
+#' Adds a new dimension to an MD3 array
+#'
+#' Adds new dimension to an MD3 object, optionally to be filled with a number of new elements
+#' @param x an md3 object
+#' @param .dimname the name of the new dimension. Has to be a single character element
+#' @param .dimcodes an optional character vector with the code names of the new elements in that dimension
+#' @param .fillall if FALSE and length(.dimcodes)>1 then the first element will contain the existing data while the others will be NA
+#'                if TRUE and length(.dimcodes)>1 then each new element will be filled with the same data as the first one
+#' @param \dots unused
+#' @return an md3
+#' @examples
+#' data("euhpq")
+#' p1=add.dim(euhpq,'Residence',c('Primary','Secondary'))
+#' print(p1[,1,1,4,])
+#' p2=add.dim(euhpq,'Residence',c('Primary','Secondary'),.fillall=TRUE)
+#' print(p2[,1,1,4,])
+#'
+#' @export
+add.dim=.adddim_md3
+
+.adddim_andfill =  function(x,.dimname='XY', .dimcodes=NULL,...) {
+  .adddim_md3(x,.dimname = .dimname,.dimcodes = .dimcodes, .fillall = TRUE)
+}
+
+
+### MERGING COALESCING
+#' Concatenates two or more md3 objects
+#'
+#' @param x an MD3 object with n dimensions
+#' @param y an MD3 object with n or n-1 dimensions
+#' @param \dots further MD3 objects with n or n-1 dimensions
+#' @param along name of an existing or new dimension along which to combine x and y. If unspecified, then it tries to guess along whcih deimnsion to paste, depending on the value of \code{overwrite}
+#' @param newcodes name of element names for the thing to be added (see \code{\link{dimcodes}}).
+#' @param overwrite relevant if x and y have the same number of dimnesions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x
+#' @param verbose if FALSE, suppress  success messages from the merging
+#' @return an md3 object with n or n+1 dimensions
+#' @seealso \code{\link{drop.md3}}
+#' @examples
+#' data(euhpq)
+#' a1=euhpq['TOTAL','I15_Q',1:3,]
+#'
+#' a2=euhpq[DW_NEW.I15_Q.BG.y:y2010]*2
+#' myres=merge(a1,a2) #assumes this is a new country, adds a new country X1
+#' print(myres)
+#'
+#' myres=merge(a1,a2, newcodes='AB') #same but with a code
+#' myres
+#'
+#' merge(a1,a1['BE',,drop=FALSE]*2, overwrite=TRUE) #overwite Belgium with Belgium*2. Compare with a1
+#' a1['BE',] = a1['BE',] *2
+#' a1
+#'
+#' merge(a1,a2, overwrite=FALSE) #is the same as
+#' c(a1,a2)
+#'
+#' @export
+merge.md3=function (x, y, ..., along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE) {
+  ix = list()
+  ctargs = nargs() - as.integer(!missing(x)) - as.integer(!missing(y)) -
+    as.integer(!missing(along)) - as.integer(!missing(newcodes)) -
+    as.integer(!missing(overwrite))
+  if (ctargs)
+    for (i in 1:ctargs) {
+      if (eval(parse(text = paste0("missing(..",
+                                   i, ")")))) {
+        ix[[i]] = integer(0)
+      }
+      else {
+        ix[[i]] = try(eval(parse(text = paste0("..",
+                                               i))), silent = TRUE)
+        if (grepl("error", class(ix[[i]])[[1]])) {
+          stop("cannot understand element ", i)
+        }
+      }
+    }
+  z = .merge2md3(x, y, along = along, newcodes = newcodes,
+                 overwrite = overwrite,verbose=verbose)
+  for (i in seq_along(ix)) {
+    newcodes2 = ifelse(is.na(newcodes[i + 2]), paste0("X",
+                                                      i + 2), newcodes[i + 2])
+    z = .merge2md3(z, ix[[i]], along = along, newcodes = newcodes2,
+                   overwrite = overwrite,verbose=verbose)
+  }
+  z
+}
+c.md3=merge.md3
+
+.merge2md3 = function (x, y, along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE) {
+  if (!is.null(along)) {
+    if (!is.character(along)) {
+      stop("along must be a single character element")
+    }
+    if (length(along) > 1) {
+      if (verbose) warning("along has been specfied as a vector with ", length(along), "elements. I only took the first one")
+    }
+  }
+  if (!.md3_is(x))
+    x = as.md3(x)
+  xdn = .getdimnames(x,TRUE); xoldc=attr(y,'dcstruct')
+  xndnt = names(xdn)
+  names(xndnt) = xndnt
+  if (!.md3_is(y)) {
+    if (!is.null(along))
+      if (!is.na(xndnt[along]))
+        xndnt = xndnt[-match(.subset2(xndnt, along),
+                             xndnt)]
+    if (is.null(names(dimnames(y))) & (length(xndnt) ==
+                                        length(.dim(y)))) {
+      names(dimnames(y)) = xndnt
+    }
+    y = as.md3(y)
+  }
+  ydn = .getdimnames(y,TRUE); yoldc=attr(y,'dcstruct')
+  if (is.null(along)) {
+    if (abs(length(xdn) - length(ydn)) == 1L) {
+      along = c(setdiff(names(xdn),names(ydn)),setdiff(names(ydn),names(xdn)))
+      if (verbose) warning("along was not specified - I assume it is ", along)
+    }
+    else if (length(xdn) == length(ydn)) {
+      if (length(overwrite))
+        if (!overwrite) {
+          #stop("£$)")
+
+            along = gsub("\\.", "", tail(make.unique(c(names(xdn),
+                                                       names(ydn), "X")), 1))
+            if (verbose) warning("along was not specified, yet overwriting was set to FALSE - I thus made a new dimension and called it ", along)
+            return(.merge2md3(x,y,along = along,newcodes = newcodes,overwrite = FALSE,verbose = verbose))
+
+        }
+    }
+    else {
+      stop("objects to be merged must have either the same number of dimensions, or 'along' specified")
+    }
+  }
+
+  namnotin = function(a1, a2) {
+    setdiff(names(a1), names(a2))
+  }
+  if (length(namnotin(ydn, xdn))) {
+    temp = data.table:::copy(x)
+    x = data.table:::copy(y)
+    y = temp
+    rm(temp)
+    xdn = .getdimnames(x,TRUE)
+    ydn = .getdimnames(y,TRUE)
+  }
+  if (length(namnotin(ydn, xdn))) {
+    if (all(which(names(ydn) %in% names(xdn)) == which(names(xdn) %in%
+                                                       names(ydn)))) {
+      tix = which(!(names(ydn) %in% names(xdn)))
+      if (verbose) warning("Dimension names were somewhat confusing: I interpreted ", paste(paste(names(ydn), "as", names(xdn))[tix], collapse = ","), ".")
+      names(ydn) = names(xdn)
+      attr(y, "hihi") = ydn
+    }
+    else {
+      stop("dimension names in objects are confusing: dimensions ",
+           namnotin(ydn, xdn), " exist in first but not in second.\n\n dimensions ",
+           namnotin(xdn, ydn), " exist in second but not in first.\n")
+    }
+  }
+  if (!(is.null(along))) {
+    if (length(along) > 1) {
+      along = along[[1]]
+      if (verbose) warning("along can be only a character singleton")
+    }
+    if (!(along %in% names(ydn))) {
+      if (!(along %in% names(xdn))) {
+        temp = newcodes
+        if (length(temp) < 2L) {
+          temp = make.names(1:2, unique = TRUE)
+        }
+        x = .adddim_md3(x, along, temp[[1]])
+        y = .adddim_md3(y, along, temp[[2]])
+        ydn=.getdimnames(y,TRUE); xdn=.getdimnames(x,TRUE)
+      }
+      else {
+        if (!length(newcodes))
+          newcodes = tail(make.names(c(xdn[[along]],
+                                       length(xdn[[along]]) + 1), unique = TRUE),
+                          1)
+        newcodes = newcodes[[1]]
+        y = .adddim_md3(y, along, newcodes)
+        ydn=.getdimnames(y,TRUE)
+      }
+    }
+  }
+  #y = aperm.md3(y, names(xdn))
+
+  zdn=lapply(as.list(names(xdn)),function(i) { union(xdn[[i]],ydn[[i]])})
+  names(zdn)  =names(xdn)
+  if (any(names(zdn)=='TIME')) zdn[['TIME']]=.timo_class(zdn[['TIME']])
+  z=data.table:::rbind.data.table(x,y,fill=TRUE)
+  attr(z,'dcstruct') = .dimcodesrescue(.dimcodesrescue(zdn,xoldc),yoldc)
+  return(.md3_class(z))
+
+}
+
+
+.imputeproxyintoarray = function(a2impute,aproxy,whichdim='TIME',backward=FALSE) {
+  if (!identical(dimnames(a2impute),dimnames(aproxy))) stop('need same dimensions')
+  if (is.null(names(dim(a2impute)))) { stop("need named dimensions")}
+  tix=which(names(dim(a2impute))==whichdim)[1]
+
+
+  selixvec=as.character(dim(a2impute)); selixvec[-tix]=""
+
+  myix=function(j) {vv=selixvec; vv[vv!=""]=j; vv}
+  ixofnottime=t(.index1d2mdint(dim(a2impute)[-tix],seq_len(prod(dim(a2impute)[-tix]))))
+  colnames(ixofnottime) = names(dim(a2impute)[-tix])
+  ixofnottime=cbind(ixofnottime,NA_integer_);
+  #browser()
+  colnames(ixofnottime)[NCOL(ixofnottime)]=whichdim;
+  ixofnottime=ixofnottime[,names(dim(a2impute)),drop=FALSE]
+  if (backward) revincase=rev else revincase =function(x) x
+  if (backward) ilag= function(j) j+1 else ilag=function(j) j-1
+  for (i in revincase(seq_len(as.integer(max(selixvec))))[-1]) {
+    temp=.arrIndex(aproxy,myix(i))-.arrIndex(aproxy,myix(ilag(i)))+.arrIndex(a2impute,myix(ilag(i)))
+    temp[!is.na(.arrIndex(a2impute,myix(i)))] = .arrIndex(a2impute,myix(i))[!is.na(.arrIndex(a2impute,myix(i)))]
+
+    ixtemp=ixofnottime; ixtemp[,whichdim] = i
+    a2impute[ixtemp]=temp
+
+  }
+  a2impute
+}
+
+  #dforward=x
+  # mydn0=list(); tix=.dn_findtime(.getdimnames(x))
+  # mydn=function(mytp,k=0) { ll=mydn0; ll[[tix]] = .timo_class(mytp); if (k!=0) {ll[[tix]]=ll[[tix]]-k}; ll }
+  # for (tp in sort(time(x))) {
+  #   insertarr=.md3get(dforward,mydn(tp,1),as='a',drop=FALSE)+.md3get(mm,mydn(tp),as='a',drop=FALSE)-.md3get(mm,mydn(tp,1),as='a',drop=FALSE)
+  #   dforward=.md3set(dforward,mydn(tp),value = insertarr,onlyna = TRUE,usenames=FALSE)
+  # }
+
+#' Impute NAs in MD3 objects with proxy data or interpolation
+#'
+#' For each time series in the MD3 array, this function fills intermittent NAs using the delta of a proxy, or (geometric) interpolation
+#' @param x an md3 object
+#' @param proxy either a vector (applied to each time series), or an array or an md3 with the same dimensions or dimension names as x. If proxy left to NULL then this function will merely interpolate any gaps it finds
+#' @param method 'dlog' denotes geometric interpolation, 'diff' denotes linear interpolation
+#' @param maxgap an integer denoting the maximum number of consecutive NAs to be filled
+#' @param direction only necessary where proxy is not NULL. See details below
+#' @return an md0
+#' @details
+#' This refers to interpolation cases where an annual time series e.g. has values for 2000 and 2005, but not for 2001:2004
+#'
+#' If maxgap =3 or more, then interpol will fill the NAs of 2001:2004
+#'
+#' Note that interpolna does not work for mixed frequencies
+#'
+#' As regards imputation by proxy, the function will impute NAs in time series that have a least one non-missing value with growth rates
+#' or deltas of the proxy. direction=='forward' means it does this for any NAs after non-missing observations, direction==' backward' for
+#' any NAs before. Direction 'both' is a weighted avearge of both methods wherever they overlap
+#' @examples
+#' data("euhpq")
+#' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md0}
+#' w1["BE.2006q4:2007q1"]=NA
+#' w1["CY.2006:2007"]=NA
+#' w1['AT.y2006q1']=100
+#' print(w1)
+#' #just interpolate
+#' imputena(w1) #note the difference 'maxgap'  makes for CY here
+#' imputena(w1,maxgap=10) #note the difference 'maxgap'  makes for CY here
+#'
+#'
+#'
+#' using a lower-dimensional proxy
+#' \dontrun{imputena(w1, euhpq['TOTAL.I10_Q.AT:CY.y2005:y2008'])}
+#'
+#' #with trend
+#' imputena(w1, 1:16)
+#'
+#' @export
+imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c('both','forward','backward')) {
+  if(pmatch(method[[1L]],c('dlog','log','growth','diff','delta','shift','level')) < 4) {method='dlog'} else {method='diff'}
+  if (is.null(proxy) & !missing(direction)) {stop('The argument "direction" only makes sense for imputing proxy data')}
+  if (!is.null(proxy) & !missing(maxgap)) {warning('The argument "maxgap" only makes sense for interpolating, not with proxy data. maxgap will be ignored')}
+
+
+  if (is.null(time.md3(x))) { stop('this only works with time series so far. A TIME dimension is necessary')}
+  myf=unique(.timo_frq(time.md3(x)))
+  if (length(myf)!=1) stop('cannot do this on mixed frequencies')
+  if (!is.null(proxy)) if (!is.vector(proxy)) proxy=as.array(proxy)
+  dx=data.table::copy(.dt_class(x))
+  if (anyNA(dx[[.md3resnames('value')]])) {stop('x is a faulty md3 object. Do as.md3(as.data.table(x)) to repair it')}
+  dimlab=names(.dim(x))
+  setkeyv(dx,dimlab)
+
+  idgap=dx[,list(TIME,V2=as.integer(diff.timo(TIME,na.pad = TRUE))),by=setdiff(names(.dim(x)),'TIME')]
+
+  idgap=idgap[V2!=1]
+  if (is.null(proxy)) {idgap=idgap[V2<=maxgap,]; if (!NROW(idgap)) return(x)}
+
+  idgap[,startperiod:=TIME-V2]
+  idgapfirst=copy(idgap)
+  colnames(idgapfirst)[match(c('TIME','startperiod'),colnames(idgapfirst))]=c('endperiod','TIME')
+
+
+  idgap=dx[idgap,,on=.NATURAL]
+  names(idgap)[names(idgap)==.md3resnames('value')] = 'endvalue'
+
+  idgapfirst=dx[idgapfirst,,on=.NATURAL];
+  names(idgapfirst)[names(idgapfirst)==.md3resnames('value')] = 'startvalue'
+  idgapfirst=idgapfirst[,TIME:=endperiod][,c(dimlab,'startvalue'),with=FALSE]
+  idgap=merge(idgap,idgapfirst,by=dimlab)
+  rm(idgapfirst)
+
+  if (!is.null(proxy)) {
+    mm=.md3_class(dx[0],dn = .getdimnames(x))
+    mm=.md3set(mm,value=proxy)
+    ax=as.array(x); am=as.array(mm)
+    if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
+    aforward=unpack(.imputeproxyintoarray(ax,am))
+    abackward=unpack(.imputeproxyintoarray(ax,am,backward = TRUE))
+  } else {
+    aforward=abackward=as.array(x)[0]
+  }
+  #browser()
+
+  if (!NROW(idgap)) {idgap2=idgap; idgap2[,period:=timo()]} else idgap2=idgap[,cbind(.SD[,c(setdiff(dimlab,'TIME'),'startperiod','startvalue','endvalue'),with=FALSE],period=TIME-V2:0,fact=(0:V2)/V2),by='TIME']
+  colnames(idgap2)[match(c('TIME','period'),colnames(idgap2))]=c('endperiod','TIME')
+
+  if (is.null(proxy)) {
+    if (method=='dlog') {
+      idgap2[,.md3resnames('value'):=exp(fact*log(endvalue)+(1-fact)*log(startvalue))]
+    } else {
+      idgap2[,.md3resnames('value'):=fact*endvalue+(1-fact)*startvalue]
+    }
+    dout=rbind(dx,idgap2[fact!=0 & fact!=1,colnames(dx),with=FALSE])
+    return(.md3_class(dout,dn=dimcodes(x)))
+  }
+
+
+
+  hh=merge(merge(merge(dx,.dt_class(as.md3.array(aforward)),by = dimlab,all = TRUE),.dt_class(as.md3.array(abackward)),by = dimlab,all = TRUE),idgap2,by = dimlab,all = TRUE)
+  colnames(hh)[length(dimlab)+1:3]=paste0('_val_',c('d','f','b'))
+
+    hh[is.na(`_val_d`) & !is.na(`_val_b`),`_val_d`:=`_val_b`]
+    hh[is.na(`_val_d`) & !is.na(`_val_f`),`_val_d`:=`_val_f`]
+    if (all(is.na(hh[,fact]))) { return(hh) }
+    hh[!is.na(fact),`_val_d`:=(1-fact)*`_val_f`+fact*`_val_b`]
+
+    dout=hh[,seq_len(length(dimlab)+1),with=FALSE]
+    colnames(dout)[NCOL(dout)]=.md3resnames('value')
+    .md3_class(dout,dn=.getdimcodes(x))
+
+}
+
+#p0=euhpq[2:3,1:2,1:3,1:12];p0[1,1,2,'2005q4:2006q3']=NA;p0[1,1,'ZZ',]=NA;  p0[1,1,1,'2005q4+2007q1:y']=100:104; #p0[1,1,,]
+#imputena(p0)
+# pp=diff(euhpq) #
+# #
+# Rprof(tmp <- tempfile())
+# p2=euhpq-euhpq[,,,time(euhpq)-1]
+# o3=.dimcodesrescue(o2,olddc = oo)
+# Rprof()
+# summaryRprof(tmp)
+# unlink(tmp)
