@@ -289,7 +289,7 @@ anyNA.md3 = function(x, recursive = FALSE) {
 }
 
 
-
+#' @export
 as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
   if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
   if (length(obsattr)) {
@@ -299,9 +299,10 @@ as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsa
   return(.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split ))
 }
 
+#' @export
 as.md3.data.frame = as.md3.data.table
 
-
+#' @export
 as.md3.numeric = function(x,xnames=NULL,dimname=NULL) {
   if (length(xnames)) {
     if (length(xnames) == length(x)) {
@@ -333,16 +334,17 @@ as.md3.numeric = function(x,xnames=NULL,dimname=NULL) {
   setnames(dout, c(dimname,.md3resnames('value')))
   .md3_class(dout)
 }
-
+#' @export
 as.md3.integer64 = function(x,...) {
   as.md3.numeric(as.numeric(x),...)
 }
 
-
+#' @export
 as.md3 = function(x,...) {
   UseMethod('as.md3')
 }
 
+#' @export
 is.md3 = .md3_is
 #
 #
@@ -398,8 +400,11 @@ is.md3 = .md3_is
   .md3_class(dx)
 }
 
+
+#' @export
 lag.md3= .md3anylag
 
+#' @export
 diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, differences = 1L,...) {
   if (differences < 0) stop('argument differences has to be a positive integer')
   differences=as.integer(differences)
@@ -414,6 +419,8 @@ diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, difference
   if (!na.pad) {warning('na.pad=FALSE does not work for now...')}
   xout
 }
+
+#' @export
 growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
    xlaggd=.md3anylag(x,k = lag,whichdim=whichdim)
    yy=x/xlaggd
