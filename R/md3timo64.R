@@ -82,6 +82,10 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
   as.POSIXct.POSIXlt( list(S,M,H,d,m-1,Y-1900,NA,NA,NA), tz='UTC')
 }
 
+.asint64 = function(x) {
+  class(x) = 'integer64'
+  x
+}
 
 .cttim_create=function(){
   basetbl0=data.frame()
@@ -96,6 +100,11 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
     N=c("N","PT1M","Minutely","1440","minute","28","%Y-%m-%dt%H:%M",'60',1,'N')
   )
   yearstarts=bit64::as.integer64.double(unclass(as.Date.character(paste0(1800:2200,'-01-01'))))*86400
+  temp=lapply(as.list(yearstarts[101:301]), function(y) .asint64(y)+cumsum(c(0,31,28,31,30,31,30,31,31,30,31,30))*86400)
+  #temp[bit64:::c.integer64(diff(yearstarts),365*86400)==31622400] = lapply(temp[bit64:::c.integer64(diff(yearstarts),365*86400)==31622400],function(z) {z[3:12]=z[3:12]+86400; z})
+  temp[bit64:::diff.integer64(yearstarts[101:302])==31622400] = lapply(temp[bit64:::diff.integer64(yearstarts[101:302])==31622400],function(z) {z[3:12]=z[3:12]+86400; z})
+  monthstarts=.unlist_keepclass(temp); rm(temp)
+
 
   makebasetbl = function() {
 
@@ -114,6 +123,7 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
   outlist$basedon=function(fid) {   y=as.character(basetbl0[fid,c('baseunit'),drop=TRUE]); attr(y,'multiple')=basetbl0[fid,c('multiple'),drop=TRUE]; y  }
   outlist$basetbl = function() {basetbl0}
   outlist$yearstartposixfrom1800 = function() {yearstarts}
+  outlist$monthstartposixfrom1900 = function() {monthstarts}
   return(outlist)
 }
 
@@ -148,10 +158,7 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
   tvec=.Primitive("class<-")(tvec,c("timo", 'timord','integer64'))
   tvec
 }
-.asint64 = function(x) {
-  class(x) = 'integer64'
-  x
-}
+
 
 #' @export
 as.integer64.timo = .asint64
@@ -1312,7 +1319,12 @@ as.timdif.difftime= function(x, units=NULL,...) {
 
 
 .monthnum=function(l) {
-  #number of the month since year 0
+  #number of the month since year 0 (sic)
+  l=.timo_class(l)
+  vout=findInterval(.asint64(l),.cttim$monthstartposixfrom1900())
+  if (all(vout>0 & vout < 201)) return(vout+1899)
+
+
   m=as.Date.timo(l); return(as.numeric(base::format.Date(m,'%Y'))*12 + as.numeric(base::format.Date(m,'%m')))
 }
 .timo_calctd = function(te1,te2, units=NULL) {
@@ -1563,7 +1575,10 @@ unique.timo = function (x, incomparables = FALSE, distinctstartend=FALSE,... ) {
 #' @export
 year.timo = function(x) {
   x=.timo_class(x)
-  unlist(lapply(as.list( x) ,  function(z) sum(.asint64(z)>.cttim$yearstartposixfrom1800())))+1800
+  vout=findInterval(.asint64(x),.cttim$yearstartposixfrom1800())
+  if (all(vout>0 & vout < 401)) return(vout+1799)
+  as.numeric(base::format.Date(as.Date.timo(x),'%Y'))
+  #unlist(lapply(as.list( x) ,  function(z) sum(.asint64(z)>.cttim$yearstartposixfrom1800())))+1800
 }
 
 
