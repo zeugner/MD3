@@ -16,7 +16,7 @@ suppressPackageStartupMessages(require(data.table,quietly = TRUE))
   #helper function to convert auxiliary column names
   if (substr(inname,0,2)=='_.') return(inname)
   inname=tolower(inname)
-  inname=gsub('^obs_','',gsub('^_','',gsub('^\\.','',inname)))
+  inname=gsub('^obs','',gsub('^obs_','',gsub('^_','',gsub('^\\.','',inname))))
   inname=tolower(inname)
   if (any(grepl('^flag',inname))) {inname='status'}
   if (any(grepl('^conf',inname))) {inname='conf'}
