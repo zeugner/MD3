@@ -252,7 +252,7 @@ as.integer64.timo = .asint64
     tempix=head(which(vmon>(.cttim$frqcodes[toupper(fvec),'maxminor'])-1));
     warning('Characters like ', paste(paste(.cttim$frqcodes[toupper(fvec[tempix]),'desc'],x[tempix],sep=': '), collapse=', '), ' seem strange' )
   }
-  vmonmult=c(q=3,s=6,m=1,"-"=1,w=NA,'/'=1,'.'=1)[ff];
+  vmonmult=c(q=3,s=6,m=1,"-"=1,w=NA,'/'=1,'.'=1,d=1,b=1,n=1)[ff];
   vmon=vmon*vmonmult +1; vmon[is.na(vmon)]=1
   vday=as.integer(unlist(lapply(xs,'[',3))); vday[is.na(vday)]=1
   vhour=as.integer(unlist(lapply(xs,'[',4))); vhour[is.na(vhour)]=0
