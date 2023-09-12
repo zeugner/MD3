@@ -10,13 +10,13 @@
 #' @param dim dimension name or number (integer) denoting the dimension for which all codes and labels should be listed
 #' @param ... etc.
 #' @return an md0, data.frame, or array, as specfied by argument 'as'.
-#' Note that if used currectly, NomicsHelp invisibly returns either an md0 object, or lists with definitions
+#' Note that if used currectly, helpNomics invisibly returns either an md0 object, or lists with definitions
 #' @details A restful SDMX query combines Provider, Dataflow and Dimension selectors
 #' Take the example 'ECB/EXR/A.GBP+CHF.EUR.SP00.A'
 #' \itemize{
-#'  \item 'ECB' designates the provider ECB (see \code{NomicsHelp()} for a list of providers)
-#'  \item 'EXR' designates the ECB's dataflow 'EXR' about exchange rates (see \code{NomicsHelp('ECB')} for a list of ECB dataflows)
-#'  \item A.GBP+CHF.EUR.SP00.A is the dimension selector: See \code{NomicsHelp('ECB/EXR')} for what dimensions exist in ECB/EXR)
+#'  \item 'ECB' designates the provider ECB (see \code{helpNomics()} for a list of providers)
+#'  \item 'EXR' designates the ECB's dataflow 'EXR' about exchange rates (see \code{helpNomics('ECB')} for a list of ECB dataflows)
+#'  \item A.GBP+CHF.EUR.SP00.A is the dimension selector: See \code{helpNomics('ECB/EXR')} for what dimensions exist in ECB/EXR)
 #'  }
 #'  Here,
 #'  \itemize{
@@ -35,16 +35,16 @@
 #' @section Finding query codes:
 #' 
 #' To find query codes, the easiest is to go to \url{http://db.nomics.world} and search for codes there
-#' Alternatively, you can use \code{NomicsHelp}
+#' Alternatively, you can use \code{helpNomics}
 #' 
 #' \itemize{
-#'  \item \code{NomicsHelp()} returns a vector with available providers
-#'  \item \code{NomicsHelp("PROVIDER")} returns a vector with the dataflows available for the provider
-#'  \item \code{NomicsHelp("PROVIDER", pat="PATTERN")} looks for a dataflow whose name or code matches the string pattern
-#'  \item \code{NomicsHelp("PROVIDER/DATAFLOW")} prints the structure of the dataflow dimensions, as well as an example query, and invisible returns the structure of code names within the dataflow
-#'  \item \code{NomicsHelp("PROVIDER/DATAFLOW/SELECTORS")} invisibly returns the query result. If not successful, it provides clues whwere the query might be wrong
-#'  \item \code{NomicsHelp("PROVIDER/DATAFLOW", dim="NumberOrName")} prints the code names and labels of the selected dimension, and invidibly returns a data.frame with those codes and labels
-#'  \item \code{NomicsHelp("PROVIDER/DATAFLOW", dim="NumberOrName", pat="PATTERN")} searches the codes and labels of that dimension for a certain pattern
+#'  \item \code{helpNomics()} returns a vector with available providers
+#'  \item \code{helpNomics("PROVIDER")} returns a vector with the dataflows available for the provider
+#'  \item \code{helpNomics("PROVIDER", pat="PATTERN")} looks for a dataflow whose name or code matches the string pattern
+#'  \item \code{helpNomics("PROVIDER/DATAFLOW")} prints the structure of the dataflow dimensions, as well as an example query, and invisible returns the structure of code names within the dataflow
+#'  \item \code{helpNomics("PROVIDER/DATAFLOW/SELECTORS")} invisibly returns the query result. If not successful, it provides clues whwere the query might be wrong
+#'  \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName")} prints the code names and labels of the selected dimension, and invidibly returns a data.frame with those codes and labels
+#'  \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName", pat="PATTERN")} searches the codes and labels of that dimension for a certain pattern
 #' }
 #'
 #' @examples
@@ -60,20 +60,20 @@
 #' w4=Nomics('ECB/EXR/A.PLN.EUR.SP00.E',as="1d")
 #' w4
 #'
-#' NomicsHelp('ECB/EXR')
-#' NomicsHelp('ECB/EXR/A.PLN.EUR.XXX.E')
+#' helpNomics('ECB/EXR')
+#' helpNomics('ECB/EXR/A.PLN.EUR.XXX.E')
 #'
 #' #show available codes for fifth dimension
-#' xx=NomicsHelp('ECB/EXR', dim=5)
+#' xx=helpNomics('ECB/EXR', dim=5)
 #' 
 #' #looking for the 'output gap' indicator in OECD's Economic Outlook dataflow
-#' NomicsHelp('OECD/EO', dim='VARIABLE', pat='gap')
+#' helpNomics('OECD/EO', dim='VARIABLE', pat='gap')
 #'
 #' @export
 Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), drop=NA, 
                   ccode=getOption('defaultcountrycode'), flags = FALSE, silent = FALSE, ...) {
-  #EXAMPLE: Nomicsnomics('Eurostat/prc_hpi_a/A.DW_EXST.INX_A_AVG.BE+BG')
-  # ww=Nomicsnomics('ECB/EXR/A..EUR.SP00.A',as="m",drop=TRUE)
+  #EXAMPLE: Nomics('Eurostat/prc_hpi_a/A.DW_EXST.INX_A_AVG.BE+BG')
+  # ww=Nomics('ECB/EXR/A..EUR.SP00.A',as="m",drop=TRUE)
   
   as=.asget(as)
   if (is.na(drop)) { if (as %in% c("1d", "2d")) drop= FALSE else drop = TRUE}
@@ -111,8 +111,8 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
     
     mytest=.readLinesFromUrl('http://api.db.nomics.world/v22/apidocs')
     if (grepl("try-error",class(mytest))) { stop('Could no tconnect to db.nomics.world.')}
-    #return(invisible(NomicsHelp(query)))
-    stop('The query "', query, '" does not return a result. Enter\n NomicsHelp("' ,query, '")\n  to inspect the reasons why')
+    #return(invisible(helpNomics(query)))
+    stop('The query "', query, '" does not return a result. Enter\n helpNomics("' ,query, '")\n  to inspect the reasons why')
   }
   
   #try(close.connection(mycon),silent=TRUE); try(rm(mycon),silent=TRUE);
@@ -445,12 +445,12 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 
 #' @rdname Nomics
 #' @export
-NomicsHelp = function(query, pat="", dim=NULL) {
+helpNomics = function(query, pattern="", dim=NULL, verbose=TRUE) {
   if (missing(query)) { query=""}
   query = strsplit(.adjquery(query,checkProv=TRUE),split="/")[[1]]
   
   if (length(query)==0L) {
-    message("DBnomics has the following Data Providers.\nRun Nomicshelp('ECB') to learn more about querying ECB data")
+    message("DBnomics has the following Data Providers.\nRun e.g. helpNomics('ECB') to learn more about querying ECB data")
     return(.Nomicsproviders()[,1,drop=FALSE])
   }
   
@@ -458,16 +458,16 @@ NomicsHelp = function(query, pat="", dim=NULL) {
     temp=suppressWarnings(try(.Nomicsdataflows(query[[1]],categ=FALSE),silent=TRUE))
     if (nchar(pat)>0L) {
       temp=temp[grepl(pat,names(temp),ignore.case = TRUE) | grepl(pat,temp,ignore.case = TRUE)]
-      cat(paste(names(temp),temp,sep="\t"),sep = "\n")
+      if (verbose) cat(paste(names(temp),temp,sep="\t"),sep = "\n")
       return(invisible(temp))
     }
     if (length(temp)< 100L) {
-      cat("The following dataflows are available for provider", query[[1]],":\n")
-      cat(paste(names(temp),temp,sep="\t"),sep = "\n")
+      if (verbose) cat("The following dataflows are available for provider", query[[1]],":\n")
+      if (verbose) cat(paste(names(temp),temp,sep="\t"),sep = "\n")
     } else {
-      cat("Provider ", query[[1]]," has ",length(temp)," dataflows. Only the first 100 are shown:\n")
-      cat(head(paste(names(temp),temp,sep="\t"),100),sep = "\n")
-      cat('Use print(NomicsHelp("',query[[1]],'")) to show all dataflows\n')
+      if (verbose) cat("Provider ", query[[1]]," has ",length(temp)," dataflows. Only the first 100 are shown:\n")
+      if (verbose) cat(head(paste(names(temp),temp,sep="\t"),100),sep = "\n")
+      if (verbose) cat('Use print(helpNomics("',query[[1]],'")) to show all dataflows\n')
     }
     
     return(invisible(temp))
@@ -499,15 +499,16 @@ NomicsHelp = function(query, pat="", dim=NULL) {
         #x2add =""; if (toupper(i)=="FREQ") { x2add = paste0("(",")"); browser()}
         str = paste0(str, "  * ",i, ": ",dfinfo$dims[[i]]," [",ifelse(length(dfinfo$dn[[i]]),length(dfinfo$dn[[i]]),"?"), " elements]","\n")
       }
-      
+      tempilludim=names(dfinfo$dn)[[which.max(unlist(lapply(dfinfo$dn,NROW)))]]
+      str=paste0(str, 'Use helpNomics("',query[[1]],"/", dfinfo$id,', dim=',tempilludim,') to see which codes are avaible for dimension ',tempilludim,'.\n'); rm(tempilludim)
       str = paste0(str, " Example query: ", dfinfo$example_query)
-      cat(str)
+      if (verbose) cat(str)
       return(invisible(dfinfo))
     }
   }
   
   
-  if (length(dim)) { #so the user wants infromation about dimension codes
+  if (length(dim)) { #so the user wants information about dimension codes
     dim=dim[[1]]
     if (is.character(dim)) {
       dimchosen=names(dfinfo$dn)[match(tolower(trimws(dim)),tolower(names(dfinfo$dn)),nomatch = integer(0))]
@@ -515,7 +516,7 @@ NomicsHelp = function(query, pat="", dim=NULL) {
       dimchosen=names(dfinfo$dn)[dim]; if (is.na(dimchosen)) dimchosen=character(0)
     }
     if (length(dimchosen)) { dim =dimchosen} else { 
-      stop("Dimension '",dim,"' does not exist in ",query[[1L]],"/",query[[2L]],". Type NomicsHelp('",query[[1L]],"/",query[[2L]],"') to see what dimensions exist.")
+      stop("Dimension '",dim,"' does not exist in ",query[[1L]],"/",query[[2L]],". Type helpNomics('",query[[1L]],"/",query[[2L]],"') to see what dimensions exist.")
     }
     
     str=as.matrix(unlist(dfinfo$dn[[dim]]))
@@ -541,7 +542,7 @@ NomicsHelp = function(query, pat="", dim=NULL) {
         str=paste0(str,"   ",dc,": ",ifelse(nrow(dfdc[[dc]])==1L, paste0(dfdc[[dc]][1,"code"]," - ",dfdc[[dc]][1,2]), "Various"),"\n")
       }
     }
-    cat(str)
+    if (verbose) cat(str)
     return(invisible(dftest))
   }
   
@@ -559,7 +560,7 @@ NomicsHelp = function(query, pat="", dim=NULL) {
              paste(lquery[[i]],collapse=', '),
              '\n  Yet none of those codes exists in dataflow ', dfinfo$id ,' dimension ',names(dfinfo$dims)[[i]],
              ifelse(!is.null(dfinfo$dn[[i]]),paste0(', which only contains ',length(dfinfo$dn[[i]]),' codes such as those: \n',paste(head(names(dfinfo$dn[[i]]),10),collapse=', ')),""),
-             '\n  Type NomicsHelp("',query[[1L]],'/',query[[2L]],'", dim = "',names(dfinfo$dims)[[i]],'")  to learn more about what those codes mean.')
+             '\n  Type helpNomics("',query[[1L]],'/',query[[2L]],'", dim = "',names(dfinfo$dims)[[i]],'")  to learn more about what those codes mean.')
       }
     }
     
