@@ -2,7 +2,7 @@
 % Please edit documentation in R/md3nomics.R
 \name{Nomics}
 \alias{Nomics}
-\alias{NomicsHelp}
+\alias{helpNomics}
 \title{Load data from db nomics world}
 \usage{
 Nomics(
@@ -15,7 +15,7 @@ Nomics(
   ...
 )
 
-NomicsHelp(query, pat = "", dim = NULL)
+helpNomics(query, pattern = "", dim = NULL, verbose = TRUE)
 }
 \arguments{
 \item{query}{a character query string with a RestFul SDMX query (such as ECB/EXR/A.GBP+CHF.EUR.SP00.A). See Details}
@@ -32,13 +32,13 @@ NomicsHelp(query, pat = "", dim = NULL)
 
 \item{...}{etc.}
 
-\item{pat}{pattern to match against the dataflow id or description. This uses in-built REgex expresions, but remains case-insensitive. If a pattern is not provided, all dataflows (or codes with labels) are returned .}
-
 \item{dim}{dimension name or number (integer) denoting the dimension for which all codes and labels should be listed}
+
+\item{pat}{pattern to match against the dataflow id or description. This uses in-built REgex expresions, but remains case-insensitive. If a pattern is not provided, all dataflows (or codes with labels) are returned .}
 }
 \value{
 an md0, data.frame, or array, as specfied by argument 'as'.
-Note that if used currectly, NomicsHelp invisibly returns either an md0 object, or lists with definitions
+Note that if used currectly, helpNomics invisibly returns either an md0 object, or lists with definitions
 }
 \description{
 Load data from db nomics world
@@ -47,9 +47,9 @@ Load data from db nomics world
 A restful SDMX query combines Provider, Dataflow and Dimension selectors
 Take the example 'ECB/EXR/A.GBP+CHF.EUR.SP00.A'
 \itemize{
- \item 'ECB' designates the provider ECB (see \code{NomicsHelp()} for a list of providers)
- \item 'EXR' designates the ECB's dataflow 'EXR' about exchange rates (see \code{NomicsHelp('ECB')} for a list of ECB dataflows)
- \item A.GBP+CHF.EUR.SP00.A is the dimension selector: See \code{NomicsHelp('ECB/EXR')} for what dimensions exist in ECB/EXR)
+ \item 'ECB' designates the provider ECB (see \code{helpNomics()} for a list of providers)
+ \item 'EXR' designates the ECB's dataflow 'EXR' about exchange rates (see \code{helpNomics('ECB')} for a list of ECB dataflows)
+ \item A.GBP+CHF.EUR.SP00.A is the dimension selector: See \code{helpNomics('ECB/EXR')} for what dimensions exist in ECB/EXR)
  }
  Here,
  \itemize{
@@ -70,16 +70,16 @@ Note also that db.nomics queries are case-sensitive
 
 
 To find query codes, the easiest is to go to \url{http://db.nomics.world} and search for codes there
-Alternatively, you can use \code{NomicsHelp}
+Alternatively, you can use \code{helpNomics}
 
 \itemize{
- \item \code{NomicsHelp()} returns a vector with available providers
- \item \code{NomicsHelp("PROVIDER")} returns a vector with the dataflows available for the provider
- \item \code{NomicsHelp("PROVIDER", pat="PATTERN")} looks for a dataflow whose name or code matches the string pattern
- \item \code{NomicsHelp("PROVIDER/DATAFLOW")} prints the structure of the dataflow dimensions, as well as an example query, and invisible returns the structure of code names within the dataflow
- \item \code{NomicsHelp("PROVIDER/DATAFLOW/SELECTORS")} invisibly returns the query result. If not successful, it provides clues whwere the query might be wrong
- \item \code{NomicsHelp("PROVIDER/DATAFLOW", dim="NumberOrName")} prints the code names and labels of the selected dimension, and invidibly returns a data.frame with those codes and labels
- \item \code{NomicsHelp("PROVIDER/DATAFLOW", dim="NumberOrName", pat="PATTERN")} searches the codes and labels of that dimension for a certain pattern
+ \item \code{helpNomics()} returns a vector with available providers
+ \item \code{helpNomics("PROVIDER")} returns a vector with the dataflows available for the provider
+ \item \code{helpNomics("PROVIDER", pat="PATTERN")} looks for a dataflow whose name or code matches the string pattern
+ \item \code{helpNomics("PROVIDER/DATAFLOW")} prints the structure of the dataflow dimensions, as well as an example query, and invisible returns the structure of code names within the dataflow
+ \item \code{helpNomics("PROVIDER/DATAFLOW/SELECTORS")} invisibly returns the query result. If not successful, it provides clues whwere the query might be wrong
+ \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName")} prints the code names and labels of the selected dimension, and invidibly returns a data.frame with those codes and labels
+ \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName", pat="PATTERN")} searches the codes and labels of that dimension for a certain pattern
 }
 }
 
@@ -96,13 +96,13 @@ w3
 w4=Nomics('ECB/EXR/A.PLN.EUR.SP00.E',as="1d")
 w4
 
-NomicsHelp('ECB/EXR')
-NomicsHelp('ECB/EXR/A.PLN.EUR.XXX.E')
+helpNomics('ECB/EXR')
+helpNomics('ECB/EXR/A.PLN.EUR.XXX.E')
 
 #show available codes for fifth dimension
-xx=NomicsHelp('ECB/EXR', dim=5)
+xx=helpNomics('ECB/EXR', dim=5)
 
 #looking for the 'output gap' indicator in OECD's Economic Outlook dataflow
-NomicsHelp('OECD/EO', dim='VARIABLE', pat='gap')
+helpNomics('OECD/EO', dim='VARIABLE', pat='gap')
 
 }
