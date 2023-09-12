@@ -500,7 +500,7 @@ helpNomics = function(query, pattern="", dim=NULL, verbose=TRUE) {
         str = paste0(str, "  * ",i, ": ",dfinfo$dims[[i]]," [",ifelse(length(dfinfo$dn[[i]]),length(dfinfo$dn[[i]]),"?"), " elements]","\n")
       }
       tempilludim=names(dfinfo$dn)[[which.max(unlist(lapply(dfinfo$dn,NROW)))]]
-      str=paste0(str, 'Use helpNomics("',query[[1]],"/", dfinfo$id,', dim=',tempilludim,') to see which codes are avaible for dimension ',tempilludim,'.\n'); rm(tempilludim)
+      str=paste0(str, 'Use helpNomics("',query[[1]],"/", dfinfo$id,'", dim="',tempilludim,'"), for instance, to see which codes are avaible for dimension ',tempilludim,'.\n'); rm(tempilludim)
       str = paste0(str, " Example query: ", dfinfo$example_query)
       if (verbose) cat(str)
       return(invisible(dfinfo))
