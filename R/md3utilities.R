@@ -1,6 +1,26 @@
 #setdiff(gsub('md0$','',methods(class = 'md0')),gsub('md3$','',methods(class = 'md3')))
 
 
+.getas =function(x, as=c("md3", "array", "numeric","data.table","data.frame","zoo","2d","1d","pdata.frame")) {
+  if (!.md3_is(x)) { stop ('needs to be md3 object!')}
+  as=.asget(as)
+  if (as=='1d') {as='data.table'} 
+  if (as=='md3') return(x)
+  if (as=='array') return(.md3get(x, as = "array", drop = FALSE))
+  if (as=='numeric') return(as.numeric(.md3get(x, as = "array", drop = FALSE)))
+  if (as=='data.table') return(.dt_class(x))
+  if (as=='data.frame') return(data.table:::as.data.frame.data.table(.dt_class(x)))
+  if (as=='zoo') return(as.zoo.md3(x))
+  if (as=='2d') {
+    if (!.dn_findtime(x)) {return(.dt_class(x))}
+    temp=.dt_class(x)[,c(names(attr(x,'dcstruct')),.md3resnames('value')),with=FALSE]
+    return(dcast(temp,...~TIME,value.var= '_.obs_value'))
+  }
+  
+  stop('Conversion to ',as,' to be done')
+  
+}
+
 
 .couldbetimo= function(x) {
   #x is a list, usually a dcsimp attribute

@@ -861,7 +861,7 @@ as.md3.array = function(x,...) {
    lix=.match2dim(ix,xdn,addifmiss = TRUE,frq = attr(ix,'frqshifter'), dotimosubset = !subsetdonealready)
   #lix = .mdfixindexfreq(lix,stopifwrong = FALSE)
 
-  if (substr(as,0,1)!='a') {
+  if (as %in% c('md3','data.table','data.frame')) {
     if (obs=='_.obs_value') {
       dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),,on=.NATURAL]
     } else {
@@ -870,7 +870,8 @@ as.md3.array = function(x,...) {
     dx=dx[!is.na(dx[[obs]])]
     x = .md3_class( dx, dn=.dimcodesrescue(lix,xdc));
     if (drop) x= .drop(x)
-    if (substr(as,0,1)=='d') { return(.dt_class(x))}
+    if (as=='data.table') { return(.dt_class(x))}
+    if (as=='data.frame') { return(data.table:::as.data.frame.data.table(.dt_class(x)))}
     return(x)
   }
 
@@ -883,6 +884,7 @@ as.md3.array = function(x,...) {
   if (.dn_findtime(lix)>0) tempdt[[match('TIME',colnames(tempdt))]] = as.character(tempdt[[match('TIME',colnames(tempdt))]])
   aout[as.matrix(tempdt[,names(lix), with=FALSE])]=tempdt[[obs]]
   if (drop) aout=drop(aout)
+  if (as=='numeric') {return(as.numeric(aout))}
   return(aout)
 
 
@@ -1211,7 +1213,7 @@ as.md3.array = function(x,...) {
   xdim=.dim(x)
   x = data.table:::`[.data.table`(x,j=!(colnames(x) %in% names(xdim)[xdim<2]), with =FALSE)
   attr(x,'dcstruct') = attr(x,'dcstruct')[xdim>1]
-  if (NROW(x)==1) return(as.numeric(x))
+  if (NROW(x)==1) return(as.numeric(x[[1L]]))
   .md3_class(x,force=TRUE)
 }
 
