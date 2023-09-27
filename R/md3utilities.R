@@ -312,11 +312,16 @@ anyNA.md3 = function(x, recursive = FALSE) {
 #' @export
 as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
   if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
+  dcstruct=attr(x,'dcstruct') 
   if (length(obsattr)) {
     if (!missing(split) | missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
-     return(.stackeddf2md3(x,isdf = FALSE))
-    }
-  return(.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split ))
+      y=.stackeddf2md3(x,isdf = FALSE)
+  } else {
+      y=.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split )
+  }
+  if (length(dcstruct))  attr(y,'dcstruct')=.dimcodesrescue(.getdimnames(y,FALSE),dcstruct)
+  return(y)
+  
 }
 
 #' @export

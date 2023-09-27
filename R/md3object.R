@@ -1779,7 +1779,10 @@ aperm.md3 = function(a, perm = NULL, resize = TRUE, ...) {
 #' @export
 as.data.table.md3 = function(x, ..., na.rm=FALSE) {
   if (na.rm) { return(.dt_class(x))}
-  .dt_class(x)[.mdsel2codes(.getdimnames(x,TRUE)),,on=.NATURAL]
+  dcstruct =attr(x,'dcstruct')
+  y=.dt_class(x)[.mdsel2codes(.getdimnames(x,TRUE)),,on=.NATURAL]
+  if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
+  y
 }
 
 #' @export
