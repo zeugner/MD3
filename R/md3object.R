@@ -835,7 +835,7 @@ as.md3.array = function(x,...) {
       ix =ix[[1]]
     } else {
 
-      return(.md3getelem(x,ix[[1]],drop = drop,.obs=obs, as=asnaifmissing))
+      return(.md3getelem(.dt_class(x),ix[[1]],drop = drop,.obs=obs, as=asnaifmissing))
 
     }
 
