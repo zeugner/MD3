@@ -645,7 +645,7 @@ as.timo.numeric = function (x, frq=NULL, ...) {
   if (any(is.infinite(mm))) return(.timo_class(rep(bit64:::NA_integer64_,length(x))))
   if (all(abs(mm) > 0 & abs(mm) < 1e-300)) { return(.timo_class(.asint64(x))) }
   if (mm[[1]]> 900 & mm[[2]] < 2500) {
-  return(MD3:::.timo_class(.cttim$yearstartposixfrom1800()[as.integer(2011)-1799]+.cttim$fcode['a'])) } #return(.char2timo(as.character(x),frq=myfq('a')))
+  return(MD3:::.timo_class(.cttim$yearstartposixfrom1800()[as.integer(x)-1799]+.cttim$fcode['a'])) } #return(.char2timo(as.character(x),frq=myfq('a')))
   #if (mm[[1]]> 900 & mm[[2]] < 2500) { return(.char2timo(as.character(x),frq=myfq('a')))}
   if (mm[[1]]> -26000 & mm[[2]] < 30000) { class(x) = 'Date'; return(as.timo.default(as.character(x),myfq('d')))}
   if (mm[[1]]> 1.8e7 & mm[[2]] < 2.2e7) {  return(.timo_num2class(.vec2POSIXct(Y=as.numeric(substr(x,0,4)),m=as.numeric(substr(x,5,6)),d=as.numeric(substr(x,7,8)),S=.cttim$fcode['d'])))}
