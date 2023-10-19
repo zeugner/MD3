@@ -1,9 +1,10 @@
-suppressPackageStartupMessages(require(data.table,quietly = TRUE))
 
 
 
 
-.onAttach <- function(libname, pkgname) {
+
+.onLoad <- function(libname, pkgname) {
+  suppressPackageStartupMessages(require(data.table,quietly = TRUE))
   requiresilent=function(...) {
     suppressMessages(suppressPackageStartupMessages(require(...)))
   }

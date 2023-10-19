@@ -47,15 +47,18 @@ Set/get dimension and element names, labels and attributes
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{default}: Returns \code{dimnames} for generic objects
+\item \code{dimcodes(default)}: Returns \code{dimnames} for generic objects
 
-\item \code{default}: Sets \code{dimnames} for generic objects
+\item \code{dimcodes(md3)}: Returns dimcodes for md0 objects
 
-\item \code{md3}: Returns dimcodes for md0 objects
-
-\item \code{md3}: Sets dimcodes for md0 objects
 }}
+\section{Functions}{
+\itemize{
+\item \code{dimcodes(default) <- value}: Sets \code{dimnames} for generic objects
 
+\item \code{dimcodes(md3) <- value}: Sets dimcodes for md0 objects
+
+}}
 \examples{
 data(euca)
 names(dimcodes(euca)) # dimension names

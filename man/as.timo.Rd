@@ -36,9 +36,9 @@ The following denotes the existing frequency codes and their notation
 }
 \section{Functions}{
 \itemize{
-\item \code{timo}: convert to timo object of time periods
-}}
+\item \code{timo()}: convert to timo object of time periods
 
+}}
 \examples{
 timo(c('2011q1','2012q1'))
 as.timo(c('2011q1','2012q1'))

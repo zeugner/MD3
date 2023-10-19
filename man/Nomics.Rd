@@ -32,9 +32,9 @@ helpNomics(query, pattern = "", dim = NULL, verbose = TRUE)
 
 \item{...}{etc.}
 
-\item{dim}{dimension name or number (integer) denoting the dimension for which all codes and labels should be listed}
+\item{pattern}{pattern to match against the dataflow id or description. This uses in-built REgex expresions, but remains case-insensitive. If a pattern is not provided, all dataflows (or codes with labels) are returned .}
 
-\item{pat}{pattern to match against the dataflow id or description. This uses in-built REgex expresions, but remains case-insensitive. If a pattern is not provided, all dataflows (or codes with labels) are returned .}
+\item{dim}{dimension name or number (integer) denoting the dimension for which all codes and labels should be listed}
 }
 \value{
 an md0, data.frame, or array, as specfied by argument 'as'.
@@ -70,16 +70,16 @@ Note also that db.nomics queries are case-sensitive
 
 
 To find query codes, the easiest is to go to \url{http://db.nomics.world} and search for codes there
-Alternatively, you can use \code{helpNomics}
+Alternatively, you can use \code{\link{helpNomics}}
 
 \itemize{
  \item \code{helpNomics()} returns a vector with available providers
  \item \code{helpNomics("PROVIDER")} returns a vector with the dataflows available for the provider
- \item \code{helpNomics("PROVIDER", pat="PATTERN")} looks for a dataflow whose name or code matches the string pattern
+ \item \code{helpNomics("PROVIDER", pattern="PATTERN")} looks for a dataflow whose name or code matches the string pattern
  \item \code{helpNomics("PROVIDER/DATAFLOW")} prints the structure of the dataflow dimensions, as well as an example query, and invisible returns the structure of code names within the dataflow
  \item \code{helpNomics("PROVIDER/DATAFLOW/SELECTORS")} invisibly returns the query result. If not successful, it provides clues whwere the query might be wrong
  \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName")} prints the code names and labels of the selected dimension, and invidibly returns a data.frame with those codes and labels
- \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName", pat="PATTERN")} searches the codes and labels of that dimension for a certain pattern
+ \item \code{helpNomics("PROVIDER/DATAFLOW", dim="NumberOrName", pattern="PATTERN")} searches the codes and labels of that dimension for a certain pattern
 }
 }
 
@@ -103,6 +103,6 @@ helpNomics('ECB/EXR/A.PLN.EUR.XXX.E')
 xx=helpNomics('ECB/EXR', dim=5)
 
 #looking for the 'output gap' indicator in OECD's Economic Outlook dataflow
-helpNomics('OECD/EO', dim='VARIABLE', pat='gap')
+helpNomics('OECD/EO', dim='VARIABLE', pattern='gap')
 
 }
