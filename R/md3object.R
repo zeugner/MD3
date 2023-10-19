@@ -4,8 +4,8 @@ suppressPackageStartupMessages(require(data.table,quietly = TRUE))
 
 
 .onAttach <- function(libname, pkgname) {
-  requiresilent=function(package,...) {
-    suppressMessages(suppressPackageStartupMessages(require(package,...)))
+  requiresilent=function(...) {
+    suppressMessages(suppressPackageStartupMessages(require(...)))
   }
   if (!requiresilent("MDcountrycode")) warning("MD3 depends a lot on package MDcountrycode. Please install it and then reload MD3.")
   #if (!require("zoo")) warning("MD2 depends a lot on package zoo. Please install it and then reload MD0.")
