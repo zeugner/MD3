@@ -411,7 +411,7 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 
 
   if (!require(jsonlite)) stop("requires package 'jsonlite'")
-  htreqres = suppressWarnings(try(.readLinesFromUrl(paste0("http://api.db.nomics.world/v22/providers/",idprov,"/"),warn = FALSE),silent=TRUE))
+  htreqres = suppressWarnings(try(.readLinesFromUrl(paste0("http://api.db.nomics.world/v22/providers/",idprov,"/")),silent=TRUE))
   if (class(htreqres)=="try-error") {
     temp=suppressWarnings(try(.Nomicsproviders(),silent=TRUE))
     if (class(temp)=="try-error") { stop("No connection") }
@@ -613,7 +613,7 @@ helpNomics = function(query, pattern="", dim=NULL, verbose=TRUE) {
 
 
 
-.readLinesFromUrl = function(myurl) {
+.readLinesFromUrl = function(myurl,...) {
 
   mzcon=url(myurl,method='libcurl')
   on.exit(try(close(mzcon),silent=TRUE))

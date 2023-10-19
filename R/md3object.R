@@ -4,11 +4,14 @@ suppressPackageStartupMessages(require(data.table,quietly = TRUE))
 
 
 .onAttach <- function(libname, pkgname) {
-  if (!require("MDcountrycode")) warning("MD3 depends a lot on package MDcountrycode. Please install it and then reload MD3.")
+  requiresilent=function(package,...) {
+    suppressMessages(suppressPackageStartupMessages(require(package,...)))
+  }
+  if (!requiresilent("MDcountrycode")) warning("MD3 depends a lot on package MDcountrycode. Please install it and then reload MD3.")
   #if (!require("zoo")) warning("MD2 depends a lot on package zoo. Please install it and then reload MD0.")
-  if (!require("data.table")) warning("MD3 depends a lot on package data.table. Please install it and then reload MD3.")
-  if (!require("bit64")) warning("MD3 depends a lot on package bit64. Please install it and then reload MD3.")
-  message('hihi')
+  if (!requiresilent("data.table")) warning("MD3 depends a lot on package data.table. Please install it and then reload MD3.")
+  if (!requiresilent("bit64")) warning("MD3 depends a lot on package bit64. Please install it and then reload MD3.")
+  #message('hihi')
 }
 
 
