@@ -4,21 +4,21 @@
 .getas =function(x, as=c("md3", "array", "numeric","data.table","data.frame","zoo","2d","1d","pdata.frame")) {
   if (!.md3_is(x)) { stop ('needs to be md3 object!')}
   as=.asget(as)
-  if (as=='1d') {as='data.table'} 
+  if (as=='1d') {as='data.table'}
   if (as=='md3') return(x)
   if (as=='array') return(.md3get(x, as = "array", drop = FALSE))
   if (as=='numeric') return(as.numeric(.md3get(x, as = "array", drop = FALSE)))
-  if (as=='data.table') return(.dt_class(x))
-  if (as=='data.frame') return(data.table:::as.data.frame.data.table(.dt_class(x)))
+  if (as=='data.table') return(as.data.table.md3(x))
+  if (as=='data.frame') return(as.data.frame.md3(x))
   if (as=='zoo') return(as.zoo.md3(x))
   if (as=='2d') {
     if (!.dn_findtime(x)) {return(.dt_class(x))}
     temp=.dt_class(x)[,c(names(attr(x,'dcstruct')),.md3resnames('value')),with=FALSE]
     return(dcast(temp,...~TIME,value.var= '_.obs_value'))
   }
-  
+
   stop('Conversion to ',as,' to be done')
-  
+
 }
 
 
@@ -312,7 +312,7 @@ anyNA.md3 = function(x, recursive = FALSE) {
 #' @export
 as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
   if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
-  dcstruct=attr(x,'dcstruct') 
+  dcstruct=attr(x,'dcstruct')
   if (length(obsattr)) {
     if (!missing(split) | missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
       y=.stackeddf2md3(x,isdf = FALSE)
@@ -321,7 +321,7 @@ as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsa
   }
   if (length(dcstruct))  attr(y,'dcstruct')=.dimcodesrescue(.getdimnames(y,FALSE),dcstruct)
   return(y)
-  
+
 }
 
 #' @export

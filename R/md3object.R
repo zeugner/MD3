@@ -1781,17 +1781,20 @@ aperm.md3 = function(a, perm = NULL, resize = TRUE, ...) {
 }
 
 #' @export
-as.data.table.md3 = function(x, ..., na.rm=FALSE) {
+as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
   if (na.rm) { return(.dt_class(x))}
   dcstruct =attr(x,'dcstruct')
-  y=.dt_class(x)[.mdsel2codes(.getdimnames(x,TRUE)),,on=.NATURAL]
+  y=.dt_class(x)
+  if (!.simple) {  y=y[.mdsel2codes(.getdimnames(x,TRUE)),,on=.NATURAL] }
+
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
+  colnames(y)=gsub('^_\\.','',colnames(y))
   y
 }
 
 #' @export
 as.data.frame.md3 = function(x, ..., na.rm=FALSE) {
-  as.data.frame(as.data.table.md3(x,...,na.rm=na.rm))
+  data.table:::as.data.frame.data.table(as.data.table.md3(x,...,na.rm=na.rm))
 }
 
 

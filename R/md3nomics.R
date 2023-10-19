@@ -432,7 +432,7 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 
 .Nomicsdataflowinfo = function(idprov, idflow) {
   if (!require(jsonlite)) stop("requires package 'jsonlite'")
-  htreqres = suppressWarnings(.readLinesFromUrl(url(paste0("http://api.db.nomics.world/v22/series/",idprov, "/",idflow,"?limit=1&metadata=true&observations=true&format=json"),method='libcurl'),warn = FALSE))
+  htreqres = suppressWarnings(.readLinesFromUrl(paste0("http://api.db.nomics.world/v22/series/",idprov, "/",idflow,"?limit=1&metadata=true&observations=true&format=json"),warn = FALSE))
   ee=parse_json(htreqres)
   mydims= ee$dataset$dimensions_labels[unlist(ee$dataset$dimensions_codes_order)]
   if (is.null(mydims)) { mydims = unlist(ee$dataset$dimensions_codes_order)}
