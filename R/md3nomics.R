@@ -35,7 +35,7 @@
 #' @section Finding query codes:
 #'
 #' To find query codes, the easiest is to go to \url{http://db.nomics.world} and search for codes there
-#' Alternatively, you can use \code{helpNomics}
+#' Alternatively, you can use \code{\link{helpNomics}}
 #'
 #' \itemize{
 #'  \item \code{helpNomics()} returns a vector with available providers
@@ -411,7 +411,7 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 
 
   if (!require(jsonlite)) stop("requires package 'jsonlite'")
-  htreqres = suppressWarnings(try(readLines(paste0("http://api.db.nomics.world/v22/providers/",idprov,"/"),warn = FALSE),silent=TRUE))
+  htreqres = suppressWarnings(try(.readLinesFromUrl(paste0("http://api.db.nomics.world/v22/providers/",idprov,"/"),warn = FALSE),silent=TRUE))
   if (class(htreqres)=="try-error") {
     temp=suppressWarnings(try(.Nomicsproviders(),silent=TRUE))
     if (class(temp)=="try-error") { stop("No connection") }
@@ -432,7 +432,7 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 
 .Nomicsdataflowinfo = function(idprov, idflow) {
   if (!require(jsonlite)) stop("requires package 'jsonlite'")
-  htreqres = suppressWarnings(readLines(url(paste0("http://api.db.nomics.world/v22/series/",idprov, "/",idflow,"?limit=1&metadata=true&observations=true&format=json"),method='libcurl'),warn = FALSE))
+  htreqres = suppressWarnings(.readLinesFromUrl(url(paste0("http://api.db.nomics.world/v22/series/",idprov, "/",idflow,"?limit=1&metadata=true&observations=true&format=json"),method='libcurl'),warn = FALSE))
   ee=parse_json(htreqres)
   mydims= ee$dataset$dimensions_labels[unlist(ee$dataset$dimensions_codes_order)]
   if (is.null(mydims)) { mydims = unlist(ee$dataset$dimensions_codes_order)}
