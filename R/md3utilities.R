@@ -74,7 +74,7 @@ as.ts.md3 = function(x,...) {
 
 
   tsfrq=c(N=1140,D=1,B=1,W=1/7,.namedvecfrommat(.cttim$basetbl(),'frqzoo'))[ixf]
-  if (tsfrq %in% c('N','B','D','W')) {
+  if (any(names(tsfrq) %in% c('N','B','D','W'))) {
     tsstart= as.Date.timo(min(x[[ixt]]))
   } else{
     tsstart = as.numeric(strsplit(as.character.timo(min(x[[ixt]])),split='[A-z]')[[1L]])

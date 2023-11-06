@@ -1034,9 +1034,14 @@ as.md3.array = function(x,...) {
 
   colnames(ff) <- names(mydn)
   for (i in seq_along(mydn)) { mydn[[i]] = mydn[[i]][mydn[[i]] %in% ff[[i]]]}
-  if (as=='md3') {  return(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc))) }
+  if (as=='md3') {  
+    x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc))) 
+    if (!drop) {return(x)}
+    return(drop.md3(x))
+  }
   x = .dt_class(x)
   if (as=='data.table') {  return(x[ff,,on=.NATURAL]) }
+  .obs=.md3resnames(.obs)
   myvec=x[ff,,on=.NATURAL][[.obs]]
 
   if (ixf>0) tempix=paste0(ff[['FREQ']],'.' ,tempix)
