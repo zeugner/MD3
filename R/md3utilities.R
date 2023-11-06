@@ -65,16 +65,18 @@ as.md3.ts = function(x, split = ".", name_for_cols = character(0), ...) {
 }
 
 #' @export
-as.ts.md3 = function(x,...) {
+as.ts.md3 = function(x,...,.obs = "value") {
   ixt =.dn_findtime(x); if (ixt<1) stop('could not find a time dimension in X')
-
+  .obs=.md3resnames(.obs[1L])
+  mycols=c(names(attr(x,'dcstruct')),.obs)
   ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
   x=.dt_class(x); colnames(x)[[ixt]] ='TIME'
-  dxts=dcast(x,TIME~ ..., sep='.', value.var= '_.obs_value')
+  x=x[,mycols,with=FALSE]
+  dxts=dcast(x,TIME~ ..., sep='.', value.var= .obs)
 
 
   tsfrq=c(N=1140,D=1,B=1,W=1/7,.namedvecfrommat(.cttim$basetbl(),'frqzoo'))[ixf]
-  if (tsfrq %in% c('N','B','D','W')) {
+  if (any(names(tsfrq) %in% c('N','B','D','W'))) {
     tsstart= as.Date.timo(min(x[[ixt]]))
   } else{
     tsstart = as.numeric(strsplit(as.character.timo(min(x[[ixt]])),split='[A-z]')[[1L]])
