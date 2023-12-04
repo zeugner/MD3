@@ -79,7 +79,7 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
 }
 
 .vec2POSIXct = function(S=0,M=0,H=0,d=1,m=0,Y=0) {
-  as.POSIXct.POSIXlt( list(S,M,H,d,m-1,Y-1900,NA,NA,NA), tz='UTC')
+  as.POSIXct.POSIXlt( list(sec=S,min=M,hour=H,mday=d,mon=m-1,year=Y-1900,wday=NA_integer_,yday=NA_integer_,isdst=0,zone='GMT',gmtoff=NA), tz='UTC')
 }
 
 .asint64 = function(x) {
@@ -473,7 +473,8 @@ as.integer64.timo = .asint64
       ltimo=as.POSIXlt(xtimo)[xfrb=='M']
       rtetemp=referstoend; if (length(referstoend)>1) { rtetemp=referstoend[xfrb=='M'] }
 
-      templ=as.POSIXct.POSIXlt( list(0,0,0,1,ltimo$mon - ltimo$mon %% attr(xfrb,'multiple')[xfrb=='M'] + rtetemp*attr(xfrb,'multiple')[xfrb=='M'],  ltimo$year,NA,NA,NA), tz='UTC')
+      #templ=as.POSIXct.POSIXlt( list(0,0,0,1,ltimo$mon - ltimo$mon %% attr(xfrb,'multiple')[xfrb=='M'] + rtetemp*attr(xfrb,'multiple')[xfrb=='M'],  ltimo$year,NA,NA,NA), tz='UTC')
+      templ=.vec2POSIXct(0,0,0,1, ltimo$mon - ltimo$mon %% attr(xfrb,'multiple')[xfrb=='M'] + rtetemp*attr(xfrb,'multiple')[xfrb=='M']+1, ltimo$year+1900L)
 
       temp[xfrb=='M']=.asnum(templ) + 2*(.5-rtetemp)*.cttim$fcode[tolower(xfrq)[xfrb=='M']]
     }
