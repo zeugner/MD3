@@ -876,6 +876,9 @@ as.md3.array = function(x,...) {
     if (drop) x= .drop(x)
     if (as=='data.table') { return(.dt_class(x))}
     if (as=='data.frame') { return(data.table:::as.data.frame.data.table(.dt_class(x)))}
+    if (.md3_is(x)) if (data.table:::dim.data.table(x)[1]==0) {
+     # return(rep(NA_real_,prod(unlist(lapply(lix,length)))))
+    }
     return(x)
   }
 
@@ -1034,8 +1037,8 @@ as.md3.array = function(x,...) {
 
   colnames(ff) <- names(mydn)
   for (i in seq_along(mydn)) { mydn[[i]] = mydn[[i]][mydn[[i]] %in% ff[[i]]]}
-  if (as=='md3') {  
-    x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc))) 
+  if (as=='md3') {
+    x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc)))
     if (!drop) {return(x)}
     return(drop.md3(x))
   }
@@ -1218,12 +1221,20 @@ as.md3.array = function(x,...) {
 
 
 .drop = function(x) {
-  x=.dt_class(x)
-  xdim=.dim(x)
-  x = data.table:::`[.data.table`(x,j=!(colnames(x) %in% names(xdim)[xdim<2]), with =FALSE)
-  attr(x,'dcstruct') = attr(x,'dcstruct')[xdim>1]
-  if (NROW(x)==1) return(as.numeric(x[[1L]]))
-  .md3_class(x,force=TRUE)
+  x=MD3:::.dt_class(x)
+  xdim=MD3:::.dim(x)
+  if (!any(xdim>1)) {
+    dims2drop=names(xdim)
+    dims2drop=dims2drop[-utils::tail(which(xdim==1L),1)]
+  } else {
+    dims2drop=names(xdim)[xdim<2]
+  }
+  y = data.table:::`[.data.table`(x,j=!(colnames(x) %in% dims2drop), with =FALSE)
+  attr(y,'dcstruct') = attr(x,'dcstruct')[setdiff(names(xdim),dims2drop)]
+  #if (NROW(y)==1) {
+    #if (NROW(y)<=prod(sapply(attr(y,'dcstruct'),length))) return(as.numeric(y[[1L]]))
+  #}
+  MD3:::.md3_class(y,force=TRUE)
 }
 
 #' @export

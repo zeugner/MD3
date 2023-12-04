@@ -261,7 +261,8 @@ as.integer64.timo = .asint64
   #sapply(xs,[[1]])
   #.Internal(as.POSIXct(list(0,0,0,1,0,117:119,0,0,0,'GMT',NA), 'GMT'))
   #vout=.Internal(as.POSIXct(list(.cttim$fcode[fvec],vmin,vhour,vday,vmon,vyear,0,0,0,'GMT',NA), 'GMT'))
-   vout=.Internal(as.POSIXct(list(.cttim$fcode[fvec],vmin,vhour,vday,vmon-1,vyear,0,0,0,'GMT',NA), 'GMT'))
+   #vout=.Internal(as.POSIXct(list(.cttim$fcode[fvec],vmin,vhour,vday,vmon-1,vyear,0,0,0,'GMT',NA), 'GMT'))
+   vout=.Internal(as.POSIXct(list(sec=.cttim$fcode[fvec],min=vmin,hour=vhour,mday=vday,mon=vmon-1,year=vyear,wday=0,yday=0,isdst=0,zone='GMT',gmtoff=NA), 'GMT'))
   if (any(fvec=='w')) {
     temp=as.POSIXct(paste0(unlist(lapply(xs[fvec=='w'],'[',1)),'-01-01'),tz='GMT',format='%F')
     temp=temp + {(8-as.integer(format(temp,'%u'))) %%7 + 7*(as.integer(unlist(lapply(xs[fvec=='w'],'[',2))) -1)}*86400 + .cttim$fcode['w']
