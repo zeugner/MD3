@@ -79,7 +79,7 @@ suppressPackageStartupMessages(require('bit64',quietly = TRUE))
 }
 
 .vec2POSIXct = function(S=0,M=0,H=0,d=1,m=0,Y=0) {
-  as.POSIXct.POSIXlt( list(sec=S,min=M,hour=H,mday=d,mon=m-1,year=Y-1900,wday=NA_integer_,yday=NA_integer_,isdst=0,zone='GMT',gmtoff=NA), tz='UTC')
+  as.POSIXct.POSIXlt( list(sec=S,min=M,hour=H,mday=d,mon=m-1,year=Y-1900,wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA), tz='UTC')
 }
 
 .asint64 = function(x) {
@@ -262,7 +262,7 @@ as.integer64.timo = .asint64
   #.Internal(as.POSIXct(list(0,0,0,1,0,117:119,0,0,0,'GMT',NA), 'GMT'))
   #vout=.Internal(as.POSIXct(list(.cttim$fcode[fvec],vmin,vhour,vday,vmon,vyear,0,0,0,'GMT',NA), 'GMT'))
    #vout=.Internal(as.POSIXct(list(.cttim$fcode[fvec],vmin,vhour,vday,vmon-1,vyear,0,0,0,'GMT',NA), 'GMT'))
-   vout=.Internal(as.POSIXct(list(sec=.cttim$fcode[fvec],min=vmin,hour=vhour,mday=vday,mon=vmon-1,year=vyear,wday=0,yday=0,isdst=0,zone='GMT',gmtoff=NA), 'GMT'))
+   vout=.Internal(as.POSIXct(list(sec=.cttim$fcode[fvec],min=vmin,hour=vhour,mday=vday,mon=vmon-1,year=vyear,wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA), 'GMT'))
   if (any(fvec=='w')) {
     temp=as.POSIXct(paste0(unlist(lapply(xs[fvec=='w'],'[',1)),'-01-01'),tz='GMT',format='%F')
     temp=temp + {(8-as.integer(format(temp,'%u'))) %%7 + 7*(as.integer(unlist(lapply(xs[fvec=='w'],'[',2))) -1)}*86400 + .cttim$fcode['w']
@@ -942,7 +942,7 @@ Sys.timo = function(frq=NULL) {
     #mn=lfrom$mon + 1 + sign(sl)*seq.int(0,abs(sl),mfrq)
     #mn = lfrom$mon + sign(sl)*c(0,seq_len(abs(sl) %/% mfrq + sign(abs(sl) %% mfrq)))*mfrq
     mn = lfrom$mon + sign(sl)*c(0,seq_len(abs(sl) %/% mfrq))*mfrq
-    as.POSIXct.POSIXlt(list(sec=.cttim$fcode[tolower(xfrq)],min=0,hour=0,mday=1,mon=mn,year=lfrom$year,yday=1,isdst=0,wday=NA, tzone='UTC'), tz='UTC')
+    as.POSIXct.POSIXlt(list(sec=.cttim$fcode[tolower(xfrq)],min=0,hour=0,mday=1,mon=mn,year=lfrom$year,wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA), tz='UTC')
 
   }
 

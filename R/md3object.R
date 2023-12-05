@@ -1037,13 +1037,8 @@ as.md3.array = function(x,...) {
 
   colnames(ff) <- names(mydn)
   for (i in seq_along(mydn)) { mydn[[i]] = mydn[[i]][mydn[[i]] %in% ff[[i]]]}
-<<<<<<< HEAD
   if (as=='md3') {
     x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc)))
-=======
-  if (as=='md3') {  
-    x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc))) 
->>>>>>> 88a8fe854b6121a2d56d0212eda7eb47eef38af7
     if (!drop) {return(x)}
     return(drop.md3(x))
   }
