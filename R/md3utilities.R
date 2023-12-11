@@ -278,7 +278,7 @@ zapply = function (X, FUN, ..., apply2indiv=FALSE)
   if (length(ixt)) {
     if (length(ixt)>1) { warning('was not clear which dimension was the time dimension.'); ixt=ixt[[1L]]}
     if (is.numeric(lix[[ixt]])) {lix[[ixt]] = as.timo.numeric(lix[[ixt]])}
-    
+
     #in case name_for_cols named the wrong column TIME:
     if (any(toupper(names(lix))=='TIME')) { if (which(toupper(names(lix))=='TIME')!=ixt) { names(lix)[which(toupper(names(lix))=='TIME')] = names(lix)[[ixt]]   }}
     names(lix)[[ixt]] = "TIME"
@@ -838,6 +838,17 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
     .md3_class(dout,dn=.getdimcodes(x))
 
 }
+
+
+sort.md3 = function(x, decreasing = FALSE, na.last = NA, ...) {
+  sort(.md3get(x, as = "array", drop = TRUE), decreasing, na.last, ...)
+}
+
+order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
+  order( .md3get(..., as = "array", drop = TRUE), decreasing=decreasing, na.last=na.last)
+}
+
+
 
 #p0=euhpq[2:3,1:2,1:3,1:12];p0[1,1,2,'2005q4:2006q3']=NA;p0[1,1,'ZZ',]=NA;  p0[1,1,1,'2005q4+2007q1:y']=100:104; #p0[1,1,,]
 #imputena(p0)
