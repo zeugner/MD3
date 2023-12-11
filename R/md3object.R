@@ -2162,6 +2162,7 @@ Ops.md3=function(e1,e2) {
   #if (is.data.table(e1) & is.data.table(e2)) {
   #  return(get(.Generic)(as.vector(as.array.md3(e1)),as.vector(as.array.md3(e2))))
   #}
+  if (missing(e2)) { e2=e1; e1=0 }
   if (.md3_is(e1)) o1=as.array.md3(e1) else o1=e1
   if (.md3_is(e2)) o2=as.array.md3(e2) else o2=e2
   y=try(get(.Generic)(o1,o2),silent=TRUE)

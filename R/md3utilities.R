@@ -277,7 +277,8 @@ zapply = function (X, FUN, ..., apply2indiv=FALSE)
   ixt=.couldbetimo(lix)
   if (length(ixt)) {
     if (length(ixt)>1) { warning('was not clear which dimension was the time dimension.'); ixt=ixt[[1L]]}
-
+    if (is.numeric(lix[[ixt]])) {lix[[ixt]] = as.timo.numeric(lix[[ixt]])}
+    
     #in case name_for_cols named the wrong column TIME:
     if (any(toupper(names(lix))=='TIME')) { if (which(toupper(names(lix))=='TIME')!=ixt) { names(lix)[which(toupper(names(lix))=='TIME')] = names(lix)[[ixt]]   }}
     names(lix)[[ixt]] = "TIME"
