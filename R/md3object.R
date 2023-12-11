@@ -1480,12 +1480,20 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       value = as.data.frame(value,stringsAsFactors=FALSE)
     }
 
-    if (usenames & is.array(value)) {
+    if (is.array(value)) {
       value=.arraymelt(value)
     }
   }
 
-
+  if (.md3_is(value) | is.data.frame(value) | is.array(value)) {
+    tempdno=setdiff(names(lix[unlist(lapply(lix,length))==1]),'TIME')
+    tempdnn=setdiff(colnames(value),'TIME'); tempdnn=tempdnn[substr(tempdnn,0,2)!='_.']
+    if (length(tempdnn)==length(tempdno) & !all(tempdno %in% tempdnn)) {
+      warning('Dimension names differ: \n', paste(tempdno, collapse = ', '),' ...vs... ', paste(tempdnn, collapse = ', '),'.',
+              '\n This operation therefore ignores the latter dimnames and indeed assumes the order of dimensions to match in both objects.')
+      colnames(value)[colnames(value) %in% tempdnn] <- tempdno
+    }
+  }
 
 
   if (.md3_is(value) | is.data.frame(value)) {

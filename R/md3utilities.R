@@ -839,6 +839,17 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
 
 }
 
+
+sort.md3 = function(x, decreasing = FALSE, na.last = NA, ...) {
+  sort(.md3get(x, as = "array", drop = TRUE), decreasing, na.last, ...)
+}
+
+order.md3 = function (..., na.last = TRUE, decreasing = FALSE, ...) {
+  order( .md3get(x, as = "array", drop = TRUE), decreasing=decreasing, na.last=na.last, ...)
+}
+
+
+
 #p0=euhpq[2:3,1:2,1:3,1:12];p0[1,1,2,'2005q4:2006q3']=NA;p0[1,1,'ZZ',]=NA;  p0[1,1,1,'2005q4+2007q1:y']=100:104; #p0[1,1,,]
 #imputena(p0)
 # pp=diff(euhpq) #
