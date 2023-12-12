@@ -11,7 +11,8 @@
   plot.type = c("single", "multiple"),
   xlab = NULL,
   ylab = NULL,
-  ...
+  ...,
+  plotflags = FALSE
 )
 
 \method{lines}{md3}(x, y = NULL, ...)
@@ -22,6 +23,8 @@
 \item{plot.type}{either 'single' or 'multiple'. Also wiorks by partial matching ('s' or 'm')}
 
 \item{...}{arguments passed on to \code{\link[stats]{plot.ts}}}
+
+\item{plotflags}{boolean. If TRUE then the charts indicats any flags (obsrvation status) on top of the data}
 }
 \description{
 Plotting method for objects inheriting from class \code{md3}. Converts md3 to time series of class \code{ts} and applies \code{\link[stats]{plot.ts}}

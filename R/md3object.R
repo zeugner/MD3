@@ -1486,7 +1486,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
   }
 
   if (.md3_is(value) | is.data.frame(value) | is.array(value)) {
-    tempdno=setdiff(names(lix[unlist(lapply(lix,length))==1]),'TIME')
+    tempdno=setdiff(names(lix[unlist(lapply(lix,length))>1]),'TIME')
     tempdnn=setdiff(colnames(value),'TIME'); tempdnn=tempdnn[substr(tempdnn,0,2)!='_.']
     if (length(tempdnn)==length(tempdno) & !all(tempdno %in% tempdnn)) {
       warning('Dimension names differ: \n', paste(tempdno, collapse = ', '),' ...vs... ', paste(tempdnn, collapse = ', '),'.',
