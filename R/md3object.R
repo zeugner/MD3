@@ -1866,7 +1866,12 @@ dimnames.md3=function(x) {  .getdimnames(x) }
       #likley renaming a dimnesion
       if (identical(unname(ndn),unname(odn))) {
         #simply renaming a dimension
+        dx=.dt_class(x)
+        vdict=union(names(ndn),setdiff(colnames(dx),names(odn))); names(vdict)=vdict; names(vdict)[seq_along(odn)]=names(odn)
+        colnames(dx)= vdict[colnames(dx)]
+        
         attr(x,'dcstruct') = newdc
+        x=.md3_class(dx)
         return(x)
       }
     }
