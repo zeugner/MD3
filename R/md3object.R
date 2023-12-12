@@ -1692,7 +1692,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
 
     #dx=rbind(dx,tempselnew,fill=TRUE)
     dx=data.table::merge.data.table(dx,tempselnew,all=TRUE)
-    attr(dx,"dcsimp") = mydn
+    #attr(dx,"dcsimp") = mydn
     attr(dx,"dcstruct")=mydc
     }
 
@@ -1866,7 +1866,12 @@ dimnames.md3=function(x) {  .getdimnames(x) }
       #likley renaming a dimnesion
       if (identical(unname(ndn),unname(odn))) {
         #simply renaming a dimension
-        attr(x,'dcstruct') = newdc
+        dx=.dt_class(x)
+        vdict=union(names(ndn),setdiff(colnames(dx),names(odn))); names(vdict)=vdict; names(vdict)[seq_along(odn)]=names(odn)
+        colnames(dx)= vdict[colnames(dx)]
+
+        attr(dx,'dcstruct') = newdc
+        x=.md3_class(dx)
         return(x)
       }
     }
@@ -2203,7 +2208,7 @@ Ops.md3=function(e1,e2) {
 
 #' @export
 is.na.md3 = function(x) {
-  ds=.mdsel2codes(attr(x,'dcsimp'))
+  ds=.mdsel2codes(.getdimnames(attr(x,'dcstruct'))) #$$$$$$$$$
   dx=.dt_class(x)[ds,,on=.NATURAL]
   is.na(dx[['_.obs_value']])
 }
