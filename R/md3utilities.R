@@ -839,11 +839,12 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
 
 }
 
-
+#' @export
 sort.md3 = function(x, decreasing = FALSE, na.last = NA, ...) {
   sort(.md3get(x, as = "array", drop = TRUE), decreasing, na.last, ...)
 }
 
+#' @export
 order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
   order( .md3get(..., as = "array", drop = TRUE), decreasing=decreasing, na.last=na.last)
 }
