@@ -61,7 +61,7 @@ as.md3.array = function(x,...) {
   .stackeddf2md3(.arraymelt(x))
 }
 
-.stackeddf2md3 = function(x,isdf=NA) {
+.stackeddf2md3 = function(x,isdf=NA,order=FALSE) {
   if (data.table::is.data.table(x)) {
 
     ixf = grep('FRE?Q',toupper(colnames(x)))
@@ -75,7 +75,7 @@ as.md3.array = function(x,...) {
       tix = match('TIME', colnames(x))
 
       #if (!is.na(tix) & tix != vix-1) stop ('time issue')
-      setkeyv(x, colnames(x)[dix])
+      if (order) setkeyv(x, colnames(x)[dix])
       if (!is.na(tix)) {
         try(x[[tix]] <- as.timo(x[[tix]]),silent=TRUE)
       }
@@ -501,6 +501,7 @@ as.md3.array = function(x,...) {
 
 .mdsel2rest = function(lix) {
 
+
   sout=lix[[length(lix)]]
 
   for (i in rev(seq_along(lix))[-1]) {
@@ -511,14 +512,17 @@ as.md3.array = function(x,...) {
   return(sout)
 }
 
-.mdsel2codes = function(lix, asdt=TRUE, aschar=FALSE) {
+.mdsel2codes = function(lix, asdt=TRUE, aschar=FALSE, bylast=FALSE) {
+
   .setdim = function(x,nbcol=1) {
     attr(x,'dim') = c(length(x)/nbcol,nbcol)
     x
   }
+  if (bylast) {lix=rev.default(lix)}
   if (any(sapply(lix,length)==0)) {
     vout = matrix(NA_character_,0,length(lix),dimnames = list(character(0),names(lix)))
     if (asdt) vout = data.table::as.data.table(vout)
+    if (bylast) {vout=vout[,NCOL(vout):1L,with=FALSE]}
     return(vout)
   }
   if (aschar) {lix=lapply(lix,as.character)}
@@ -541,6 +545,7 @@ as.md3.array = function(x,...) {
 
   }
   names(vout) = names(lix)
+  if (bylast) {vout=rev.default(vout)}
   return(vout)
 }
 
@@ -1524,7 +1529,11 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       }
     } else {
       dtval=.mdsel2codes(lix,aschar = FALSE)
-      dtval[[obs]]=as.data.table.md3(value,na.rm = FALSE)[[gsub('^_\\.','',obs)]]
+      if (.md3_is(value)) {
+        dtval[[obs]]=as.data.table.md3(value,na.rm = FALSE)[[gsub('^_\\.','',obs)]]
+      } else {
+        dtval[[obs]]=value[[obs]]
+      }
     }
 
 
