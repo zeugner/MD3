@@ -1528,7 +1528,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
        dtval=cbind(.mdsel2codes(lixsub,aschar=FALSE),.dt_class(value))
       }
     } else {
-      dtval=.mdsel2codes(lix,aschar = FALSE)
+      dtval=.mdsel2codes(lix,aschar = FALSE,bylast=TRUE)
       if (.md3_is(value)) {
         dtval[[obs]]=as.data.table.md3(value,na.rm = FALSE)[[gsub('^_\\.','',obs)]]
       } else {
@@ -1819,7 +1819,7 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
   if (na.rm) { return(.dt_class(x))}
   dcstruct =attr(x,'dcstruct')
   y=.dt_class(x)
-  if (!.simple) {  y=y[.mdsel2codes(.getdimnames(x,TRUE)),,on=.NATURAL] }
+  if (!.simple) {  y=y[.mdsel2codes(.getdimnames(x,TRUE),bylast = TRUE),,on=.NATURAL] }
 
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
   colnames(y)=gsub('^_\\.','',colnames(y))
