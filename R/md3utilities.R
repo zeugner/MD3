@@ -801,7 +801,8 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (!is.null(proxy)) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
     mm=.md3set(mm,value=proxy)
-    ax=as.array(x); am=as.array(mm)
+    ax=as.array(x); am=as.arr
+    ay(mm)
     if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
     aforward=unpack(.imputeproxyintoarray(ax,am))
     abackward=unpack(.imputeproxyintoarray(ax,am,backward = TRUE))
@@ -810,7 +811,20 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   }
   #browser()
 
-  if (!NROW(idgap)) {idgap2=idgap; idgap2[,period:=timo()]} else idgap2=idgap[,cbind(.SD[,c(setdiff(dimlab,'TIME'),'startperiod','startvalue','endvalue'),with=FALSE],period=TIME-V2:0,fact=(0:V2)/V2),by='TIME']
+  if (!NROW(idgap)) {idgap2=idgap; idgap2[,period:=timo()]} else {
+    #idgap2=idgap[,cbind(.SD[,c(setdiff(dimlab,'TIME'),'startperiod','startvalue','endvalue'),with=FALSE],period=TIME-V2:0,fact=(0:V2)/V2),by='TIME']
+    idgap[,fact:=0]; idgap2=idgap; idgap2[,period:=startperiod]
+    for (glen in unique(idgap$V2)) {
+      for (i in 1:glen) {
+        temp=idgap[V2==glen,]; temp[['period']]=temp[['startperiod']]+i
+        temp[['fact']]=i/glen
+        idgap2=rbind(idgap2,temp); rm(temp)
+      }
+    }
+
+  }
+
+
   colnames(idgap2)[match(c('TIME','period'),colnames(idgap2))]=c('endperiod','TIME')
 
   if (is.null(proxy)) {

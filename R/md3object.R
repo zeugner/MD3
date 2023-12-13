@@ -415,7 +415,7 @@ as.md3.array = function(x,...) {
   obs=.md3resnames(obs[[1]])
 
   lix=dimnames(aa)
-
+  if (is.null(lix)) { lix = .fixhihi(NULL,dim(aa), ignore.time = FALSE)}
   if (is.null(attr(lix,'names'))) { tix0=rep(TRUE, length(lix))} else {tix0=is.null(names(lix))}
   if (any(tix0)) { names(lix)[tix0] = make.names(LETTERS[seq_along(lix)])[tix0]}
   if (any(unlist(lapply(lix,length))!=dim(aa))) {
@@ -1490,14 +1490,17 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
     }
   }
 
+  changeddimnames=FALSE
   if (.md3_is(value) | is.data.frame(value) | is.array(value)) {
-    tempdno=setdiff(names(lix[unlist(lapply(lix,length))>1]),'TIME')
-    tempdnn=setdiff(colnames(value),'TIME'); tempdnn=tempdnn[substr(tempdnn,0,2)!='_.']
+    tempdno=names(lix[unlist(lapply(lix,length))>1])
+    tempdnn=colnames(value); tempdnn=tempdnn[substr(tempdnn,0,2)!='_.']
     if (length(tempdnn)==length(tempdno) & !all(tempdno %in% tempdnn)) {
       warning('Dimension names differ: \n', paste(tempdno, collapse = ', '),' ...vs... ', paste(tempdnn, collapse = ', '),'.',
               '\n This operation therefore ignores the latter dimnames and indeed assumes the order of dimensions to match in both objects.')
       colnames(value)[colnames(value) %in% tempdnn] <- tempdno
+      changeddimnames=TRUE
     }
+
   }
 
 
@@ -1509,7 +1512,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       } else {
         if (any(!(tempn %in% names(x)))) stop('Could not identify what of these columns in X refers to values: ', paste(tempn, collapse=', '))
       }
-      vtix=.dn_findtime(value); if (vtix) value[[vtix]]=as.timo(value[[vtix]])
+
 
     }
     if (usenames) {
@@ -1534,12 +1537,19 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       } else {
         dtval[[obs]]=value[[obs]]
       }
+      if (changeddimnames ) {
+        if (NROW(value)==NROW(dtval)) value[,tempdno] = dtval[,tempdno, with=FALSE]
+      }
     }
+
+    vtix2=.dn_findtime(value); if (vtix2) value[[vtix2]]=as.timo(value[[vtix2]])
+    vtix1=.dn_findtime(dtval); if (vtix1) dtval[[vtix1]]=as.timo(dtval[[vtix1]])
 
 
     tempselix=x[dtval[,names(xdn),with=FALSE],,on=.NATURAL]
     tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
     tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
+    if (onlyna | justval) { tempselremove=tempselremove[0,]}
     if (usenames) {
       #warning('have to deal with setting NA under usenames')
 
