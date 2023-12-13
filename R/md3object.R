@@ -1513,7 +1513,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       lixsub=lix[setdiff(names(lix),names(dimval))]
 #message('???'); browser()
       if (length(lixsub)==1L) {
-        dtlixsub=data.table(unlist(lapply(as.list(lixsub[[1L]]),rep,NROW(value))))
+        dtlixsub=data.table(unlist(lapply(as.list(lixsub[[1L]]),rep,data.table:::dim.data.table(value)[[1]])))
         names(dtlixsub) =names(lixsub)
         dtval=cbind(dtlixsub,.dt_class(value))
       } else if (!length(lixsub)) {
@@ -1524,7 +1524,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       }
     } else {
       dtval=.mdsel2codes(lix,aschar = FALSE)
-      dtval[[obs]]=as.vector(.md3get(value,as='a'))
+      dtval[[obs]]=as.data.table.md3(value,na.rm = FALSE)[[gsub('^_\\.','',obs)]]
     }
 
 
@@ -1537,7 +1537,8 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       uebrigbleiber=lapply(names(dimval),function(x) {dimval[[x]][!(dimval[[x]] %in% dtval[[x]])]}); names(uebrigbleiber)=names(dimval)
       if (any(as.logical(unlist(lapply(uebrigbleiber,length))))) {
 
-        tempselremove=data.table::as.data.table(lix)[data.table::as.data.table(uebrigbleiber),,on=.NATURAL]
+        #tempselremove=data.table::as.data.table(lix)[data.table::as.data.table(uebrigbleiber),,on=.NATURAL]
+        tempselremove= .mdsel2codes(lix)[ .mdsel2codes(uebrigbleiber),,on=.NATURAL]
       }
     }
     if (NROW(tempselremove)) {
@@ -2124,7 +2125,7 @@ dimcodes.default <- function(x,...) {
 #' @describeIn dimcodes Sets \code{dimnames} for generic objects
 #' @export
 "dimcodes<-.default" <- function(x,value) {
-  get(".dimnames<-")(...)
+  get("dimnames<-")(x, value)
 }
 
 #' @describeIn dimcodes Returns dimcodes for md0 objects
