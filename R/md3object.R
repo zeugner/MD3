@@ -488,7 +488,7 @@ as.md3.array = function(x,...) {
     if (is.na(timedim)) {
       #if (!ignore.time) stop("could not find time dimensions")
     } else {
-      hihi[[timedim]]=.mdt_sortperiods(hihi[[timedim]])
+      hihi[[timedim]]=sort(hihi[[timedim]])
     }
   }
   for (i in seq_along(hihi)) {
