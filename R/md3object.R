@@ -727,7 +727,7 @@ as.md3.array = function(x,...) {
        attributes(y)[['dcstruct']] = .dimcodesrescue(mdcmdcold)
   }
 
-  y =drop.md3(y)
+  y =.drop(y)
   if (as=='md3') {  return(y) }
   mdc=.dc2dn(attr(y,'dcstruct'))
   if (!length(mdc)) {return(rep(y[[.obs]],0))}
@@ -1045,7 +1045,7 @@ as.md3.array = function(x,...) {
   if (as=='md3') {
     x=(.md3_class(.dt_class(x)[ff,,on=.NATURAL],dn =.dimcodesrescue(mydn,mydc)))
     if (!drop) {return(x)}
-    return(drop.md3(x))
+    return(.drop(x))
   }
   x = .dt_class(x)
   if (as=='data.table') {  return(x[ff,,on=.NATURAL]) }
@@ -1242,8 +1242,37 @@ as.md3.array = function(x,...) {
   MD3:::.md3_class(y,force=TRUE)
 }
 
+
 #' @export
-drop.md3 = .drop
+drop=function() {
+  UseMethod('drop')
+}
+
+#' @export
+drop.default = base::drop
+
+
+
+#' Dropping dimensions
+#'
+#' Drops any dimensions that contain only a single element
+#' @param omd0 an md0 object with n dimensions
+#' @return and md0 obnject with n dimensions or less
+#' @seealso \code{\link{aperm.md0}}, \code{\link{adddim}}
+#' @examples
+#' data(euhpq)
+#' ww=euhpq[TOTAL.I15_Q..,drop=FALSE]
+#' dim(ww)# dimensions
+#' w2=drop(ww)
+#' dim(w2)
+#' @export
+drop.md3 = function(x,...) {
+  .drop(x)
+}
+
+
+
+
 
 #' @export
 dim.md3=function(x) {
@@ -1774,13 +1803,93 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
 
 
 
-
+#' Extract or replace parts of an md3 object
+#'
+#'
+#' @name indexMD3
+#' @param x an md3 object
+#' @param ... indexes, see 'Details' below
+#' @param drop whether to drop singleton dimensions (see \code{\link{drop.md3}})
+#' @param as how to return the result, see also \code{\link{as.data.table.md3}}
+#' @param onlyna only update those elements that are NA
+#' @param justval only update those elements that are not NA
+#' @param usenames when replacing parts of x, update x by using the dimension codes, rather than the order, of elements in value
+#' @param .obs used when extracting or replacing not the observation values, but observation attributes such as flags (see below)
+#' @return an md3, array, numeric, zoo, or data.table, data.frame depending on parameter \code{as}
+#' @section Internal structure:
+#' an md3 actually is a data.table that contains one column for each dimension,
+#' and at least one column for observations (there can be additional columns for flags and confidentiality labels).
+#' You can see that  by running .e.g \code{as.data.table(euhpq)}
+#'
+#' @details and md3 object can be indexed like an array (\code{euhpq['TOTAL',2,7:9,'2021q1']}),
+#' or in an SDMX API-like notation (\code{euhpq['TOTAL.I15_Q.BE+FR.2021q1:']} resp (\code{euhpq['TOTAL..SI.2021q1:']}),
+#' or a mix thereof (\code{euhpq[3,2,'BE+FR','2021q1:']})
+#' @seealso \code{\link{dimcodes}}
+#' @examples
+#'
+#'#Retrieving values
+#' #Austrian & Slovak HP growth year-on-year
+#' #these five commands are equivalent:
+#' euhpq["TOTAL","RCH_A",c("AT","SK"),]
+#' euhpq["TOTAL.AT+SK."]
+#' euhpq[3,3,c(1, 35),]
+#' euhpq[3,3,c("AT", "SK"),]
+#' euhpq[3,3,"AT+SK",]
+#'
+#'#Using + and :
+#'
+#' euhpq[TOTAL..FR+AT.y2011q4] #time periods should be prefixed by 'y'
+#' euhpq[TOTAL..FR.y2011q1:y2017q4]
+#' euhpq[TOTAL..FR.2011q2:2017] #but dropping the prefix 'y'is mostly possible
+#' #note the way  2017 is used to encompass all periods of that year.
+#' euhpq[TOTAL.RCH_A.AT+SK.y2020q1:y]
+#' euhpq[TOTAL.RCH_A.FR:PL.y2022q1+y2023q1]
+#'
+#' #Time periods: the following are equivalent:
+#' euhpq['TOTAL.I15_Q.FR+NL.:2007q4']
+#' euhpq[TOTAL.I15_Q.FR+NL.y:y2007q4]
+#' euhpq["TOTAL.I15_Q.FR+NL.y:y2007"]
+#' euhpq[3,2,c("FR","NL"),1:12]
+#'
+#'
+#'#Setting values:
+#' Slovak and Austrian house price growth for 2005-2006
+#' #these four commands are equivalent:
+#' euhpq[.RCH_A.AT+SK.:2006]=0
+#' euhpq[.RCH_A.AT+SK.y:y2006]=0
+#' euhpq[".RCH_A.AT+SK.:2006"]=0
+#' euhpq[,"RCH_A",c(1,33),1:8]=0
+#'
+#'
+#'#Adding elements:
+#' euhpq[,,"Dummy",]=0 #add a dummy country
+#' euhpq[2,'I15_Q',,"2011"] #see effect
+#'
+#'#Argument usenames, onlyna and justval still to be described
+# @describeIn indexMD3 Get subelements
+#' @rdname indexMD3
 #' @export
 `[.md3` = .md3get
 
+# @describeIn indexMD3 Set subelements
 #' @export
 `[<-.md3` = .md3set
 
+
+
+#' Extract the labels of the time dimensions
+#'
+#' @param x an md3 object
+#' @param ... not used, only there for compatitibilty reasons
+#' @return a timo object
+#' @seealso \code{\link[stats]{time}}
+#' @examples
+#'
+#' time(euhpq)
+#' time(euhpq)+10
+#' frequency(time(euhpq),'A') #convert frequency
+#' euhpq[3,3,'AT',time(euhpq)-3] #3 year lag
+#'
 #' @export
 time.md3 = function(x,...) {
   if (is(x,'md3')) x = .getdimnames(x,TRUE)
@@ -1791,6 +1900,18 @@ time.md3 = function(x,...) {
   return(x[[ixt]])
 }
 
+
+
+#' transpose a twodimensional md3 object
+#'
+#' @param x an md3 object
+#' @return an md3
+#' @seealso \code{aperm}
+#' @examples
+#' data(euhpq) #house prices for EU countries
+#' euhpq[3,3,1:2,'2020:']
+#' t(euhpq[3,3,1:2,'2020:'])
+#'
 #' @export
 t.md3 = function(x) {
   if (length(.getdimnames(x,TRUE)) !=2) { stop('transpose only works with 2 dims')}
@@ -1833,7 +1954,8 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
 
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
   colnames(y)=gsub('^_\\.','',colnames(y))
-  y
+  if (missing(...)) return(y)
+  data.table::dcast(y,...)
 }
 
 #' @export
