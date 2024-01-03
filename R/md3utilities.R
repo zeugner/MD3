@@ -816,7 +816,13 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   }
   #browser()
 
-  if (!NROW(idgap)) {idgap2=idgap; idgap2[,period:=timo()]} else {
+  if (!NROW(idgap)) {
+    idgap2=idgap; idgap2[,period:=timo()]
+    if (!('fact'%in% colnames(idgap2)) & ('V2' %in% colnames(idgap2)) ) {
+      colnames(idgap2)[colnames(idgap2)=='V2'] <- 'fact'
+    }
+
+  } else {
     #idgap2=idgap[,cbind(.SD[,c(setdiff(dimlab,'TIME'),'startperiod','startvalue','endvalue'),with=FALSE],period=TIME-V2:0,fact=(0:V2)/V2),by='TIME']
     idgap[,fact:=0]; idgap2=idgap; idgap2[,period:=startperiod]
     for (glen in unique(idgap$V2)) {
@@ -849,9 +855,9 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
 
     hh[is.na(`_val_d`) & !is.na(`_val_b`),`_val_d`:=`_val_b`]
     hh[is.na(`_val_d`) & !is.na(`_val_f`),`_val_d`:=`_val_f`]
-    if (all(is.na(hh[,fact]))) { return(hh) }
-    hh[!is.na(fact),`_val_d`:=(1-fact)*`_val_f`+fact*`_val_b`]
-
+    if (!all(is.na(hh[,fact]))) {
+      hh[!is.na(fact),`_val_d`:=(1-fact)*`_val_f`+fact*`_val_b`]
+    }
     dout=hh[,seq_len(length(dimlab)+1),with=FALSE]
     colnames(dout)[NCOL(dout)]=.md3resnames('value')
     .md3_class(dout,dn=.getdimcodes(x))
