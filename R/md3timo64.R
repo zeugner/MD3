@@ -1298,14 +1298,17 @@ as.timdif.difftime= function(x, units=NULL,...) {
    #if (any(attr(ytd,'units') !=.cttim$basedon(.timo_frq(xtimo)))) warning('')
    #.timo_cfrq(ytimo,.timo_frq(xtimo))
    if (length(xtimo)<length(xtd)) {templ=.recycle(xtimo,xtd,force=TRUE); xtimo=templ[[1]]; xtd=templ[[2]]; rm(templ)}
-   ltimo = as.POSIXlt.timo(.timo_within(xtimo,referstoend = addit))
+
+   if (any(fff!='M')) {xtimo[fff!='M']=.timo_within(xtimo[fff!='M'],referstoend = addit)}
+   if (any(fff=='M')) {xtimo[fff=='M']=.timo_within(xtimo[fff=='M'],referstoend = FALSE)}
+   ltimo = as.POSIXlt.timo(xtimo)
 
 
    if (any('N' %in% fff) ) {ltimo$min[fff=='N']=.Primitive(switch(2-addit,"+","-"))(ltimo$min[fff=='N'], ytd[fff=='N'])   }
    ytimo=as.timo.POSIXct(as.POSIXct.POSIXlt(ltimo));
    if (any('N' %in% fff) ) {ytimo[fff=='N'] =  .timo_cfrq(ytimo[fff=='N'],.timo_frq(xtimo[fff=='N'])) }
    if (any('M' %in% fff) ) {
-
+     #if (addit) {ltimo$mday[fff=='M']=ltimo$mday[fff=='M']-4}
      #temp=ltimo$year[fff=='M']*12+ltimo$mon[fff=='M'] + sign(addit-0.5)*ytd[fff=='M']
      #ytimo[fff=='M'] =  .timo_cfrq(.char2timo(paste0(temp%/% 12 + 1900, 'm', temp%%12 +1)),.timo_frq(xtimo[fff=='M']))
      ltimo$mon[fff=='M'] = ltimo$mon[fff=='M']  + sign(addit-0.5)*ytd[fff=='M']

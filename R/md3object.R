@@ -1819,13 +1819,13 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
 #' @section Internal structure:
 #' an md3 actually is a data.table that contains one column for each dimension,
 #' and at least one column for observations (there can be additional columns for flags and confidentiality labels).
-#' You can see that  by running .e.g \code{as.data.table(euhpq)}
+#' You can see that  by running e.g. \code{as.data.table(euhpq)}
 #'
-#' @details and md3 object can be indexed like an array (\code{euhpq['TOTAL',2,7:9,'2021q1']}),
-#' or in an SDMX API-like notation (\code{euhpq['TOTAL.I15_Q.BE+FR.2021q1:']} resp (\code{euhpq['TOTAL..SI.2021q1:']}),
-#' or a mix thereof (\code{euhpq[3,2,'BE+FR','2021q1:']})
+#' or in an SDMX API-like notation (\code{euhpq["TOTAL.I15_Q.BE+FR.2021q1:"]} resp \code{euhpq["TOTAL..SI.2021q1:"]}),
+#' or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 #' @seealso \code{\link{dimcodes}}
 #' @examples
+#' data(euhpq) #house prices for EU countries
 #'
 #'#Retrieving values
 #' #Austrian & Slovak HP growth year-on-year
@@ -1853,7 +1853,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
 #'
 #'
 #'#Setting values:
-#' Slovak and Austrian house price growth for 2005-2006
+#' # Slovak and Austrian house price growth for 2005-2006
 #' #these four commands are equivalent:
 #' euhpq[.RCH_A.AT+SK.:2006]=0
 #' euhpq[.RCH_A.AT+SK.y:y2006]=0
