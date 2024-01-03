@@ -47,17 +47,34 @@ as.timo('2011q1') + 0:8
 
 as.timo(c('2011q1', '2011')) + 1
 as.timo('2011/9/23')
-timo('2011/9/23','Q')
+
+timo('2011/9/23',frq='B') #is the same as
+as.timo('2011/9/23',frq='B') #Note that B means business day frequency as opposed to D for daily frequency
+
+frequency(timo('2011m03'),'W') # convert to weekly frq
 
 timo(y2019q4) -'2q' #substract 2 quarters
 timo(y2019q4) -'2a' #substract 2 years
 timo("2019q4") +'12m' #add 12 months
 
-seq(as.timo('2011m03'),'2012m01')
+seq(as.timo('2011m03'),'2012m01') #all months from March 2011 to Jan 2012
+seq(timo('2014q1'),'2014q2',frq='B') #all business days in the first half of 2014
 
 sort(as.timo(c("2012m01","2011","2011q2","2011s2","2011m03","2011w51",
    "2011-08-23","2012", '2011-08-23 11:11')))
 
 sort(as.timo('2011q1') + 0:8, decreasing=TRUE)
 
+data(euhpq)
+time(euhpq)
+time(euhpq)+1
+time(euhpq)+'1Q'
+time(euhpq)+'1M'
+frequency(time(euhpq),'D')
+frequency(time(euhpq),'D')+'2W'
+
+
+}
+\seealso{
+\code{\link{seq.timo}}, \code{\link{frequency.timo}}, \code{\link{Sys.timo}}
 }

@@ -44,3 +44,6 @@ frequency(aa,'D')
 frequency(aa,frq='D',refersto='end')
 frequency(seq(timo(2013),2014,by='Q'),frq='D',refersto=c('start','end'))
 }
+\seealso{
+\code{\link{timo}}, \code{\link{seq.timo}}, \code{\link{Sys.timo}}
+}

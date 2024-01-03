@@ -42,3 +42,6 @@ seq(timo('2014m03'),'2015m06',by=3)
 seq(timo('2014q1'),'2014q2',frq='W')
 seq(timo('2014m03'),frq='B')
 }
+\seealso{
+\code{\link{timo}}, \code{\link{frequency.timo}}, \code{\link{Sys.timo}}
+}

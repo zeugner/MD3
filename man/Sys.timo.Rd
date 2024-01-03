@@ -34,3 +34,6 @@ Sys.timo(frq='W') + 0:5 #current week plus the next four ones
 Sys.timo() -"1Q" # this minute one quarter ago
 
 }
+\seealso{
+\code{\link{timo}}, \code{\link{frequency.timo}}, \code{\link{seq.timo}}
+}

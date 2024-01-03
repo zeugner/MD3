@@ -591,6 +591,7 @@ is.numeric.timo = function(x) { FALSE}
 #' \item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
 #' }
 #'
+#' @seealso \code{\link{seq.timo}}, \code{\link{frequency.timo}}, \code{\link{Sys.timo}}
 #' @examples
 #' timo(c('2011q1','2012q1'))
 #' as.timo(c('2011q1','2012q1'))
@@ -599,18 +600,32 @@ is.numeric.timo = function(x) { FALSE}
 #'
 #' as.timo(c('2011q1', '2011')) + 1
 #' as.timo('2011/9/23')
-#' timo('2011/9/23','Q')
+#'
+#' timo('2011/9/23',frq='B') #is the same as
+#' as.timo('2011/9/23',frq='B') #Note that B means business day frequency as opposed to D for daily frequency
+#'
+#' frequency(timo('2011m03'),'W') # convert to weekly frq
 #'
 #' timo(y2019q4) -'2q' #substract 2 quarters
 #' timo(y2019q4) -'2a' #substract 2 years
 #' timo("2019q4") +'12m' #add 12 months
 #'
-#' seq(as.timo('2011m03'),'2012m01')
+#' seq(as.timo('2011m03'),'2012m01') #all months from March 2011 to Jan 2012
+#' seq(timo('2014q1'),'2014q2',frq='B') #all business days in the first half of 2014
 #'
 #' sort(as.timo(c("2012m01","2011","2011q2","2011s2","2011m03","2011w51",
 #'    "2011-08-23","2012", '2011-08-23 11:11')))
 #'
 #' sort(as.timo('2011q1') + 0:8, decreasing=TRUE)
+#'
+#' data(euhpq)
+#' time(euhpq)
+#' time(euhpq)+1
+#' time(euhpq)+'1Q'
+#' time(euhpq)+'1M'
+#' frequency(time(euhpq),'D')
+#' frequency(time(euhpq),'D')+'2W'
+#'
 #'
 #' @export
 as.timo= function (x,frq=NULL,...) UseMethod("as.timo")
@@ -769,6 +784,7 @@ as.data.frame.timo=as.data.frame.numeric
 #' \item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
 #' }
 #'
+#' @seealso \code{\link{timo}}, \code{\link{frequency.timo}}, \code{\link{seq.timo}}
 #' @examples
 #' Sys.timo()
 #' Sys.timo(frq='M')
@@ -1020,6 +1036,7 @@ Sys.timo = function(frq=NULL) {
 #' \item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
 #' }
 #'
+#' @seealso \code{\link{timo}}, \code{\link{seq.timo}}, \code{\link{Sys.timo}}
 #' @examples
 #' frequency(timo(c('2011q1','2023m11','2014-12-09')))
 #' aa <- timo(y2022q3,y2022q4)
@@ -1126,6 +1143,7 @@ range.timo = function(..., na.rm = FALSE, finite = FALSE) {
 #' }
 #'
 #' @return a timo vector
+#' @seealso \code{\link{timo}}, \code{\link{frequency.timo}}, \code{\link{Sys.timo}}
 #' @examples
 #' seq(timo('2014m03'),'2015m06')
 #' seq(timo('2014m03'),'2015')
@@ -1299,8 +1317,9 @@ as.timdif.difftime= function(x, units=NULL,...) {
    #.timo_cfrq(ytimo,.timo_frq(xtimo))
    if (length(xtimo)<length(xtd)) {templ=.recycle(xtimo,xtd,force=TRUE); xtimo=templ[[1]]; xtd=templ[[2]]; rm(templ)}
 
-   if (any(fff!='M')) {xtimo[fff!='M']=.timo_within(xtimo[fff!='M'],referstoend = addit)}
-   if (any(fff=='M')) {xtimo[fff=='M']=.timo_within(xtimo[fff=='M'],referstoend = FALSE)}
+   #if (any(fff!='M')) {xtimo[fff!='M']=.timo_within(xtimo[fff!='M'],referstoend = addit)}
+   #if (any(fff=='M')) {xtimo[fff=='M']=.timo_within(xtimo[fff=='M'],referstoend = FALSE)}
+   xtimo=.timo_within(xtimo,referstoend = addit)
    ltimo = as.POSIXlt.timo(xtimo)
 
 
@@ -1308,11 +1327,12 @@ as.timdif.difftime= function(x, units=NULL,...) {
    ytimo=as.timo.POSIXct(as.POSIXct.POSIXlt(ltimo));
    if (any('N' %in% fff) ) {ytimo[fff=='N'] =  .timo_cfrq(ytimo[fff=='N'],.timo_frq(xtimo[fff=='N'])) }
    if (any('M' %in% fff) ) {
-     #if (addit) {ltimo$mday[fff=='M']=ltimo$mday[fff=='M']-4}
+     if (addit) {ltimo$mday[fff=='M']=ltimo$mday[fff=='M']-4}
      #temp=ltimo$year[fff=='M']*12+ltimo$mon[fff=='M'] + sign(addit-0.5)*ytd[fff=='M']
      #ytimo[fff=='M'] =  .timo_cfrq(.char2timo(paste0(temp%/% 12 + 1900, 'm', temp%%12 +1)),.timo_frq(xtimo[fff=='M']))
      ltimo$mon[fff=='M'] = ltimo$mon[fff=='M']  + sign(addit-0.5)*ytd[fff=='M']
      ytimo[fff=='M'] = .timo_num2class(as.POSIXct.POSIXlt(ltimo[fff=='M']))
+     if (addit) {ytimo[fff=='M'] = .timo_within(ytimo[fff=='M'],referstoend = TRUE) }
    }
    if (any('B' %in% fff) ) {
      ytimo[fff=='B']=.addbizday(ytimo[fff=='B'],switch(2-addit,1,-1)*ytd[fff=='B'])
