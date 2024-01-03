@@ -801,8 +801,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (!is.null(proxy)) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
     mm=.md3set(mm,value=proxy)
-    ax=as.array(x); am=as.arr
-    ay(mm)
+    ax=as.array(x); am=as.array(mm)
     if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
     aforward=unpack(.imputeproxyintoarray(ax,am))
     abackward=unpack(.imputeproxyintoarray(ax,am,backward = TRUE))
