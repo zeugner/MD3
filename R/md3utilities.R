@@ -1,6 +1,10 @@
 #setdiff(gsub('md0$','',methods(class = 'md0')),gsub('md3$','',methods(class = 'md3')))
 
 
+
+
+
+
 .getas =function(x, as=c("md3", "array", "numeric","data.table","data.frame","zoo","2d","1d","pdata.frame")) {
   if (!.md3_is(x)) { stop ('needs to be md3 object!')}
   as=.asget(as)
@@ -776,6 +780,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (!is.null(proxy)) if (!is.vector(proxy)) proxy=as.array(proxy)
   dx=data.table::copy(.dt_class(x))
   if (anyNA(dx[[.md3resnames('value')]])) {stop('x is a faulty md3 object. Do as.md3(as.data.table(x)) to repair it')}
+  dx=dx[,names(dx) %in% c(names(.getdimnames(x)),.md3resnames('value')),with=FALSE]
   dimlab=names(.dim(x))
   setkeyv(dx,dimlab)
 
@@ -801,8 +806,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (!is.null(proxy)) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
     mm=.md3set(mm,value=proxy)
-    ax=as.array(x); am=as.arr
-    ay(mm)
+    ax=as.array(x); am=as.array(mm)
     if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
     aforward=unpack(.imputeproxyintoarray(ax,am))
     abackward=unpack(.imputeproxyintoarray(ax,am,backward = TRUE))
