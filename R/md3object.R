@@ -1226,8 +1226,8 @@ as.md3.array = function(x,...) {
 
 
 .drop = function(x) {
-  x=MD3:::.dt_class(x)
-  xdim=MD3:::.dim(x)
+  x=.dt_class(x)
+  xdim=.dim(x)
   if (!any(xdim>1)) {
     dims2drop=names(xdim)
     dims2drop=dims2drop[-utils::tail(which(xdim==1L),1)]
@@ -1239,12 +1239,12 @@ as.md3.array = function(x,...) {
   #if (NROW(y)==1) {
     #if (NROW(y)<=prod(sapply(attr(y,'dcstruct'),length))) return(as.numeric(y[[1L]]))
   #}
-  MD3:::.md3_class(y,force=TRUE)
+  .md3_class(y,force=TRUE)
 }
 
 
 #' @export
-drop=function() {
+drop=function(x,...) {
   UseMethod('drop')
 }
 
@@ -2392,6 +2392,69 @@ str.md3 = function (object,...) {
       'and of the last element',paste(lapply((lapply(.getdimnames(object,TRUE),function(x) x[length(x)])),as.character),collapse = '.'))
 }
 
+
+
+
+.matchixsubset2dn = function(ix,xdn) {
+  #this is a counterpart to match2dim
+  #the code elements in  ix must exist somewhere in xdn
+  #examples
+  #m0=euhpq['TOTAL.I15_Q.AT:BG.y2005:y2007']
+  #.matchixsubset2dn(matrix(3,3,12),m0)
+  #.matchixsubset2dn(c('BG','AT'),m0)
+  #.matchixsubset2dn(c('BG','AT'),dimnames(m0))
+  #.matchixsubset2dn(matrix(NA,1,12),m0)
+
+  xdn=.getdimnames(xdn)
+  ixclass=utils::head(class(ix),1)
+  stopfn=function() stop('Cannot match this ',ixclass,' to ', paste(names(xdn),collapse=', '))
+
+  dimlen=NULL
+  temp=dimnames(ix)
+  if (is.array(ix)) {
+    dimlen=dim(ix)
+    ix=temp
+  } else if (is.numeric(ix) & !length(names(ix))) {
+    return(xdn)
+
+  } else if (is.numeric(ix) ) {
+    ix=list(names(ix))
+  } else {
+    if (!is.null(temp)) {ix=temp};
+    if (!is.list(ix) & length(ix)) {  ix=list(ix)}
+  }; rm(temp)
+
+  if (is.null(names(ix))) if (identical(unname(unlist(lapply(xdn,length))),unname(unlist(lapply(ix,length))))) {
+    names(ix) = names(xdn)
+  }
+  if (!is.null(names(ix))) if (all(names(ix) %in% names(xdn) )) {
+    return(.match2dim(ix,xdn[names(ix)]))
+
+  }
+  #could be that we have an unnamed subset
+  if (!length(ix) & length(dimlen)) {
+    if (all(dimlen==unlist(lapply(xdn,length)))) {return(xdn)}
+    dimlen=dimlen[dimlen>1]
+    if (!length(dimlen)) {browser()}
+    dimss=base:::match(dimlen,unlist(lapply(xdn,length)),nomatch = NA_integer_)
+    if (anyNA(dimss)) stopfn()
+    return(xdn[dimss])
+  }
+
+
+  #so we are dealing with a case where dimensions are labelled differntly, or we have a subset, etc.
+
+  .finddim=function (x,xdn) utils::tail(names(xdn)[unlist(lapply(xdn,function(z) all(base::match(x,z,nomatch = 0))))],1)
+  if (length(ix)) {
+    temp=unlist(lapply(ix,.finddim,xdn))
+    if (!length(temp)) {stopfn()}
+    if (anyDuplicated(temp)) {stopfn()}
+    names(ix)= temp
+    return(ix)
+  }
+
+  stopfn()
+}
 
 
 

@@ -737,7 +737,7 @@ c.md3=merge.md3
 #' @param method 'dlog' denotes geometric interpolation, 'diff' denotes linear interpolation
 #' @param maxgap an integer denoting the maximum number of consecutive NAs to be filled
 #' @param direction only necessary where proxy is not NULL. See details below
-#' @return an md0
+#' @return an md3 object
 #' @details
 #' This refers to interpolation cases where an annual time series e.g. has values for 2000 and 2005, but not for 2001:2004
 #'
@@ -805,6 +805,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
 
   if (!is.null(proxy)) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
+    if (is.array(proxy)) {dimnames(proxy)<- .matchixsubset2dn(proxy,.getdimnames(mm)); proxy=drop(proxy)}
     mm=.md3set(mm,value=proxy)
     ax=as.array(x); am=as.array(mm)
     if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
@@ -868,6 +869,70 @@ order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
 }
 
 
+
+#' Fill out an MD3 or array with a number or a certain subset
+#'
+#' This function is useful when one wants to use the same sequence of numbers along a certain dimension, e.g. when computing an index
+#' @param bigmd3 an md3 object, array, or anything that may be converted to an md3
+#' @param \dots a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})
+#' @return an md3 object (or an array if bigmd3 is an array)
+#' @examples
+#' data("euhpq")
+#'
+#' mm=euhpq[1,1,1:4,as.character(2013:2016)]
+#'
+#' # these four are equivalent:
+#' fill(mm,mm[,'2014q4'])
+#' fill(mm,'.2014q4')
+#' fill(mm,'BE+BG.2014q4')
+#' fill(mm,c('BE','BG'),'2014q4')
+#'
+#' mm/fill(mm,rowMeans(mm[,'2014']))*100 # e.g. re-base the index with the av of 2014 being 100
+#'
+#' fill(mm,100)
+#' fill(mm,c('AT'=1,'BG'=2))
+#'
+#' fill(mm,c('2014q1'=1,'2014q2'=2))
+#'
+#'
+#' fill(mm,1:2)
+#'
+#'
+#'
+#' @export
+fill = function(bigmd3,...) {
+  retasarr=FALSE
+  if (is.array(bigmd3)) {retasarr=TRUE; bigmd3=as.md3.array(bigmd3) }
+  if (!.md3_is(bigmd3)) {bigmd3=as.md3(bigmd3)}
+
+
+  smallmd3=.dotsaslistws(...)
+  if (length(smallmd3)==1) { smallmd3=smallmd3[[1L]]}
+
+  if (.md3_is(smallmd3)) {smallmd3 = as.array.md3(smallmd3)}
+  if (!is.array(smallmd3) && !is.numeric(smallmd3)) {
+    temp=try(.md3get(bigmd3,smallmd3),silent=TRUE)
+    if (!any(grepl('err',class(temp)))) {smallmd3=temp};
+    rm(temp)
+  }
+
+  dx=.dt_class(bigmd3)
+  mm=.md3_class(dx[0],dn = .getdimnames(bigmd3))
+  sdn=.matchixsubset2dn(smallmd3,.getdimnames(mm))
+  if (is.array(smallmd3)) {dimnames(smallmd3)<- sdn; smallmd3=drop(smallmd3)}
+  if (!is.array(smallmd3) && length(smallmd3)>1) {
+    if (all(setdiff(dim(as.array(smallmd3)),1)==unlist(lapply(sdn,length)))) {
+      smallmd3=as.array(smallmd3); dimnames(smallmd3)=sdn
+    }
+  }
+  dd=.getdimnames(bigmd3)
+  dd[names(sdn)] = sdn
+  mm=.md3set(mm,dd,value=smallmd3)
+
+  if (retasarr) {return(.md3get(mm, as = "array", drop = FALSE))}
+  if (.md3_is(mm)) {return(mm)}
+  stop('cannot use fill on this object')
+}
 
 #p0=euhpq[2:3,1:2,1:3,1:12];p0[1,1,2,'2005q4:2006q3']=NA;p0[1,1,'ZZ',]=NA;  p0[1,1,1,'2005q4+2007q1:y']=100:104; #p0[1,1,,]
 #imputena(p0)

@@ -24,7 +24,7 @@ imputena(
 \item{direction}{only necessary where proxy is not NULL. See details below}
 }
 \value{
-an md0
+an md3 object
 }
 \description{
 For each time series in the MD3 array, this function fills intermittent NAs using the delta of a proxy, or (geometric) interpolation
