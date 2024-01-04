@@ -1,4 +1,5 @@
-
+#problem eupop=mds("Eurostat/demo_pjanbroad",ccode='iso2m')
+#problem oecdgdp_aq[1:3,1,'2019q1']
 
 
 
@@ -576,8 +577,8 @@ as.md3.array = function(x,...) {
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
       if (.timo_is(xdn[[i]]) ) {
         if (!.timo_is(ix[[i]])) if (length(ix[[i]])==1L) { if (any(grepl(':',ix[[i]]))) { ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]] }}
-
-        lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingraifen
+        if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]])==frq]}
+        lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
       } else {
         lix[[i]]=.subset(nvec,ix[[i]])
@@ -2370,6 +2371,15 @@ Math.md3 = function(x,...) {
 #p5=.md3set(euhpq,TOTAL.HAHA..,value=euhpq[TOTAL.I15_Q..]/100,); p5[TOTAL..PL.]
 
 
+#' @export
+Summary.md3 = function(x,...) {
+  x=as.array.md3(.dropflags(x))
+  y=get(.Generic)(x,...)
+  if (inherits(y,'array')) return(as.md3.array(y))
+  y
+
+
+}
 
 
 #' @export
