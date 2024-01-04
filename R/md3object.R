@@ -284,8 +284,12 @@ as.md3.array = function(x,...) {
           if (any(grepl(':$',temp[[i]]))) { temp[[i]] = seq.timo(gsub(':$','',temp[[i]]),tail(ohihi[[i]],1)) }
           if (any(grepl('^:',temp[[i]]))) { temp[[i]] = seq.timo(head(ohihi[[i]],1), gsub(':','',temp[[i]])) }
         }
-        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], addifmiss = TRUE)
-        if (length(frqshifter)) temp[[ixt]] = temp[[ixt]][.timo_frq(temp[[ixt]]) %in% frqshifter]
+        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs =FALSE, addifmiss = TRUE )
+        if (length(frqshifter)) {
+          if (length(temp)) if (!any(.timo_frq(temp[[ixt]]) %in% frqshifter)) stop('The specified time periods like ',
+              temp[[ixt]][1],' do not match the specified frequencies ',paste(frqshifter,collapse=', '))
+          temp[[ixt]] = temp[[ixt]][.timo_frq(temp[[ixt]]) %in% frqshifter]
+        }
         next
       }
       ohihi[[i]] = as.character(ohihi[[i]])
@@ -577,7 +581,7 @@ as.md3.array = function(x,...) {
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
       if (.timo_is(xdn[[i]]) ) {
         if (!.timo_is(ix[[i]])) if (length(ix[[i]])==1L) { if (any(grepl(':',ix[[i]]))) { ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]] }}
-        if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]])==frq]}
+        if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
         lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
       } else {

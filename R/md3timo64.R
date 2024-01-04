@@ -915,12 +915,15 @@ Sys.timo = function(frq=NULL) {
     if (!length(bla)) bla[[2]] = bla[[1]] = .char2timo(ixl[[i]])
     maxfrq=NULL; if (!coverhigherfrqs) maxfrq=toupper(names(.cttim$fcode))[match(.timo_frq(c(bla[[1]],bla[[2]])),toupper(names(.cttim$fcode)))]
     ixsmaller = 1L + bit64:::`>.integer64`(.asint64(bla[[1]]),.asint64(bla[[2]]))
+
     xout=try(x[.timo_within(.timo_class(bla[[3-ixsmaller]]), TRUE, FALSE)>=x & x >=.timo_within(.timo_class(bla[[ixsmaller]]), FALSE, FALSE)],silent=TRUE)
+
     if (!length(xout)) if (all(.timo_frq(.unlist_keepclass(bla)) %in% .timo_frq(x) )) {
       xout=.timo_subperiods(bla[[1L]],.timo_frq(bla[[1L]]),bla[[2L]])
     }
-    if (length(maxfrq)) {
-      xout=xout[.timo_frq(xout) %in% maxfrq]
+    if (length(maxfrq) && !coverhigherfrqs ) {
+      #xout=xout[.timo_frq(xout) %in% maxfrq]
+      xout=xout[match(.timo_frq(xout),.cttim$frqcodes[['fcode']])>=max(match(maxfrq,.cttim$frqcodes[['fcode']]))]
     }
 
     #xout=try(x[xPOSIXct>=.mdt_asPOSIXct(bla[[1]]) & xPOSIXct <= .mdt_asPOSIXct(bla[[2]], last=TRUE)],silent=TRUE)

@@ -531,7 +531,7 @@ add.dim=.adddim_md3
 #' @param overwrite relevant if x and y have the same number of dimnesions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x
 #' @param verbose if FALSE, suppress  success messages from the merging
 #' @return an md3 object with n or n+1 dimensions
-#' @seealso \code{\link{drop.md3}}
+#' @seealso \code{\link{drop.md3}}, \code{\link{aggregate.md3}}
 #' @examples
 #' data(euhpq)
 #' a1=euhpq['TOTAL','I15_Q',1:3,]
@@ -767,6 +767,7 @@ c.md3=merge.md3
 #' As regards imputation by proxy, the function will impute NAs in time series that have a least one non-missing value with growth rates
 #' or deltas of the proxy. direction=='forward' means it does this for any NAs after non-missing observations, direction==' backward' for
 #' any NAs before. Direction 'both' is a weighted avearge of both methods wherever they overlap
+#' @seealso \code{\link{fill.md3}},  \code{\link{aggregate.md3}}, \link{indexMD3}
 #' @examples
 #' data("euhpq")
 #' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
@@ -901,6 +902,7 @@ order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
 #' @param bigmd3 an md3 object, array, or anything that may be converted to an md3
 #' @param \dots a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})
 #' @return an md3 object (or an array if bigmd3 is an array)
+#' @seealso \code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}
 #' @examples
 #' data("euhpq")
 #'
@@ -981,7 +983,7 @@ fill = function(bigmd3,...) {
   if (drop) {dx=dx[,TIME:=NULL]}
   mdc=attr(dx,'dcstruct');
   if (drop) { mdc[['TIME']]<-NULL} else {mdc[['TIME']] = unique(dx[['TIME']])}
-  attr(dx,'dcstruct')=mdc
+  attr(dx,'dcstruct')=.dimcodesrescue(mdc,attr(x,'dcstruct'))
 
 
   .md3_class(dx)
@@ -1028,7 +1030,7 @@ end.md3 = function(x,...,drop=TRUE) {
     }
   vt=vtcomplete=sort(vtcomplete)
   xdn[['TIME']] = vtcomplete
-  attr(x,'dcstruct') = xdn
+  attr(x,'dcstruct') = .dimcodesrescue(xdn,attr(x,'dcstruct'))
   tgrp=.timo_cfrq(vt,frq=frq, referstoend=TRUE)
   }
 
@@ -1059,7 +1061,7 @@ end.md3 = function(x,...,drop=TRUE) {
   ydn[['TIME']] =sort(unique(tgrp))
   dy[,TIME:=.char2timo(`_.perdaggs`,guess = FALSE)]
   dy[['_.perdaggs']]<-NULL
-  attr(dy,'dcstruct') = ydn
+  attr(dy,'dcstruct') = .dimcodesrescue(ydn,attr(x,'dcstruct'))
   y=.md3_class(dy)
   if (drop) { y=drop.md3(y)}
   y
@@ -1067,12 +1069,7 @@ end.md3 = function(x,...,drop=TRUE) {
 
 
 
-<<<<<<< HEAD
 #' Aggregate an MD3 over time and/or multiple other dimensions
-=======
-<<<<<<< HEAD
-#' Agreggate an MD3 over time and/or multiple other dimensions
->>>>>>> 4cbf503db8105cfe7db522bc7cacb8cf8af75094
 #'
 #' Can sum, average, etc. to lower frequencies, or along entire dimensions, or along user-defined aggregates (such as country groups)
 #' @param x an md3 object,
@@ -1084,6 +1081,7 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @param complete.periods logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).
 #' @param drop Logical, default \code{TRUE}. See \code{\link{drop.md3}}
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
+#' @seealso \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}
 #' @examples
 #' data("oecdgdp_aq")
 #'
@@ -1123,19 +1121,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
                          ..., complete.periods=!na.rm, drop=TRUE) {
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.periods)) {warning('Argument complete.periods is being ignored when na.rm=TRUE'); complete.periods=FALSE}
-<<<<<<< HEAD
   if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods, drop=drop))
-=======
-  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods))
-=======
-
-#' @export
-aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.groups=!na.rm) {
-  if (missing(frq_grp)) {frq_grp=NULL}
-  if (na.rm & !missing(complete.groups)) {warning('Argument complete.groups is being ignored when na.rm=TRUE'); complete.groups=FALSE}
-  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.groups))
->>>>>>> be8acb4bc2152f81dc1c872445690e531e58a3bc
->>>>>>> 4cbf503db8105cfe7db522bc7cacb8cf8af75094
   if (is.list(FUN)) {FUN=FUN[[1L]]}
   if (is.character(FUN)) FUN=get(FUN)
   if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
@@ -1163,7 +1149,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (!length(frq_grp)) {
     dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
     if (!length(nalong)) { return(as.numeric(dy[[1L]])) }
-    attr(dy,'dcstruct') = xdn[nalong]
+    attr(dy,'dcstruct') = .dimcodesrescue(xdn[nalong],attr(x,'dcstruct'))
     return(.md3_class(dy))
   }
 
@@ -1219,7 +1205,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
   if (!length(nalong)) { return(as.numeric(dy[[1L]])) }
   colnames(dy)=gsub('^_\\.agg_','',colnames(dy))
-  attr(dy,'dcstruct') = ydn
+  attr(dy,'dcstruct') = .dimcodesrescue(ydn,attr(x,'dcstruct'))
   my=.md3_class(dy)
   if(drop) my=drop.md3(my)
   return(my)
