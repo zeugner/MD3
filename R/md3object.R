@@ -1,4 +1,5 @@
-
+#problem eupop=mds("Eurostat/demo_pjanbroad",ccode='iso2m')
+#problem oecdgdp_aq[1:3,1,'2019q1']
 
 
 
@@ -2370,6 +2371,15 @@ Math.md3 = function(x,...) {
 #p5=.md3set(euhpq,TOTAL.HAHA..,value=euhpq[TOTAL.I15_Q..]/100,); p5[TOTAL..PL.]
 
 
+#' @export
+Summary.md3 = function(x,...) {
+  x=as.array.md3(.dropflags(x))
+  y=get(.Generic)(x,...)
+  if (inherits(y,'array')) return(as.md3.array(y))
+  y
+
+
+}
 
 
 #' @export

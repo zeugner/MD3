@@ -1067,31 +1067,94 @@ end.md3 = function(x,...,drop=TRUE) {
 
 
 
-
+#' @export
 aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.groups=!na.rm) {
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.groups)) {warning('Argument complete.groups is being ignored when na.rm=TRUE'); complete.groups=FALSE}
-  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(MD3:::.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.groups))
+  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.groups))
   if (is.list(FUN)) {FUN=FUN[[1L]]}
+  if (is.character(FUN)) FUN=get(FUN)
   if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
   if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
 
 
 
-  xdn=MD3:::.getdimnames(x)
+  xdn=.getdimnames(x)
   if (!na.rm) {
-    dx=MD3:::as.data.table.md3(MD3:::.dropflags(x,FALSE),na.rm = FALSE)
+    dx=as.data.table.md3(.dropflags(x,FALSE),na.rm = FALSE)
     colnames(dx)[NCOL(dx)]<-'_.obs_value'
   } else {
-    dx=MD3:::.dropflags(x,asDT=TRUE)
+    dx=.dropflags(x,asDT=TRUE)
+  }
+
+  if (missing(along) & is.list(frq_grp)) {
+    along=names(frq_grp)
   }
 
   nxdn=names(xdn)
   data.table::setkeyv(dx,nxdn)
   nalong=setdiff(nxdn,along);
   if (length(nalong)==length(nxdn)) {stop('Argument along (',paste(along,collapse=', '),') does not relate to any dimension of x')}
-  dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
 
-  browser()
-  stop(1)
+  if (!length(frq_grp)) {
+    dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
+    if (!length(nalong)) { return(as.numeric(dy[[1L]])) }
+    attr(dy,'dcstruct') = xdn[nalong]
+    return(.md3_class(dy))
+  }
+
+
+  #so frq_grp must be something like list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US')) or list(geo=list(G4=c('ES','DE','FR','IT')))
+  #start user checks frq_grp
+  if (!is.list(frq_grp)& length(along)==1) {
+      frq_grp=list(list(frq_grp));
+      names(frq_grp) = along
+  } else if (!is.list(frq_grp[[1L]]) & length(along)==1) {
+    frq_grp=list(frq_grp);
+    names(frq_grp) = along
+  } else if (is.list(frq_grp)) {
+    if (any(!unlist(lapply(frq_grp,length)))) {
+      for (i in which(!unlist(lapply(frq_grp,length)))) frq_grp[[i]]=list()
+    }
+  } else {
+    temp=lapply(lapply(dimnames(x), head,2),function(z) paste0('list(X=c("',z[1],'","',z[length(z)],'"))'))
+    stop('You specified to aggregate along ',length(along),' dimensions with specfic code groups (frq_grp), but did not specify frq_grp correctly\n',
+         'try setting frq_grp to something like ', paste0('list(', paste(unlist(lapply(as.list(names(temp)),function(z) paste0(z,'=',temp[[z]]))),collapse=', '), ')'))
+  }
+  for (sdim in along) {
+    if (!length(frq_grp[[sdim]])) next
+    mygrp=frq_grp[[sdim]]
+    if (is.null(names(mygrp))) {names(mygrp)=NA_character_ }
+    if (anyNA(names(mygrp))) {  temp=names(mygrp); temp[is.na(temp)]=''; names(mygrp)=gsub('\\.','',make.names(temp,unique = TRUE))}
+    if (any(grepl('\\.',names(mygrp)))) {warning('No dots in element names that you provide to argument frq_grp'); names(mygrp)=gsub('\\.','',names(mygrp))}
+    ixix=unlist(lapply(mygrp,function(z) {is.numeric(z) || is.logical(z)}))
+    if (any(ixix)) for (i in which(ixix)) { mygrp[[i]]=xdn[[sdim]][mygrp[[i]]]  }
+    frq_grp[[sdim]]=mygrp
+  }
+
+
+  #end user checks frq_grp
+
+  #here TIME as characterz
+
+
+  ydn=xdn[nalong]
+  for (sdim in along) {
+    if (!length(frq_grp[[sdim]])) next
+    sdict=unlist(lapply(as.list(names(frq_grp[[sdim]])), function(z) rep(z,length(frq_grp[[sdim]][[z]]))))
+    names(sdict) = unlist(frq_grp[[sdim]], use.names = FALSE, recursive = FALSE)
+    sadim=paste0('_.agg_',sdim)
+    dx[[sadim]] <- sdict[dx[[sdim]]]
+    dx = dx[!is.na(dx[[sadim]])]
+    nalong=c(nalong,sadim)
+    ydn[[sdim]] = names(frq_grp[[sdim]])
+    dx[[sdim]]<-NULL
+  }
+
+
+  dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
+  if (!length(nalong)) { return(as.numeric(dy[[1L]])) }
+  colnames(dy)=gsub('^_\\.agg_','',colnames(dy))
+  attr(dy,'dcstruct') = ydn
+  return(.md3_class(dy))
 }
