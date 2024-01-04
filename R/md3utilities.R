@@ -1067,12 +1067,12 @@ end.md3 = function(x,...,drop=TRUE) {
 
 
 
-#' Agreggate an MD3 over time and/or multiple other dimensions
+#' Aggregate an MD3 over time and/or multiple other dimensions
 #'
 #' Can sum, average, etc. to lower frequencies, or along entire dimensions, or along user-defined aggregates (such as country groups)
 #' @param x an md3 object,
 #' @param frq_grp what to aggregate to: A single character frequency code like \code{"A"},  \code{"Q"} or  \code{"B"} when aggregating along time, or a user-defined aggregate list (see details)
-#' @param along characer vector: the dimensions along which to aggregate. Default is \code{TIME}
+#' @param along character vector: the dimensions along which to aggregate. Default is \code{TIME}
 #' @param FUN the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end} and  \code{start} are also popular. Can be any function (passed along as a function or the string name of that function)
 #' @param na.rm logical, default \code{TRUE}. Should missing values be removed?
 #' @param \dots other arguments to FUN
@@ -1085,7 +1085,7 @@ end.md3 = function(x,...,drop=TRUE) {
 #' #Aggregating along the time dimension
 #'
 #' yy=oecdgdp_aq['Q','AU:BE',,'2011q2:2015q2']
-#' yy[AU..y2011q2+y2011q3]=NA #make some artifical NAs for demo purposes
+#' yy[AU..y2011q2+y2011q3]=NA #make some artificial NAs for demo purposes
 #' print(yy[,'GDP_USD',])
 #' aggregate(yy,'A')[,'GDP_USD',] # sum quarterly GDP figures to annual ones
 #' aggregate(yy,'A',FUN=sum, na.rm=FALSE)[,'GDP_USD',] # sum quarterly GDP figures to annual ones.
@@ -1110,7 +1110,8 @@ end.md3 = function(x,...,drop=TRUE) {
 #' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
 #'
 #' data(eupop)
-#' aggregate(eupop,
+#' aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT15','Y_GE65'))))
+#' #non-working age people in EU countries
 #'
 #' @export
 aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE,

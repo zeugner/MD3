@@ -2,7 +2,7 @@
 % Please edit documentation in R/md3utilities.R
 \name{aggregate.md3}
 \alias{aggregate.md3}
-\title{Agreggate an MD3 over time and/or multiple other dimensions}
+\title{Aggregate an MD3 over time and/or multiple other dimensions}
 \usage{
 \method{aggregate}{md3}(
   x,
@@ -20,7 +20,7 @@
 
 \item{frq_grp}{what to aggregate to: A single character frequency code like \code{"A"},  \code{"Q"} or  \code{"B"} when aggregating along time, or a user-defined aggregate list (see details)}
 
-\item{along}{characer vector: the dimensions along which to aggregate. Default is \code{TIME}}
+\item{along}{character vector: the dimensions along which to aggregate. Default is \code{TIME}}
 
 \item{FUN}{the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end} and  \code{start} are also popular. Can be any function (passed along as a function or the string name of that function)}
 
@@ -44,7 +44,7 @@ data("oecdgdp_aq")
 #Aggregating along the time dimension
 
 yy=oecdgdp_aq['Q','AU:BE',,'2011q2:2015q2']
-yy[AU..y2011q2+y2011q3]=NA #make some artifical NAs for demo purposes
+yy[AU..y2011q2+y2011q3]=NA #make some artificial NAs for demo purposes
 print(yy[,'GDP_USD',])
 aggregate(yy,'A')[,'GDP_USD',] # sum quarterly GDP figures to annual ones
 aggregate(yy,'A',FUN=sum, na.rm=FALSE)[,'GDP_USD',] # sum quarterly GDP figures to annual ones.
@@ -69,6 +69,7 @@ aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],c('CA','DE','ES','FR','IT','JP','UK'
 aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
 
 data(eupop)
-aggregate(eupop,
+aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT15','Y_GE65'))))
+#non-working age people in EU countries
 
 }
