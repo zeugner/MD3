@@ -729,6 +729,25 @@ c.md3=merge.md3
   #   dforward=.md3set(dforward,mydn(tp),value = insertarr,onlyna = TRUE,usenames=FALSE)
   # }
 
+
+
+.dropflags = function(omd3,asDT=FALSE) {
+  dx=data.table::copy(.dt_class(omd3))
+  orincol=NCOL(dx)
+  dx=dx[,names(dx) %in% c(names(.getdimnames(omd3)),.md3resnames('value')),with=FALSE]
+  if (NCOL(dx)==orincol) {
+    if (anyNA(dx[[.md3resnames('value')]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
+  } else {
+    dx=dx[!is.na(dx[[.md3resnames('value')]]),]
+  }
+
+  if (asDT) return(dx)
+  .md3_class(dx)
+}
+
+
+
+
 #' Impute NAs in MD3 objects with proxy data or interpolation
 #'
 #' For each time series in the MD3 array, this function fills intermittent NAs using the delta of a proxy, or (geometric) interpolation
@@ -750,7 +769,7 @@ c.md3=merge.md3
 #' any NAs before. Direction 'both' is a weighted avearge of both methods wherever they overlap
 #' @examples
 #' data("euhpq")
-#' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md0}
+#' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
 #' w1["BE.2006q4:2007q1"]=NA
 #' w1["CY.2006:2007"]=NA
 #' w1['AT.y2006q1']=100
@@ -778,9 +797,9 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   myf=unique(.timo_frq(time.md3(x)))
   if (length(myf)!=1) stop('cannot do this on mixed frequencies')
   if (!is.null(proxy)) if (!is.vector(proxy)) proxy=as.array(proxy)
-  dx=data.table::copy(.dt_class(x))
-  if (anyNA(dx[[.md3resnames('value')]])) {stop('x is a faulty md3 object. Do as.md3(as.data.table(x)) to repair it')}
-  dx=dx[,names(dx) %in% c(names(.getdimnames(x)),.md3resnames('value')),with=FALSE]
+
+  dx=.dropflags(x,asDT=TRUE)
+
   dimlab=names(.dim(x))
   setkeyv(dx,dimlab)
 
@@ -950,3 +969,129 @@ fill = function(bigmd3,...) {
 # Rprof()
 # summaryRprof(tmp)
 # unlink(tmp)
+
+
+.subsetspectime = function(x,what,drop=TRUE) {
+  ixt=.dn_findtime(x)
+  if (ixt<1) return(x)
+  if (is.function(what)) { what=what(time.md3(x))}
+  dx=.dt_class(x)
+
+  dx=dx[TIME==what,]
+  if (drop) {dx=dx[,TIME:=NULL]}
+  mdc=attr(dx,'dcstruct');
+  if (drop) { mdc[['TIME']]<-NULL} else {mdc[['TIME']] = unique(dx[['TIME']])}
+  attr(dx,'dcstruct')=mdc
+
+
+  .md3_class(dx)
+}
+
+#' @export
+start.md3 = function(x,...,drop=TRUE) {
+  .subsetspectime(x,start.timo,drop=drop)
+}
+
+#' @export
+end.md3 = function(x,...,drop=TRUE) {
+  .subsetspectime(x,end.timo,drop=drop)
+}
+
+.timeaggregate = function(x, frq, FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.periods=!na.rm) {
+  if (is.list(FUN)) {FUN=FUN[[1L]]}
+
+  if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
+  if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
+
+  vt=time.md3(x)
+  if (is.null(vt)) return(x)
+
+  of=.timo_frq(vt)
+  ofunique = unique(of)
+
+  if (length(frq)!=1) stop('Argument frq must be a single character like A, M, W, B, or D')
+  frq=substr(trimws(toupper(as.character(frq[1L]))),0,1)
+  frqpos=base::match(frq,.cttim$frqcodes[,1,drop=TRUE],nomatch=1000)
+  ofpos=base::match(ofunique,.cttim$frqcodes[,1,drop=TRUE],nomatch=1000)
+  if (any(ofpos<=frqpos)) {
+    stop('Cannot aggregate an object of frequencies ',paste(unique(of,collapse=', ')),' to a lower frequency like ', frq)
+  }
+
+  xdn=.getdimnames(x)
+  tgrp=.timo_cfrq(vt,frq=frq, referstoend=TRUE)
+
+  if (na.rm & !missing(complete.periods)) {complete.periods=FALSE}
+  if (complete.periods) {
+    vtcomplete=timo()
+    for (ff in ofunique) {
+      vtcomplete=c(vtcomplete,.timo_class(unlist(lapply(as.list(unique(tgrp)),.timo_subperiods,ff))))
+    }
+  vt=vtcomplete=sort(vtcomplete)
+  xdn[['TIME']] = vtcomplete
+  attr(x,'dcstruct') = xdn
+  tgrp=.timo_cfrq(vt,frq=frq, referstoend=TRUE)
+  }
+
+
+  tdict=.timo2char(tgrp); names(tdict) = .timo2char(vt)
+
+
+
+  if (!na.rm) {
+    dx=as.data.table.md3(.dropflags(x,FALSE),na.rm = FALSE)
+    colnames(dx)[NCOL(dx)]<-'_.obs_value'
+  } else {
+    dx=.dropflags(x,asDT=TRUE)
+  }
+
+
+
+
+
+  nxdn=names(xdn)
+  data.table::setkeyv(dx,nxdn)
+
+  nxdn[nxdn=='TIME']='_.perdaggs'
+  dx[,`_.perdaggs`:=tdict[.timo2char(TIME)]]
+  dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nxdn]
+
+  ydn=xdn
+  ydn[['TIME']] =sort(unique(tgrp))
+  dy[,TIME:=.char2timo(`_.perdaggs`,guess = FALSE)]
+  dy[['_.perdaggs']]<-NULL
+  attr(dy,'dcstruct') = ydn
+  y=.md3_class(dy)
+  y
+}
+
+
+
+
+
+aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.groups=!na.rm) {
+  if (missing(frq_grp)) {frq_grp=NULL}
+  if (na.rm & !missing(complete.groups)) {warning('Argument complete.groups is being ignored when na.rm=TRUE'); complete.groups=FALSE}
+  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(MD3:::.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.groups))
+  if (is.list(FUN)) {FUN=FUN[[1L]]}
+  if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
+  if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
+
+
+
+  xdn=MD3:::.getdimnames(x)
+  if (!na.rm) {
+    dx=MD3:::as.data.table.md3(MD3:::.dropflags(x,FALSE),na.rm = FALSE)
+    colnames(dx)[NCOL(dx)]<-'_.obs_value'
+  } else {
+    dx=MD3:::.dropflags(x,asDT=TRUE)
+  }
+
+  nxdn=names(xdn)
+  data.table::setkeyv(dx,nxdn)
+  nalong=setdiff(nxdn,along);
+  if (length(nalong)==length(nxdn)) {stop('Argument along (',paste(along,collapse=', '),') does not relate to any dimension of x')}
+  dy=dx[,list(`_.obs_value`=FUN(`_.obs_value`,...)),by=nalong]
+
+  browser()
+  stop(1)
+}

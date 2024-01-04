@@ -435,23 +435,23 @@ as.integer64.timo = .asint64
   intimo
 }
 
-
-.timo_withinold = function(xtimo, referstoend = FALSE, classit=TRUE) {
-
-  #if (!referstoend) return(switch(classit+1,.asnum,function(x) x)(.char2timo(as.character(as.timo(xtimo)))))
-
-  if (!referstoend) {
-    return(switch(classit+1,.asnum,return)(.char2timo(as.character(as.timo(xtimo)))))
-
-  }
-  temp=.asnum(.timo_addnumeric(.char2timo(as.character(as.timo(xtimo))),1, TRUE) )
-  temp = temp - .cttim$frqcodes[.timo_frq(temp),'timosuffix']*2
-  #temp = as.POSIXct(temp, tz='GMT')
-  if (classit) temp = .timo_num2class(temp)
-  return(temp)
-
-
-}
+#
+# .timo_withinold = function(xtimo, referstoend = FALSE, classit=TRUE) {
+#
+#   #if (!referstoend) return(switch(classit+1,.asnum,function(x) x)(.char2timo(as.character(as.timo(xtimo)))))
+#
+#   if (!referstoend) {
+#     return(switch(classit+1,.asnum,return)(.char2timo(as.character(as.timo(xtimo)))))
+#
+#   }
+#   temp=.asnum(.timo_addnumeric(.char2timo(as.character(as.timo(xtimo))),1, TRUE) )
+#   temp = temp - .cttim$frqcodes[.timo_frq(temp),'timosuffix']*2
+#   #temp = as.POSIXct(temp, tz='GMT')
+#   if (classit) temp = .timo_num2class(temp)
+#   return(temp)
+#
+#
+# }
 
 .timo_within = function(xtimo, referstoend = FALSE, classit=TRUE) {
 
@@ -494,21 +494,21 @@ as.integer64.timo = .asint64
 }
 
 
-.timo_cfrqold =function(xtimo, frq, refersto = c('start','end','middle'), classit=TRUE) {
-  refersto=c('end', 'start','middle')[pmatch(tolower(trimws(refersto[[1]])),c('end','start','middle'))]
-  #tout=unclass(xtimo)
-  tout=.asnum(xtimo)
-  if (refersto!='end') {
-    tout=.timo_within(tout , referstoend= FALSE, classit=FALSE)
-    tout=tout- tout%% 60 + .cttim$frqcodes[toupper(frq),'timosuffix']
-  } else {
-    tout=.timo_within(tout , referstoend= TRUE, classit=FALSE)
-    tout=tout - (tout%% 60) + 60-.cttim$frqcodes[toupper(frq),'timosuffix']
-  }
-  if (classit) tout = .timo_num2class(tout)
-  .checkbizday(tout)
-
-}
+# .timo_cfrqold =function(xtimo, frq, refersto = c('start','end','middle'), classit=TRUE) {
+#   refersto=c('end', 'start','middle')[pmatch(tolower(trimws(refersto[[1]])),c('end','start','middle'))]
+#   #tout=unclass(xtimo)
+#   tout=.asnum(xtimo)
+#   if (refersto!='end') {
+#     tout=.timo_within(tout , referstoend= FALSE, classit=FALSE)
+#     tout=tout- tout%% 60 + .cttim$frqcodes[toupper(frq),'timosuffix']
+#   } else {
+#     tout=.timo_within(tout , referstoend= TRUE, classit=FALSE)
+#     tout=tout - (tout%% 60) + 60-.cttim$frqcodes[toupper(frq),'timosuffix']
+#   }
+#   if (classit) tout = .timo_num2class(tout)
+#   .checkbizday(tout)
+#
+# }
 
 
 .timo_cfrq =function(xtimo, frq, referstoend = FALSE, classit=TRUE) {
@@ -1607,6 +1607,12 @@ year.timo = function(x) {
   #unlist(lapply(as.list( x) ,  function(z) sum(.asint64(z)>.cttim$yearstartposixfrom1800())))+1800
 }
 
+
+#' @export
+start.timo = function(x,...) {utils::head(x,1)}
+
+#' @export
+end.timo = function(x,...) {utils::tail(x,1)}
 
 #too slow:
 #uu=.timo_within(seq(timo(y2014w14), 2015,frq='n'),TRUE) $ fixed

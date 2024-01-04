@@ -42,7 +42,7 @@ any NAs before. Direction 'both' is a weighted avearge of both methods wherever 
 }
 \examples{
 data("euhpq")
-\dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md0}
+\dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
 w1["BE.2006q4:2007q1"]=NA
 w1["CY.2006:2007"]=NA
 w1['AT.y2006q1']=100
