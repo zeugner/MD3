@@ -1066,6 +1066,7 @@ end.md3 = function(x,...,drop=TRUE) {
 
 
 
+<<<<<<< HEAD
 #' Agreggate an MD3 over time and/or multiple other dimensions
 #'
 #' Can sum, average, etc. to lower frequencies, or along entire dimensions, or along user-defined aggregates (such as country groups)
@@ -1100,6 +1101,14 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.periods)) {warning('Argument complete.periods is being ignored when na.rm=TRUE'); complete.periods=FALSE}
   if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods))
+=======
+
+#' @export
+aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.groups=!na.rm) {
+  if (missing(frq_grp)) {frq_grp=NULL}
+  if (na.rm & !missing(complete.groups)) {warning('Argument complete.groups is being ignored when na.rm=TRUE'); complete.groups=FALSE}
+  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.groups))
+>>>>>>> be8acb4bc2152f81dc1c872445690e531e58a3bc
   if (is.list(FUN)) {FUN=FUN[[1L]]}
   if (is.character(FUN)) FUN=get(FUN)
   if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
