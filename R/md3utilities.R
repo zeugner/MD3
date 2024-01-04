@@ -997,7 +997,7 @@ end.md3 = function(x,...,drop=TRUE) {
   .subsetspectime(x,end.timo,drop=drop)
 }
 
-.timeaggregate = function(x, frq, FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.periods=!na.rm) {
+.timeaggregate = function(x, frq, FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.periods=!na.rm, drop=drop) {
   if (is.list(FUN)) {FUN=FUN[[1L]]}
 
   if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
@@ -1061,6 +1061,7 @@ end.md3 = function(x,...,drop=TRUE) {
   dy[['_.perdaggs']]<-NULL
   attr(dy,'dcstruct') = ydn
   y=.md3_class(dy)
+  if (drop) { y=drop.md3(y)}
   y
 }
 
@@ -1076,9 +1077,12 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @param na.rm logical, default \code{TRUE}. Should missing values be removed?
 #' @param \dots other arguments to FUN
 #' @param complete.periods logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).
+#' @param drop Logical, default \code{TRUE}. See \code{\link{drop.md3}}
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
 #' @examples
 #' data("oecdgdp_aq")
+#'
+#' #Aggregating along the time dimension
 #'
 #' yy=oecdgdp_aq['Q','AU:BE',,'2011q2:2015q2']
 #' yy[AU..y2011q2+y2011q3]=NA #make some artifical NAs for demo purposes
@@ -1087,19 +1091,33 @@ end.md3 = function(x,...,drop=TRUE) {
 #' aggregate(yy,'A',FUN=sum, na.rm=FALSE)[,'GDP_USD',] # sum quarterly GDP figures to annual ones.
 #' #Note the NAs for 2011 and 2015 because 2011q1 and 2015q3:2015q4 are missing completely
 #'
-#' Alternatively sum those years where not all periods are available by setting complete.periods=FALSE
+#' #Alternatively sum those years where not all periods are available by setting complete.periods=FALSE
 #' aggregate(yy,'A',FUN=sum, na.rm=FALSE, complete.periods=FALSE)[,'GDP_USD',]
 #'
 #'
-#' aggregate(yy,'A',FUN=end)[,'GDP_USD',] use the last period only
-#' aggregate(yy,'A',FUN=end, na.rm=FALSE)[,'GDP_USD',] use the last period only, but be careful about NAs
+#' aggregate(yy,'A',FUN=end)[,'GDP_USD',] #use the last period only
+#' aggregate(yy,'A',FUN=end, na.rm=FALSE)[,'GDP_USD',] #use the last period only, but be careful about NAs
 #'
+#' #Aggregating along other dimensions
+#'
+#' aggregate(yy,along=c('LOCATION','TIME'),FUN=mean) # average GDP of countries
+#' aggregate(yy,along=c('LOCATION'),FUN=sum) #GDP time series, sum of all three countries in yy
+#'
+#' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA','DE','ES','FR','IT','JP','UK','US'),Baltics=c('EE','LV', 'LT'))))
+#' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA','DE','ES','FR','IT','JP','UK','US'),Baltics=c('EE','LV', 'LT'))), along = 'LOCATION') # along is superfluous here
+#' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(G7=c('CA','DE','ES','FR','IT','JP','UK','US')), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
+#' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],c('CA','DE','ES','FR','IT','JP','UK','US'), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
+#' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
+#'
+#' data(eupop)
+#' aggregate(eupop,
 #'
 #' @export
-aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.periods=!na.rm) {
+aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE,
+                         ..., complete.periods=!na.rm, drop=TRUE) {
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.periods)) {warning('Argument complete.periods is being ignored when na.rm=TRUE'); complete.periods=FALSE}
-  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods))
+  if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods, drop=drop))
   if (is.list(FUN)) {FUN=FUN[[1L]]}
   if (is.character(FUN)) FUN=get(FUN)
   if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
@@ -1184,5 +1202,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (!length(nalong)) { return(as.numeric(dy[[1L]])) }
   colnames(dy)=gsub('^_\\.agg_','',colnames(dy))
   attr(dy,'dcstruct') = ydn
-  return(.md3_class(dy))
+  my=.md3_class(dy)
+  if(drop) my=drop.md3(my)
+  return(my)
 }

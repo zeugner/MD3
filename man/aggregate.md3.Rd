@@ -11,7 +11,8 @@
   FUN = c(sum, mean, end, start),
   na.rm = TRUE,
   ...,
-  complete.periods = !na.rm
+  complete.periods = !na.rm,
+  drop = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@
 \item{\dots}{other arguments to FUN}
 
 \item{complete.periods}{logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).}
+
+\item{drop}{Logical, default \code{TRUE}. See \code{\link{drop.md3}}}
 }
 \value{
 an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
@@ -38,6 +41,8 @@ Can sum, average, etc. to lower frequencies, or along entire dimensions, or alon
 \examples{
 data("oecdgdp_aq")
 
+#Aggregating along the time dimension
+
 yy=oecdgdp_aq['Q','AU:BE',,'2011q2:2015q2']
 yy[AU..y2011q2+y2011q3]=NA #make some artifical NAs for demo purposes
 print(yy[,'GDP_USD',])
@@ -45,12 +50,25 @@ aggregate(yy,'A')[,'GDP_USD',] # sum quarterly GDP figures to annual ones
 aggregate(yy,'A',FUN=sum, na.rm=FALSE)[,'GDP_USD',] # sum quarterly GDP figures to annual ones.
 #Note the NAs for 2011 and 2015 because 2011q1 and 2015q3:2015q4 are missing completely
 
-Alternatively sum those years where not all periods are available by setting complete.periods=FALSE
+#Alternatively sum those years where not all periods are available by setting complete.periods=FALSE
 aggregate(yy,'A',FUN=sum, na.rm=FALSE, complete.periods=FALSE)[,'GDP_USD',]
 
 
-aggregate(yy,'A',FUN=end)[,'GDP_USD',] use the last period only
-aggregate(yy,'A',FUN=end, na.rm=FALSE)[,'GDP_USD',] use the last period only, but be careful about NAs
+aggregate(yy,'A',FUN=end)[,'GDP_USD',] #use the last period only
+aggregate(yy,'A',FUN=end, na.rm=FALSE)[,'GDP_USD',] #use the last period only, but be careful about NAs
 
+#Aggregating along other dimensions
+
+aggregate(yy,along=c('LOCATION','TIME'),FUN=mean) # average GDP of countries
+aggregate(yy,along=c('LOCATION'),FUN=sum) #GDP time series, sum of all three countries in yy
+
+aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA','DE','ES','FR','IT','JP','UK','US'),Baltics=c('EE','LV', 'LT'))))
+aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA','DE','ES','FR','IT','JP','UK','US'),Baltics=c('EE','LV', 'LT'))), along = 'LOCATION') # along is superfluous here
+aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(G7=c('CA','DE','ES','FR','IT','JP','UK','US')), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
+aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],c('CA','DE','ES','FR','IT','JP','UK','US'), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
+aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
+
+data(eupop)
+aggregate(eupop,
 
 }
