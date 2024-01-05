@@ -55,5 +55,5 @@ c(a1,a2)
 
 }
 \seealso{
-\code{\link{drop.md3}}
+\code{\link{drop.md3}}, \code{\link{aggregate.md3}}
 }

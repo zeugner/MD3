@@ -60,3 +60,6 @@ using a lower-dimensional proxy
 imputena(w1, 1:16)
 
 }
+\seealso{
+\code{\link{fill.md3}},  \code{\link{aggregate.md3}}, \link{indexMD3}
+}

@@ -996,7 +996,7 @@ Sys.timo = function(frq=NULL) {
 
   temp=match(c(xfrq,vfrq),rownames(.cttim$frqcodes))
   if (any(temp[2:3]<temp[1])) {
-    if (unclass(from) > unclass(to)) {
+    if (.asint64(from) > .asint64(to)) {
       #lfrom = as.POSIXlt.POSIXct(.timo_within(from,TRUE), tz = 'UTC'); lto = as.POSIXlt.POSIXct(.timo_within(to,FALSE), tz = 'UTC')
       from = .timo_within(from,TRUE); to = .timo_within(to,FALSE)
     } else {
