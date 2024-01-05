@@ -1274,7 +1274,11 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (ofb!=nfb) { stop('x has frequency ',of,' (a multiple of ',ofb,') -  while frq is specified as ',frq, ' (a multiple of ',nfb,').\nCannot disaggregate into irergular subperiods')}
   xdn=.getdimnames(x)
   mz=as.zoo.md3(x)
+<<<<<<< HEAD
 
+=======
+  browser()
+>>>>>>> 977cca93292049bafbc6179acebe7ad854acd45a
   lz=lapply(mz,.tsdisagg,to=attr(ofb,'multiple')/attr(nfb,'multiple'),conversion=conversion,method=method,criterion=criterion,...)
 
   nt=seq(min(vt),max(vt),frq=frq)
@@ -1293,8 +1297,11 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 #ee=.timedisaggregate(eupop[1:3,1,1,12:15],'M')
 #drop(as.md3(data.table(TIME=seq(timo('2005m01'),'2008m12'),as.data.frame(ee))))
 
+<<<<<<< HEAD
 
 #disaggregate(oecdgdp_aq['A.BG+RO.GDP.y2011:y2020'],'Q',FUN=sum)
+=======
+>>>>>>> 977cca93292049bafbc6179acebe7ad854acd45a
 #' @export
 disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), ...) {
   if (!length(along)) stop('along needs to be specfied')
@@ -1303,6 +1310,10 @@ disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), .
   along=trimws(as.character(along))
   if (!(along %in% names(.dim(x)))) stop('along="',along, '" cannot be found among dimension names of x')
   if(along!='TIME') stop('only disaggregating along TIME works for now')
+<<<<<<< HEAD
   .timedisaggregate(x,frq=frq_grp,FUN,...)
+=======
+  .timedisaggregate(x,frq,FUN,...)
+>>>>>>> 977cca93292049bafbc6179acebe7ad854acd45a
 
 }
