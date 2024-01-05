@@ -41,3 +41,6 @@ fill(mm,1:2)
 
 
 }
+\seealso{
+\code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}
+}

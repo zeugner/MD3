@@ -73,3 +73,6 @@ aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT
 #non-working age people in EU countries
 
 }
+\seealso{
+\code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}
+}

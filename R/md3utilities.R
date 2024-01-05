@@ -896,6 +896,18 @@ order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
 
 
 
+.FUNfixer = function(FUN=c(sum, mean, last, first)) {
+  if (is.list(FUN)) {FUN=FUN[[1L]]}
+  if (is.character(FUN)) FUN=get(trimws(FUN))
+  if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
+  if (any(grepl('UseMethod\\("last"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
+  if (identical(FUN,data.table::last)) FUN = function(x) utils::tail(x,1)
+  if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
+  if (any(grepl('UseMethod\\("first"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
+  if (identical(FUN,data.table::first)) FUN = function(x) utils::head(x,1)
+  FUN
+}
+
 #' Fill out an MD3 or array with a number or a certain subset
 #'
 #' This function is useful when one wants to use the same sequence of numbers along a certain dimension, e.g. when computing an index
@@ -1000,11 +1012,7 @@ end.md3 = function(x,...,drop=TRUE) {
 }
 
 .timeaggregate = function(x, frq, FUN = c(sum,mean,end,start), na.rm=TRUE, ..., complete.periods=!na.rm, drop=drop) {
-  if (is.list(FUN)) {FUN=FUN[[1L]]}
-
-  if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
-  if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
-
+  FUN=.FUNfixer(FUN)
   vt=time.md3(x)
   if (is.null(vt)) return(x)
 
@@ -1122,11 +1130,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.periods)) {warning('Argument complete.periods is being ignored when na.rm=TRUE'); complete.periods=FALSE}
   if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods, drop=drop))
-  if (is.list(FUN)) {FUN=FUN[[1L]]}
-  if (is.character(FUN)) FUN=get(FUN)
-  if (any(grepl('UseMethod\\("end"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::tail(x,1)
-  if (any(grepl('UseMethod\\("start"\\)',deparse(body(FUN))[1:5]))) FUN = function(x) utils::head(x,1)
-
+  FUN=.FUNFixer(FUN)
 
 
   xdn=.getdimnames(x)
@@ -1209,4 +1213,96 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   my=.md3_class(dy)
   if(drop) my=drop.md3(my)
   return(my)
+}
+
+
+
+
+
+
+.tsdisagg=function (tso, to, proxy = NULL, conversion = "sum", method = "chow-lin-maxlog",
+          truncated.rho = 0, fixed.rho = 0.5, criterion = "proportional",
+          h = 1, ...)
+{
+  tso = as.vector(tso)
+  myformu = as.formula(tso ~ proxy)
+  method = method[[1L]]
+  if (!length(proxy)) {
+    if (is.null(proxy))
+      method = "denton-cholette"
+    if (is.na(match(method, c("uniform", "denton-cholette",
+                              "denton")))) {
+      method = "denton-cholette"
+      warning("for disaggregation without a proxy, only few methods are possible. I have chosen denton-cholette for now.")
+    }
+    myformu = as.formula(tso ~ 1)
+  }
+  else {
+    proxy = as.vector(proxy)
+  }
+  tsout = suppressWarnings(tempdisagg:::predict.td(tempdisagg::td(myformu,
+                                                                  to = to, conversion = conversion, method = method, truncated.rho = truncated.rho,
+                                                                  fixed.rho = fixed.rho, criterion = criterion, h = h)))
+  if (!length(proxy))
+    return(tsout)
+  tspr = proxy
+  tspr[] = NA
+  tspr[index(tspr) %in% index(tsout)] = tsout
+  return(tspr)
+}
+
+.timedisaggregate = function(x, frq, FUN = c(sum,mean,end,start), method = "chow-lin-maxlog",criterion = "proportional",...) {
+
+  FUN=.FUNfixer(FUN)
+  conversion='sum'
+  if (length(body(FUN))) {
+    if (any(grepl('head',head(body(FUN),10)))) { conversion='first'}
+    if (any(grepl('tail',head(body(FUN),10)))) { conversion='last'}
+    if (any(grepl('mean',head(body(FUN),10)))) { conversion='mean'}
+  }
+
+
+  if (!require('tempdisagg')) stop('temporal disaggregation requires package "tempdisagg" to be installed.')
+  x=.dropflags(x)
+  frq=toupper(trimws(frq[[1]]))
+  vt=time.md3(x)
+  vf=.timo_frq(vt)
+
+    of=unique(vf)
+  if (length(of)!=1) stop('mixed frq not allowed for disaggregation')
+  ofb=.cttim$basedon(of); nfb=.cttim$basedon(frq)
+  if (ofb!=nfb) { stop('x has frequency ',of,' (a multiple of ',ofb,') -  while frq is specified as ',frq, ' (a multiple of ',nfb,').\nCannot disaggregate into irergular subperiods')}
+  xdn=.getdimnames(x)
+  mz=as.zoo.md3(x)
+
+  lz=lapply(mz,.tsdisagg,to=attr(ofb,'multiple')/attr(nfb,'multiple'),conversion=conversion,method=method,criterion=criterion,...)
+
+  nt=seq(min(vt),max(vt),frq=frq)
+  ntmatch=.timo_class(unlist(lapply(as.list(vt),rep,length(nt)/length(vt))))
+  lt=lapply(lapply(mz,function(z) vt[!is.na(z)]),function(t)  nt[ntmatch %in% t])
+  ly=lapply(names(lz),function(i) {y=data.table(.mdrest2codes(i),lt[[i]],lz[[i]]); colnames(y)=c(names(xdn),.md3resnames('value')); y})
+  #.timo_subset(nt,lt[[1]])
+  #y=.drop(as.md3(data.table(TIME=nt,as.data.frame(lz)),name_for_cols = setdiff(names(.dim(x)),'TIME')))
+  dy=data.table::rbindlist(ly)
+  ydn=xdn
+  ydn[['TIME']] = nt
+  attr(dy,'dcstruct') = .dimcodesrescue(ydn,.getdimcodes(x))
+  .md3_class(dy)
+}
+#.timedisaggregate(euhpq[1,1,1:3,18:22],'M')
+#ee=.timedisaggregate(eupop[1:3,1,1,12:15],'M')
+#drop(as.md3(data.table(TIME=seq(timo('2005m01'),'2008m12'),as.data.frame(ee))))
+
+
+#disaggregate(oecdgdp_aq['A.BG+RO.GDP.y2011:y2020'],'Q',FUN=sum)
+#' @export
+disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), ...) {
+  if (!length(along)) stop('along needs to be specfied')
+  if (length(along)>1) { warning('along needs to be a single dimension.'); along=along[1]}
+  if (is.numeric(along) || is.logical(along)) { along=names(.dim(x))[along]}
+  along=trimws(as.character(along))
+  if (!(along %in% names(.dim(x)))) stop('along="',along, '" cannot be found among dimension names of x')
+  if(along!='TIME') stop('only disaggregating along TIME works for now')
+  .timedisaggregate(x,frq=frq_grp,FUN,...)
+
 }
