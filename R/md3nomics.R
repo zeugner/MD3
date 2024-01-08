@@ -93,8 +93,13 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
   #query='Eurostat/prc_hpi_a/A.DW_EXST.INX_A_AVG.BE+BG'
 
   makeDBeconURL = function(query,observations=TRUE,metadata=TRUE) {
-    baseurl="http://api.db.nomics.world/v22/series/"
+    baseurl="https://api.db.nomics.world/v22/series/"
     paste0(baseurl,query,"?format=json&","observations=",tolower(observations),"&metadata=",tolower(metadata))
+  }
+
+  myquery=.adjquery(query,checkProv = TRUE)
+  if (tolower(gsub('/.*$','',myquery[1])) %in% tolower(.altnicksNomicsProviders)) {
+    myquery=paste0(names(.altnicksNomicsProviders)[tolower(.altnicksNomicsProviders)==tolower(gsub('/.*$','',myquery))], '/',gsub('^[^/]*/','',myquery))
   }
 
   myurl = makeDBeconURL(.adjquery(query,checkProv = TRUE))
@@ -109,7 +114,7 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
     #htreqres = suppressWarnings(try(readLines(mycon, warn=FALSE),silent = TRUE))
     #if (grepl("try-error",class(htreqres))) {try(close.connection(mycon),silent=TRUE); try(rm(mycon),silent=TRUE); stop('Could no tconnect to db.nomics.world.')}
 
-    mytest=.readLinesFromUrl('http://api.db.nomics.world/v22/apidocs')
+    mytest=.readLinesFromUrl('https://api.db.nomics.world/v22/apidocs')
     if (grepl("try-error",class(mytest))) { stop('Could no tconnect to db.nomics.world.')}
     #return(invisible(helpNomics(query)))
     stop('The query "', query, '" does not return a result. Enter\n helpNomics("' ,query, '")\n  to inspect the reasons why')
@@ -342,15 +347,17 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
 }
 
 
-
+.altnicksNomicsProviders=c('Eurostat'='ESTAT', 'BUBA'='BBK','UN'='UNSD')
 
 .Nomicsproviders = function(id=NULL) {
   if (!require(jsonlite)) stop("requires package 'jsonlite'")
   #htreqres = suppressWarnings(readLines(url("http://api.db.nomics.world/v22/providers/",method='libcurl'),warn = FALSE))
-  htreqres = .readLinesFromUrl("http://api.db.nomics.world/v22/providers/")
+  htreqres = .readLinesFromUrl("https://api.db.nomics.world/v22/providers/")
   ee=fromJSON(htreqres)
   mout=ee$providers$docs[,c("code","name","indexed_at")]
   rownames(mout)=mout[,1]; mout=mout[,2:3]
+  mout=cbind(mout,'altnicks'=unname(.altnicksNomicsProviders[rownames(mout)]))
+
   if (!is.null(id)) return(mout[id,])
   return(mout)
 }

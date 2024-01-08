@@ -857,18 +857,19 @@ Sys.timo = function(frq=NULL) {
 
 
 .timo_subset = function(x,...,coverhigherfrqs=TRUE,addifmiss=FALSE) {
-  # tt=.timo_seq('1999m06','2003m05')
-  # tt["y2001q3:"]
-  # .mdt_subset(tt,paste0('1999m0',7:9))
-  # .mdt_subset(tt,23:27)
-  # .mdt_subset(tt,'2001m02+2001m05')
-  # .timo_subset(tt,'2001m02:2001m05+2002m02')
-  # .timo_subset(tt,'2001q2:2001q4')
-  # .timo_subset(tt,'2001q2:y')
-  #.timo_subset(tt,'2004:y')
-  # .timo_subset(tt,'2014')
-
-
+  # tt=MD3:::.timo_seq('1999m06','2003m05')
+  # MD3:::.timo_subset(tt,paste0('1999m0',7:9))
+  # MD3:::.timo_subset(tt,23:27)
+  # MD3:::.timo_subset(tt,'2001m02+2001m05')
+  # MD3:::.timo_subset(tt,'2001m02:2001m05+2002m02')
+  # MD3:::.timo_subset(tt,'2001q2:2001q4')
+  # MD3:::.timo_subset(tt,'2001q2:y')
+  #MD3:::.timo_subset(tt,'2004:y')
+  # MD3:::.timo_subset(tt,'2014')
+  # MD3:::.timo_subset(tt,'2002-01-02',cover=T)
+  #  MD3:::.timo_subset(tt,'2002-01-02',cover=F)
+  #MD3:::.timo_subset(tt,c('2002-01-02','2002-01-03'),coverhigherfrqs =F) #porblemm
+  #MD3:::.timo_subset(tt,'2002-01-02',coverhigherfrqs =F) #porblemm
 
   ixl=list(...)
 
@@ -878,7 +879,7 @@ Sys.timo = function(frq=NULL) {
 
   if (length(ixl)!=1L) {
     #stop('sdafasdf')
-    return(.timo_class(unlist(lapply(ixl,function(y) .timo_subset(x,y)))))
+    return(.timo_class(unlist(lapply(ixl,function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs)))))
   }
 
 
@@ -889,7 +890,7 @@ Sys.timo = function(frq=NULL) {
     if (!is.character(ix) ) return(x[unlist(ixl)])
     if (length(ix)!=1L) {
       #stop('sdafasdf')
-      return(.timo_class(unlist(lapply(as.list(ix),function(y) .timo_subset(x,y)))))
+      return(.timo_class(unlist(lapply(as.list(ix),function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs)))))
     }
 
     ix=gsub("y","",ix)

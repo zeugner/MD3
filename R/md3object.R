@@ -1,7 +1,7 @@
 #problem eupop=mds("Eurostat/demo_pjanbroad",ccode='iso2m')
-#problem oecdgdp_aq[1:3,1,'2019q1']
-
-
+#problem oecdgdp_aq[1:3,1,'2019q1'] === .timo_subset(timo('2019','2019q1'),as.timo('2019q1'), coverhigherfrqs = FALSE, addifmiss=TRUE) #hier eingreifen
+#problem euhpq[..AT.AT.y2010q1:y]
+#problem euhp_aq['Q','TOTAL',,'AT',c('2010q1','2011q1')]
 
 
 .onLoad <- function(libname, pkgname) {
@@ -560,7 +560,7 @@ as.md3.array = function(x,...) {
 
 
 
-.match2dim = function(ix,xdn,addifmiss=TRUE, frq=NULL, dotimosubset=TRUE) {
+.match2dim = function(ix,xdn,addifmiss=TRUE, frq=NULL, dotimosubset=FALSE) {
   #takes a list of indexes, matches against a hihi, and returns a dimname-like list of character codes,
   #ARGUMENTS:
   #ix: list of vectors that are character, integer or logical
@@ -580,7 +580,14 @@ as.md3.array = function(x,...) {
     if (length(ix[[i]])) {
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
       if (.timo_is(xdn[[i]]) ) {
-        if (!.timo_is(ix[[i]])) if (length(ix[[i]])==1L) { if (any(grepl(':',ix[[i]]))) { ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]] }}
+        if (!.timo_is(ix[[i]])) {
+          if (length(ix[[i]])==1L) {
+              if (any(grepl(':',ix[[i]]))) {
+                ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]]
+              } else {
+                ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
+              }
+          } else {ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))}}
         if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
         lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
@@ -864,8 +871,10 @@ as.md3.array = function(x,...) {
   if (all(sapply(ix,class)=="data.frame")) { ix = lapply(ix,"[[","code") } #if dimcodes instead of hihi has been supplied
 
   if (length(ix)!= length(xdn)) {
+    frqshifter = try(.trafoRestQuery(ix[[1L]])[[1L]],silent=TRUE)
     if (length(ix)!= 1+length(xdn)) stop("md3 object has ",length(xdn),  " dimensions, but you specified ",length(ix))
-    frqshifter = .trafoRestQuery(ix[[1L]])[[1L]]
+    if (any(grepl('err',class(frqshifter)))) stop("md3 object has ",length(xdn),  " dimensions, but you specified ",length(ix))
+
     if (length(setdiff(frqshifter,.cttim$frqcodes$fcode))) { stop("md3 object has ",length(xdn),  " dimensions, but you specified ",length(ix)) }
     ix = ix[-1]
     attr(ix,'frqshifter') = frqshifter
