@@ -587,7 +587,11 @@ as.md3.array = function(x,...) {
               } else {
                 ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
               }
+<<<<<<< HEAD
           } else {ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))}}
+=======
+          }}
+>>>>>>> b26ad2a8f30e9b55d436bfab025a05f0a5e4394a
         if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
         lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
