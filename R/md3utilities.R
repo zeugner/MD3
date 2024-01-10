@@ -731,19 +731,42 @@ c.md3=merge.md3
 
 
 
-.dropflags = function(omd3,asDT=FALSE) {
+#' Drop observation attributes
+#'
+#' By default, this removes obs attributes other than obs_value from an MD3 or associated data.table
+#' @param x an md3 object or stacked data.table
+#' @param asDT logical. Default \code{FALSE} returns an md3. \code{TRUE} returns a data.table
+#' @param attr2keep\code{"value"} by default, but could also be "status" or "conf". If this is not 'value' or 'obs_value', asDT is assumed to be TRUE.
+#' @return an md3 object or dat.table, depending on \code{asDT}
+#' @seealso \code{\link{fill.md3}},  \code{\link{as.data.table}}
+#' @examples
+#'
+#' as.data.table(euhpq['TOTAL.I15_Q.BG.'])
+#' as.data.table(unflag(euhpq['TOTAL.I15_Q.BG.']))
+#' unflag(euhpq['TOTAL.I15_Q.BG.'], asDT=TRUE)
+#' @export
+unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
+  wasdt=is.data.table(omd3)
   dx=data.table::copy(.dt_class(omd3))
   orincol=NCOL(dx)
-  dx=dx[,names(dx) %in% c(names(.getdimnames(omd3)),.md3resnames('value')),with=FALSE]
-  if (NCOL(dx)==orincol) {
-    if (anyNA(dx[[.md3resnames('value')]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
-  } else {
-    dx=dx[!is.na(dx[[.md3resnames('value')]]),]
+  if (wasdt) {
+    tempix=tolower(colnames(dx)) %in% tolower(.md3resnames())
+    if (length(tempix)) colnames(dx)[tempix]=paste0('_.',colnames(dx)[tempix])
   }
+  dx=dx[,names(dx) %in% c(names(.getdimnames(omd3)),.md3resnames(attr2keep)),with=FALSE]
+  if (NCOL(dx)==orincol) {
+    if (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
 
+  } else {
+    dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
+  }
+  if (.md3resnames(attr2keep)!=.md3resnames('value' )) asDT=TRUE
+  if (wasdt & asDT) {colnames(dx)=gsub('^_\\.','',colnames(dx))}
   if (asDT) return(dx)
   .md3_class(dx)
 }
+
+
 
 
 
@@ -799,7 +822,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (length(myf)!=1) stop('cannot do this on mixed frequencies')
   if (!is.null(proxy)) if (!is.vector(proxy)) proxy=as.array(proxy)
 
-  dx=.dropflags(x,asDT=TRUE)
+  dx=unflag(x,asDT=TRUE)
 
   dimlab=names(.dim(x))
   setkeyv(dx,dimlab)
@@ -1048,10 +1071,10 @@ end.md3 = function(x,...,drop=TRUE) {
 
 
   if (!na.rm) {
-    dx=as.data.table.md3(.dropflags(x,FALSE),na.rm = FALSE)
+    dx=as.data.table.md3(unflag(x,FALSE),na.rm = FALSE)
     colnames(dx)[NCOL(dx)]<-'_.obs_value'
   } else {
-    dx=.dropflags(x,asDT=TRUE)
+    dx=unflag(x,asDT=TRUE)
   }
 
 
@@ -1135,10 +1158,10 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 
   xdn=.getdimnames(x)
   if (!na.rm) {
-    dx=as.data.table.md3(.dropflags(x,FALSE),na.rm = FALSE)
+    dx=as.data.table.md3(unflag(x,FALSE),na.rm = FALSE)
     colnames(dx)[NCOL(dx)]<-'_.obs_value'
   } else {
-    dx=.dropflags(x,asDT=TRUE)
+    dx=unflag(x,asDT=TRUE)
   }
 
   if (missing(along) & is.list(frq_grp)) {
@@ -1263,7 +1286,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 
 
   if (!require('tempdisagg')) stop('temporal disaggregation requires package "tempdisagg" to be installed.')
-  x=.dropflags(x)
+  x=unflag(x)
   frq=toupper(trimws(frq[[1]]))
   vt=time.md3(x)
   vf=.timo_frq(vt)

@@ -18,6 +18,7 @@
 
 
 .md3resnames = function(inname)  {
+  if (missing(inname)) return(paste0('obs_',c('value','status','conf','pre_break','footnote','qual','ref','type')))
   #helper function to convert auxiliary column names
   if (substr(inname,0,2)=='_.') return(inname)
   inname=tolower(inname)
@@ -587,11 +588,7 @@ as.md3.array = function(x,...) {
               } else {
                 ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
               }
-<<<<<<< HEAD
           } else {ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))}}
-=======
-          }}
->>>>>>> b26ad2a8f30e9b55d436bfab025a05f0a5e4394a
         if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
         lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
@@ -1973,7 +1970,7 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
   colnames(y)=gsub('^_\\.','',colnames(y))
   if (missing(...)) return(y)
-  data.table::dcast(y,...)
+  data.table::dcast(unflag(y,asDT=TRUE),value.var=gsub('_\\.','',MD3:::.md3resnames('value')),...)
 }
 
 #' @export
@@ -2390,7 +2387,7 @@ Math.md3 = function(x,...) {
 
 #' @export
 Summary.md3 = function(x,...) {
-  x=as.array.md3(.dropflags(x))
+  x=as.array.md3(unflag(x))
   y=get(.Generic)(x,...)
   if (inherits(y,'array')) return(as.md3.array(y))
   y
