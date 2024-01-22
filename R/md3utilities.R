@@ -38,7 +38,8 @@ as.zoo.md3 = function(x,...) {
   ixt =.dn_findtime(.getdimnames(x)); if (ixt<1) stop('could not find a time dimension in X')
 
   ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
-  x=.dt_class(x); colnames(x)[[ixt]] ='TIME'
+  x=.dt_class(unflag(x));  colnames(x)[[ixt]] ='TIME'
+
   dxts=data.table(dcast(x,TIME~ ..., sep='.', value.var= '_.obs_value'))
 
 
@@ -98,13 +99,32 @@ as.xts = function(x,...) {
 }
 
 
+#' Applies a function to each times series of an objects
+#'
+#' This function is focused on applying functions from the zoo package, such as rollmean
+#' @param bigmd3 an md3 object, array, or anything that may be converted to an md3
+#' @param \dots a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})
+#' @return an md3 object (or an array if bigmd3 is an array)
+#' @seealso \code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{zapply}}, \code{\link[zoo]{rollapply}}, , \code{\link{rollmean.md3}}
+#' @examples
+#'
+#'
+#' zapply(euhpq[1,1,1:4,],mean)
+#'
+#' zapply(euhpq[1,1,1:4,],rollmean, k=2)
+#'
+#' rollmean.md3(euhpq[1,1,1:4,],k=4)
+#' rollsum.md3(euhpq[1,1,1:4,],k=4)
+#' rollmedian.md3(euhpq[1,1,1:4,],k=4)
+#'
 #' @export
-zapply = function (X, FUN, ..., apply2indiv=FALSE)
+zapply = function (X, FUN, ..., apply2indiv=TRUE)
 {
   require(zoo)
   if (!.md3_is(X)) X=as.md3(X)
-  myf=unique(.timo_frq(time(euhpq)))
+  myf=unique(.timo_frq(time(X)))
     #mdin = as.md3(X)
+
   zapply_perfrq = function(mdin, FUN, ...) {
     y0 = as.zoo.md3(mdin)
     FUN2 = FUN
@@ -119,13 +139,30 @@ zapply = function (X, FUN, ..., apply2indiv=FALSE)
     if (is.null(yf)) { yf=FUN }
 
     if (apply2indiv) {
-      y0[, ] = apply(y0, 2, FUN, ...)
-      y1 = y0
+      temp= apply(y0, 2, yf, ...)
+      if (!is.null(dim(temp)) && all(dim(temp)==dim(y0))) { y0[, ] = temp; y1=y0 } else {
+        if (length(dim(temp))==2 && is.null(rownames(temp))) { rownames(temp) = utils::tail(.timo2char(time(mdin)),NROW(temp))}
+        y1=temp
+      }
+
     } else {
       y1 = yf(y0, ...)
     }
+    if ((length(dim(temp))<length(dim(y0))) || !zoo::is.zoo(y1)) {
+      #y2=as.md3.numeric(y1,dimname = setdiff(names(.dim(mdin)),'TIME'))
+      if (is.null(dim(y1))) {
+        y2=drop.md3(as.md3.data.frame(as.list(y1), name_for_cols = setdiff(names(.dim(mdin)),'TIME')))
+        attr(y2,'dcstruct') <- attr(mdin,'dcstruct')[names(.dim(y2))]
+      } else {
+        ff=data.table(TIME=rownames(y1),y1)
+        y2=as.md3.data.table(ff,id.vars = 'TIME',split = '.',name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+      }
 
-    y2 = as.md3.zoo(y1, name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+    } else {
+      y2 = as.md3.zoo(y1, name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+    }
+
+
     return(y2)
   }
 
@@ -145,6 +182,34 @@ zapply = function (X, FUN, ..., apply2indiv=FALSE)
   }
   return(X)
 }
+
+
+#' @export
+rollmean.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+  zapply(x,rollmean, k=k, na.pad=na.pad, align=align,...)
+}
+
+#' @export
+movav=rollmean.md3
+
+
+#' @export
+rollsum.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+  zapply(x,rollsum, k=k, na.pad=na.pad, align=align,...)
+}
+
+
+#' @export
+rollmax.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+  zapply(x,rollmax, k=k, na.pad=na.pad, align=align,...)
+}
+
+
+#' @export
+rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+  zapply(x,rollmedian, k=k, na.pad=na.pad, align=align,...)
+}
+
 
 
 
@@ -300,7 +365,8 @@ zapply = function (X, FUN, ..., apply2indiv=FALSE)
 
   if (anyNA(dd[[.md3resnames('value')]])) { dd=dd[!is.na(dd[[.md3resnames('value')]]),]}
   dout=.stackeddf2md3(dd)
-  .setdimcodes(dout,lix)
+  #.setdimcodes(dout,lix)
+  dout
 
 
 
@@ -361,7 +427,7 @@ as.md3.numeric = function(x,xnames=NULL,dimname=NULL) {
   }
   names(ldc)=dimname
   #setattr(dout,'dcsimp',ldc)
-  setattr(dout,'dcstruct',.dimnamesrescue(ldc))
+  setattr(dout,'dcstruct',.dimcodesrescue(ldc))
 
   setnames(dout, c(dimname,.md3resnames('value')))
   .md3_class(dout)
@@ -506,7 +572,7 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
 #' @param \dots unused
 #' @return an md3
 #' @examples
-#' data("euhpq")
+#'
 #' p1=add.dim(euhpq,'Residence',c('Primary','Secondary'))
 #' print(p1[,1,1,4,])
 #' p2=add.dim(euhpq,'Residence',c('Primary','Secondary'),.fillall=TRUE)
@@ -533,7 +599,7 @@ add.dim=.adddim_md3
 #' @return an md3 object with n or n+1 dimensions
 #' @seealso \code{\link{drop.md3}}, \code{\link{aggregate.md3}}
 #' @examples
-#' data(euhpq)
+#'
 #' a1=euhpq['TOTAL','I15_Q',1:3,]
 #'
 #' a2=euhpq[DW_NEW.I15_Q.BG.y:y2010]*2
@@ -792,7 +858,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' any NAs before. Direction 'both' is a weighted avearge of both methods wherever they overlap
 #' @seealso \code{\link{fill.md3}},  \code{\link{aggregate.md3}}, \link{indexMD3}
 #' @examples
-#' data("euhpq")
+#'
 #' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
 #' w1["BE.2006q4:2007q1"]=NA
 #' w1["CY.2006:2007"]=NA
@@ -937,9 +1003,9 @@ order.md3 = function (..., na.last = TRUE, decreasing = FALSE) {
 #' @param bigmd3 an md3 object, array, or anything that may be converted to an md3
 #' @param \dots a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})
 #' @return an md3 object (or an array if bigmd3 is an array)
-#' @seealso \code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}
+#' @seealso \code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{zapply}}, \code{\link{rollapply.md3}}, , \code{\link{movav}}
 #' @examples
-#' data("euhpq")
+#'
 #'
 #' mm=euhpq[1,1,1:4,as.character(2013:2016)]
 #'
@@ -1114,7 +1180,7 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
 #' @seealso \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}
 #' @examples
-#' data("oecdgdp_aq")
+#' #data("oecdgdp_aq")
 #'
 #' #Aggregating along the time dimension
 #'
@@ -1143,7 +1209,7 @@ end.md3 = function(x,...,drop=TRUE) {
 #' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],c('CA','DE','ES','FR','IT','JP','UK','US'), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
 #' aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
 #'
-#' data(eupop)
+#' #data(eupop)
 #' aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT15','Y_GE65'))))
 #' #non-working age people in EU countries
 #'

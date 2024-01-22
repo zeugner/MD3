@@ -39,7 +39,7 @@ an md3 object. Note that any flags or observation metadata from the original MD3
 Can sum, average, etc. to lower frequencies, or along entire dimensions, or along user-defined aggregates (such as country groups)
 }
 \examples{
-data("oecdgdp_aq")
+#data("oecdgdp_aq")
 
 #Aggregating along the time dimension
 
@@ -68,7 +68,7 @@ aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(G7=c('CA','DE','ES','FR','IT','
 aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],c('CA','DE','ES','FR','IT','JP','UK','US'), along = 'LOCATION') # but along is not superfluous here,  because frq_grp does not contain enough info
 aggregate(oecdgdp_aq['Q..GDP_USD.y2015q1:'],list(LOCATION=list(G7=c('CA', 'DE','ES','FR','IT','JP','UK', 'US'),Baltics=c('EE','LV', 'LT')),  TIME=character()), FUN=mean) #mean GDP across Time
 
-data(eupop)
+#data(eupop)
 aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT15','Y_GE65'))))
 #non-working age people in EU countries
 

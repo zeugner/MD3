@@ -16,7 +16,7 @@ and md0 obnject with n dimensions or less
 Drops any dimensions that contain only a single element
 }
 \examples{
-data(euhpq)
+#data(euhpq)
 ww=euhpq[TOTAL.I15_Q..,drop=FALSE]
 dim(ww)# dimensions
 w2=drop(ww)

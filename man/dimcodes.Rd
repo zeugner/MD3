@@ -60,13 +60,13 @@ Set/get dimension and element names, labels and attributes
 
 }}
 \examples{
-data(euca)
-names(dimcodes(euca)) # dimension names
-dimcodes(euca) # element names
-dimcodes(euca)[[1]][,"label:fr"] = c("Millions euro","\% PIB") #add labels in French language
-dimcodes(euca)[[2]][1:3,2] = paste(dimcodes(euca)[[2]][1:3,2], "cool") #adjust labels
-dimcodes(euca)[["unit"]]["PC_GDP",1] = "PC" #rename element
-names(dimcodes(euca))[[2]] = "country" #rename dimension
+#data(eupop)
+names(dimcodes(eupop)) # dimension names
+dimcodes(eupop) # element names
+dimcodes(eupop)[[2]][,"label:it"] = c("Donne","Uomini","Totale") #add labels in Italian language
+dimcodes(eupop)[[2]][1:3,2] = paste(dimcodes(eupop)[[2]][1:3,2], "cool") #adjust labels
+dimcodes(eupop)[["age"]]["Y_LT15",1] = "Kids" #rename element
+names(dimcodes(eupop))[[2]] = "Gender" #rename dimension
 }
 \seealso{
 \code{\link{dimnames}}

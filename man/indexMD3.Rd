@@ -48,7 +48,7 @@ or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 }
 
 \examples{
-data(euhpq) #house prices for EU countries
+#data(euhpq) #house prices for EU countries
 
 #Retrieving values
 #Austrian & Slovak HP growth year-on-year

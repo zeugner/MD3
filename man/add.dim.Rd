@@ -25,7 +25,7 @@ an md3
 Adds new dimension to an MD3 object, optionally to be filled with a number of new elements
 }
 \examples{
-data("euhpq")
+
 p1=add.dim(euhpq,'Residence',c('Primary','Secondary'))
 print(p1[,1,1,4,])
 p2=add.dim(euhpq,'Residence',c('Primary','Secondary'),.fillall=TRUE)

@@ -16,7 +16,7 @@ an md3
 transpose a twodimensional md3 object
 }
 \examples{
-data(euhpq) #house prices for EU countries
+#data(euhpq) #house prices for EU countries
 euhpq[3,3,1:2,'2020:']
 t(euhpq[3,3,1:2,'2020:'])
 

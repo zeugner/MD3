@@ -36,7 +36,7 @@ an md3 object with n or n+1 dimensions
 Concatenates two or more md3 objects
 }
 \examples{
-data(euhpq)
+
 a1=euhpq['TOTAL','I15_Q',1:3,]
 
 a2=euhpq[DW_NEW.I15_Q.BG.y:y2010]*2

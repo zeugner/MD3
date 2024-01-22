@@ -1275,7 +1275,7 @@ drop.default = base::drop
 #' @return and md0 obnject with n dimensions or less
 #' @seealso \code{\link{aperm.md0}}, \code{\link{adddim}}
 #' @examples
-#' data(euhpq)
+#' #data(euhpq)
 #' ww=euhpq[TOTAL.I15_Q..,drop=FALSE]
 #' dim(ww)# dimensions
 #' w2=drop(ww)
@@ -1840,7 +1840,7 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
 #' or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 #' @seealso \code{\link{dimcodes}}
 #' @examples
-#' data(euhpq) #house prices for EU countries
+#' #data(euhpq) #house prices for EU countries
 #'
 #'#Retrieving values
 #' #Austrian & Slovak HP growth year-on-year
@@ -1923,7 +1923,7 @@ time.md3 = function(x,...) {
 #' @return an md3
 #' @seealso \code{aperm}
 #' @examples
-#' data(euhpq) #house prices for EU countries
+#' #data(euhpq) #house prices for EU countries
 #' euhpq[3,3,1:2,'2020:']
 #' t(euhpq[3,3,1:2,'2020:'])
 #'
@@ -2248,13 +2248,13 @@ dimnames.md3=function(x) {  .getdimnames(x) }
 #'   The following column names, however, have special meaning: 1) \code{label:LANG}, 2) \code{parent}
 #' @seealso \code{\link{dimnames}}
 #' @examples
-#' data(euca)
-#' names(dimcodes(euca)) # dimension names
-#' dimcodes(euca) # element names
-#' dimcodes(euca)[[1]][,"label:fr"] = c("Millions euro","% PIB") #add labels in French language
-#' dimcodes(euca)[[2]][1:3,2] = paste(dimcodes(euca)[[2]][1:3,2], "cool") #adjust labels
-#' dimcodes(euca)[["unit"]]["PC_GDP",1] = "PC" #rename element
-#' names(dimcodes(euca))[[2]] = "country" #rename dimension
+#' #data(eupop)
+#' names(dimcodes(eupop)) # dimension names
+#' dimcodes(eupop) # element names
+#' dimcodes(eupop)[[2]][,"label:it"] = c("Donne","Uomini","Totale") #add labels in Italian language
+#' dimcodes(eupop)[[2]][1:3,2] = paste(dimcodes(eupop)[[2]][1:3,2], "cool") #adjust labels
+#' dimcodes(eupop)[["age"]]["Y_LT15",1] = "Kids" #rename element
+#' names(dimcodes(eupop))[[2]] = "Gender" #rename dimension
 #' @export
 dimcodes <- function(x,...) {
   UseMethod("dimcodes")

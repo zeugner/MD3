@@ -41,7 +41,7 @@ or deltas of the proxy. direction=='forward' means it does this for any NAs afte
 any NAs before. Direction 'both' is a weighted avearge of both methods wherever they overlap
 }
 \examples{
-data("euhpq")
+
 \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
 w1["BE.2006q4:2007q1"]=NA
 w1["CY.2006:2007"]=NA

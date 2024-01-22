@@ -18,7 +18,7 @@ an md3 object (or an array if bigmd3 is an array)
 This function is useful when one wants to use the same sequence of numbers along a certain dimension, e.g. when computing an index
 }
 \examples{
-data("euhpq")
+
 
 mm=euhpq[1,1,1:4,as.character(2013:2016)]
 
@@ -42,5 +42,5 @@ fill(mm,1:2)
 
 }
 \seealso{
-\code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}
+\code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{zapply}}, \code{\link{rollapply.md3}}, , \code{\link{movav}}
 }
