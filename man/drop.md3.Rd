@@ -7,10 +7,10 @@
 \method{drop}{md3}(x, ...)
 }
 \arguments{
-\item{omd0}{an md0 object with n dimensions}
+\item{x}{an md3 object with n dimensions}
 }
 \value{
-and md0 obnject with n dimensions or less
+an md3 object with n dimensions or less
 }
 \description{
 Drops any dimensions that contain only a single element
@@ -23,5 +23,5 @@ w2=drop(ww)
 dim(w2)
 }
 \seealso{
-\code{\link{aperm.md0}}, \code{\link{adddim}}
+\code{\link{aperm.md3}}, \code{\link{add.dim}}
 }

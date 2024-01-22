@@ -1257,7 +1257,19 @@ as.md3.array = function(x,...) {
   .md3_class(y,force=TRUE)
 }
 
-
+#' Dropping dimensions
+#'
+#' Drops any dimensions from an array or similar object that contain only a single element
+#' @param x an array or md3 object with n dimensions
+#' @param \dots other arguments
+#' @return an array or md3 object with n dimensions or less
+#' @seealso \code{\link{drop.md3}}
+#' @examples
+#' #data(euhpq)
+#' ww=euhpq[TOTAL.I15_Q..,drop=FALSE]
+#' dim(ww)# dimensions
+#' w2=drop(ww)
+#' dim(w2)
 #' @export
 drop=function(x,...) {
   UseMethod('drop')
@@ -1271,15 +1283,16 @@ drop.default = base::drop
 #' Dropping dimensions
 #'
 #' Drops any dimensions that contain only a single element
-#' @param omd0 an md0 object with n dimensions
-#' @return and md0 obnject with n dimensions or less
-#' @seealso \code{\link{aperm.md0}}, \code{\link{adddim}}
+#' @param x an md3 object with n dimensions
+#' @return an md3 object with n dimensions or less
+#' @seealso \code{\link{aperm.md3}}, \code{\link{add.dim}}
 #' @examples
 #' #data(euhpq)
 #' ww=euhpq[TOTAL.I15_Q..,drop=FALSE]
 #' dim(ww)# dimensions
 #' w2=drop(ww)
 #' dim(w2)
+#' @export drop.md3
 #' @export
 drop.md3 = function(x,...) {
   .drop(x)

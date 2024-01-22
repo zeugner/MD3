@@ -1,41 +1,27 @@
-#' MD3: A package providing for multi-dimensional data manipulation
+#' MD3: A package for handling multidimensional macro data with metadata
 #'
-#' The md3 object is meant to natively work with data from SDMX sources.
-#' It is a hybrid between multdimensional arrays and data.table, allowing data to be addressed with SDMX-like syntax
-#' In addition it provides the following functionality:
-#' \itemize{
-#' \item \code{Nomics} loading data from db.nomics.world
-#' \item \code{imputena} and \code{interpolna}: imputing data
-#' }
 #'
 #'
 #' @section MD3 functionality:
-#' The main strength of MD3 is its indexing system. Check \link{indexMD0} for an explanation
-#'
-#' It also provides for metadata: See \code{\link{dimcodes}} for that
-#'
-#' It provides for working with mixed frequencies. Check e.g. \code{aggregate.md3} (to be built later)
-#'
-#' It can convert to and from: \code{data.frame}, \code{array}, \code{zoo}, \code{xts}, \code{ts}
-#'
-#' Package \code{MDstats} uses MD0 a lot
+#' Check help(indexMD3) to see how to deal with MD3 objects
+#' Use function \code{Nomics} and function \code{helpNomics} to load data
 #'
 #' @section Further work:
-#' MD0 does not yet harness the full power of data.table, so beyond a few million data points it is getting slow.
 #'
-#' In addition this packge is still under development; there are certainly some bugs lurking around
+#' This package is still under development; there are certainly some bugs lurking around
+#' Build date: 2024-01-19
+#'
 #'
 #' Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to be added
 #'
 #' @section Author:
 #' Stefan Zeugner ECFIN.B1
-#'
-#' @import data.table
+#
+#' @import utils
+#' @import stats
+#' @import zoo
+#' @import jsonlite
 #' @import bit64
-#' @exportClass timo
-#' @exportClass timdif
-#' @exportClass timord
-#' @exportClass md3
-#' @docType package
+#' @import MDcountrycode
 #' @name MD3
 NULL
