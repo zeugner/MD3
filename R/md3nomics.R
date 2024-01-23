@@ -150,7 +150,8 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
   for (i in seq_len(dd$series$num_found)) {
     myser = dd[["series"]][["docs"]][[i]]
     myserdims=myser$dimensions[names(mydims)]
-    tvec=.char2timo(unlist(myser$period), frq = myserdims$FREQ, guess = FALSE)
+    ixfd=grep('^freq$',names(myserdims),ignore.case = TRUE)
+    tvec=.char2timo(unlist(myser$period), frq = myserdims[[ixfd]], guess = FALSE)
     ovec=unlist(myser$value)
     ovec = suppressWarnings(as.numeric(ovec)) # if nonumeric strings are converted to NA, so be it
 
