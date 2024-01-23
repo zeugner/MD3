@@ -19,9 +19,10 @@
 #
 #' @import utils
 #' @import stats
+#' @import MDcountrycode
 #' @import zoo
 #' @import jsonlite
 #' @import bit64
-#' @import MDcountrycode
+#' @import data.table
 #' @name MD3
 NULL

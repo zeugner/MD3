@@ -2,9 +2,24 @@
 % Please edit documentation in R/md3utilities.R
 \name{zapply}
 \alias{zapply}
+\alias{rollmean.md3}
+\alias{movav}
+\alias{rollsum.md3}
+\alias{rollmax.md3}
+\alias{rollmedian.md3}
 \title{Applies a function to each times series of an objects}
 \usage{
 zapply(X, FUN, ..., apply2indiv = TRUE)
+
+\method{rollmean}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+
+movav(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+
+\method{rollsum}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+
+\method{rollmax}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+
+\method{rollmedian}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
 }
 \arguments{
 \item{\dots}{a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})}
@@ -26,7 +41,7 @@ zapply(euhpq[1,1,1:4,],rollmean, k=2)
 
 rollmean.md3(euhpq[1,1,1:4,],k=4)
 rollsum.md3(euhpq[1,1,1:4,],k=4)
-rollmedian.md3(euhpq[1,1,1:4,],k=4)
+rollmedian.md3(euhpq[1,1,1:4,],k=3)
 
 }
 \seealso{

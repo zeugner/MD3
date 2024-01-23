@@ -53,9 +53,9 @@ as.zoo.md3 = function(x,...) {
 #' @export
 as.md3.zoo = function (x, split = ".", name_for_cols = character(0))
 {
-  require(zoo)
+  #require(zoo)
   xtime = as.timo(zoo::index(x))
-  x = as.data.frame(x, stringsAsFactors = FALSE)
+  x = zoo:::as.data.frame.zoo(x, stringsAsFactors = FALSE)
   #rownames(x) = .timo2char(xtime)
   out = suppressWarnings(.df2md3(cbind(x,TIME=xtime), split = split, name_for_cols = name_for_cols))
   nn = names(attr(out, "hihi"))
@@ -115,12 +115,12 @@ as.xts = function(x,...) {
 #'
 #' rollmean.md3(euhpq[1,1,1:4,],k=4)
 #' rollsum.md3(euhpq[1,1,1:4,],k=4)
-#' rollmedian.md3(euhpq[1,1,1:4,],k=4)
+#' rollmedian.md3(euhpq[1,1,1:4,],k=3)
 #'
 #' @export
 zapply = function (X, FUN, ..., apply2indiv=TRUE)
 {
-  require(zoo)
+  #require(zoo)
   if (!.md3_is(X)) X=as.md3(X)
   myf=unique(.timo_frq(time(X)))
     #mdin = as.md3(X)
@@ -183,28 +183,34 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
   return(X)
 }
 
-
+#' @rdname zapply
+#' @export rollmean.md3
 #' @export
 rollmean.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
   zapply(x,rollmean, k=k, na.pad=na.pad, align=align,...)
 }
 
+
+#' @rdname zapply
 #' @export
 movav=rollmean.md3
 
-
+#' @rdname zapply
+#' @export rollsum.md3
 #' @export
 rollsum.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
   zapply(x,rollsum, k=k, na.pad=na.pad, align=align,...)
 }
 
-
+#' @rdname zapply
+#' @export rollmax.md3
 #' @export
 rollmax.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
   zapply(x,rollmax, k=k, na.pad=na.pad, align=align,...)
 }
 
-
+#' @rdname zapply
+#' @export rollmedian.md3
 #' @export
 rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
   zapply(x,rollmedian, k=k, na.pad=na.pad, align=align,...)
@@ -274,7 +280,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
 .df2md3 = function (data, id.vars, name_for_cols = NULL, split = NULL, ...) {
   splitmissing=FALSE
   if (!length(split)) {splitmissing=TRUE; split='.'}
-  require(data.table)
+  #require(data.table)
   data = as.data.frame(data, stringsAsFactors = FALSE)
   data = .fixfactors(data)
   if (missing(id.vars)) {
@@ -312,7 +318,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
     if (anyDuplicated(temp))
       stop("The codes provided are not unique: There are duplicates when using columns ", paste(names(data)[id.ind],
                                                  collapse = ","),"  to identify observations.")
-    dd = suppressMessages(as.data.frame(data.table::melt.data.table(data.table::as.data.table(data),
+    dd = suppressMessages(data.table:::as.data.frame.data.table(data.table::melt.data.table(data.table::as.data.table(data),
                                                             id.vars = id.ind, na.rm = FALSE, value.name = .md3resnames('value'),
                                                             variable.name = "_stuff_from_THEcolnames_", variable.factor = FALSE, value.factor = FALSE)))
     dd = .fixfactors(dd)
@@ -646,6 +652,8 @@ merge.md3=function (x, y, ..., along = NULL, newcodes = character(0), overwrite 
   }
   z
 }
+
+#' @export
 c.md3=merge.md3
 
 .merge2md3 = function (x, y, along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE) {
@@ -812,6 +820,7 @@ c.md3=merge.md3
 #' unflag(euhpq['TOTAL.I15_Q.BG.'], asDT=TRUE)
 #' @export
 unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
+  #asDT=NA: same as .dt_class(unflag(x))
   wasdt=is.data.table(omd3)
   dx=data.table::copy(.dt_class(omd3))
   orincol=NCOL(dx)
@@ -827,6 +836,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
     dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
   }
   if (.md3resnames(attr2keep)!=.md3resnames('value' )) asDT=TRUE
+  if (is.na(asDT)) {return(dx)}
   if (wasdt & asDT) {colnames(dx)=gsub('^_\\.','',colnames(dx))}
   if (asDT) return(dx)
   .md3_class(dx)
@@ -888,7 +898,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   if (length(myf)!=1) stop('cannot do this on mixed frequencies')
   if (!is.null(proxy)) if (!is.vector(proxy)) proxy=as.array(proxy)
 
-  dx=unflag(x,asDT=TRUE)
+  dx=unflag(x,asDT=NA)
 
   dimlab=names(.dim(x))
   setkeyv(dx,dimlab)
@@ -1113,7 +1123,7 @@ end.md3 = function(x,...,drop=TRUE) {
   frqpos=base::match(frq,.cttim$frqcodes[,1,drop=TRUE],nomatch=1000)
   ofpos=base::match(ofunique,.cttim$frqcodes[,1,drop=TRUE],nomatch=1000)
   if (any(ofpos<=frqpos)) {
-    stop('Cannot aggregate an object of frequencies ',paste(unique(of,collapse=', ')),' to a lower frequency like ', frq)
+    stop('Cannot aggregate an object of frequencies ',paste(unique(of,collapse=', ')),' to a lower frequency like ', frq, '.\nUse function disaggregate instead.')
   }
 
   xdn=.getdimnames(x)
@@ -1140,7 +1150,7 @@ end.md3 = function(x,...,drop=TRUE) {
     dx=as.data.table.md3(unflag(x,FALSE),na.rm = FALSE)
     colnames(dx)[NCOL(dx)]<-'_.obs_value'
   } else {
-    dx=unflag(x,asDT=TRUE)
+    dx=unflag(x,asDT=NA)
   }
 
 
@@ -1178,7 +1188,7 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @param complete.periods logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).
 #' @param drop Logical, default \code{TRUE}. See \code{\link{drop.md3}}
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
-#' @seealso \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}
+#' @seealso \code{\link{fill.md3}},  \code{\link{disaggregate}}, \link{indexMD3}, \code{\link{imputena}}
 #' @examples
 #' #data("oecdgdp_aq")
 #'
@@ -1213,13 +1223,14 @@ end.md3 = function(x,...,drop=TRUE) {
 #' aggregate(eupop['...y2019:y'],list(sex=list(all=c('F','M')),age=list(nwa=c('Y_LT15','Y_GE65'))))
 #' #non-working age people in EU countries
 #'
+#' @export aggregate.md3
 #' @export
 aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), na.rm=TRUE,
                          ..., complete.periods=!na.rm, drop=TRUE) {
   if (missing(frq_grp)) {frq_grp=NULL}
   if (na.rm & !missing(complete.periods)) {warning('Argument complete.periods is being ignored when na.rm=TRUE'); complete.periods=FALSE}
   if (length(along)==1 & length(frq_grp)==1) if (all(along=='TIME') & is.character(frq_grp)) return(.timeaggregate(x,frq=frq_grp,FUN,na.rm,...,complete.periods = complete.periods, drop=drop))
-  FUN=.FUNFixer(FUN)
+  FUN=.FUNfixer(FUN)
 
 
   xdn=.getdimnames(x)
@@ -1227,7 +1238,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
     dx=as.data.table.md3(unflag(x,FALSE),na.rm = FALSE)
     colnames(dx)[NCOL(dx)]<-'_.obs_value'
   } else {
-    dx=unflag(x,asDT=TRUE)
+    dx=unflag(x,asDT=NA)
   }
 
   if (missing(along) & is.list(frq_grp)) {
@@ -1384,6 +1395,32 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 
 
 #disaggregate(oecdgdp_aq['A.BG+RO.GDP.y2011:y2020'],'Q',FUN=sum)
+
+
+
+#' Disaggregate an MD3 over time and/or  other dimensions
+#'
+#' Can decompose sums, averages, etc. to higher frequencies, or to constituent parts (e.g. countries in country groups)
+#' @param x an md3 object,
+#' @param frq_grp what to disaggregate to: A single character frequency code like \code{"M"},  \code{"W"} or  \code{"B"} when aggregating along time, or a user-defined aggregate list (see \link{frequency.timo})
+#' @param along character vector: the dimensions along which to aggregate. Default is \code{TIME} - Note that all otehr dimensions are not possible for the moment
+#' @param FUN the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end} and  \code{start} are also possible (passed along as a function or the string name of that function)
+#' @param \dots other arguments to FUN
+#' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
+#' @seealso \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{aggregate.md3}}
+#' @examples
+#' #data("oecdgdp_aq")
+#'
+#' #Take some quarterly data: e.g. house price index for Austria and Belgium
+#' x0=euhpq[TOTAL.I15_Q.AT+BE.y2020:y]
+#' x0
+#'
+#' #now disaggregate to monthly data
+#' x1=disaggregate(x0,'M', FUN=mean)
+#' x1
+#' plot(x1)
+#'
+#'
 #' @export
 disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), ...) {
   if (!length(along)) stop('along needs to be specfied')

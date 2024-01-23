@@ -5,12 +5,12 @@
 
 
 .onLoad <- function(libname, pkgname) {
-  suppressPackageStartupMessages(require(data.table,quietly = TRUE))
+   suppressPackageStartupMessages(require(data.table,quietly = TRUE))
   requiresilent=function(...) {
-    suppressMessages(suppressPackageStartupMessages(require(...)))
+    suppressWarnings(suppressMessages(suppressPackageStartupMessages(require(...))))
   }
   if (!requiresilent("MDcountrycode")) warning("MD3 depends a lot on package MDcountrycode. Please install it and then reload MD3.")
-  #if (!require("zoo")) warning("MD2 depends a lot on package zoo. Please install it and then reload MD0.")
+  if (!requiresilent("zoo")) warning("MD2 depends a lot on package zoo. Please install it and then reload MD0.")
   if (!requiresilent("data.table")) warning("MD3 depends a lot on package data.table. Please install it and then reload MD3.")
   if (!requiresilent("bit64")) warning("MD3 depends a lot on package bit64. Please install it and then reload MD3.")
   #message('hihi')
@@ -1169,7 +1169,7 @@ as.md3.array = function(x,...) {
   }
   toprint = data.table:::format.data.table(toprint, na.encode = FALSE, timezone = timezone,
                               ...)
-  data.table:::require_bit64_if_needed(x)
+  #data.table:::require_bit64_if_needed(x)
   if (isTRUE(row.names))
     rownames(toprint) = paste0(format(rn, right = TRUE, scientific = FALSE),
                                ":")

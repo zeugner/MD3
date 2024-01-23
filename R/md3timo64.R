@@ -1,5 +1,5 @@
 #problem time(p3)+6m
-suppressPackageStartupMessages(require('bit64',quietly = TRUE))
+#suppressPackageStartupMessages(require('bit64',quietly = TRUE))
 #eutemp
 .naomit_atomic = function(x) {
   if (!is.atomic(x)) stop('x must be atomic')
