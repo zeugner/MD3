@@ -1,5 +1,5 @@
 #setdiff(gsub('md0$','',methods(class = 'md0')),gsub('md3$','',methods(class = 'md3')))
-
+#deal with f=='h'  such as xx=mds('ECB/EXR/H.ARS.EUR.SP00.A') resp xx=mds('ECB/EXR/.ARS.EUR.SP00.A')
 
 
 
@@ -466,7 +466,7 @@ is.md3 = .md3_is
 #
 #
 
-.lagmd3time = function (x, k = 1, consttimerange=TRUE, na.pad = FALSE, ...) {
+.lagmd3time = function (x, k = 1, consttimerange=TRUE, na.pad = TRUE, ...) {
   mytime=.timo_within(time.md3(x),referstoend = FALSE)
   if (is.null(mytime)) return(x)
 
@@ -483,7 +483,10 @@ is.md3 = .md3_is
     addedobs=.timo_class(setdiff(mydc$TIME,mytime));
     dy=dy[!(TIME %in% addedobs)]
     mydc$TIME=.timo_class(setdiff(mydc$TIME,addedobs))
-    }
+  }
+  if (!na.pad & k!=0) {
+    if (k<0) {mydc$TIME=mydc$TIME[seq_len(length(mydc$TIME)-k+1)]} else{mydc$TIME=mydc$TIME[-seq_len(k)]}
+  }
 
   attr(dy,'dcstruct') = .dimcodesrescue(mydc,x)
   .md3_class(dy)
@@ -492,22 +495,71 @@ is.md3 = .md3_is
 
 .md3anylag=  function(x, k = 1, whichdim=length(dim(x)),constrange=TRUE,na.pad=TRUE,...) {
   if (is.numeric(whichdim)) {whichdim=names(.getdimnames(x,TRUE))[[whichdim]]}
-  if (toupper(whichdim)=='TIME') { return(.lagmd3time(x,k = k,consttimerange = constrange,...) )}
+  if (toupper(whichdim)=='TIME') { return(.lagmd3time(x,k = k,consttimerange = constrange,na.pad = na.pad,...) )}
   mydn=.getdimnames(x,TRUE)
   dx=.dt_class(x)
   mydict = mydn[[whichdim]]; names(mydict)=data.table::shift(mydn[[whichdim]],k)
+  if (!constrange) {
+    leftoverelems=setdiff(mydict,names(mydict))
+    mydict = make.names(c(mydict,rep('X',length(leftoverelems))), unique = TRUE)
+    names(mydict) = c(data.table::shift(mydn[[whichdim]],k),leftoverelems)
+  } else {leftoverelems=character()}
+
 
   dx[[whichdim]]=mydict[dx[[whichdim]]]
   dx=dx[!is.na(dx[[whichdim]])]
-
+  if (!constrange | !na.pad) {#
+    mydn[[whichdim]] =  base::unname(mydict)
+    if (!na.pad) {
+      mydn[[whichdim]] =  base::unname(mydict[!is.na(names(mydict))])
+    } else {
+      mydn[[whichdim]] =  base::unname(mydict)
+    }
+    attr(dx,'dcstruct') <- .dimcodesrescue(mydn,.getdimcodes(x))
+  }
 
   .md3_class(dx)
 }
 
 
+
+
+#' lag MD3 objects
+#'
+#' Lags,  differences, and growth rates of MD3 objects akin to the lag function operating on other R objects
+#' @param x an md3 object, or anything that may be converted to an md3
+#' @param k,lag Integer or character. If integer, the number of backward lags used (or if negative the number of forward lags). Can also be a character time differnce corresponding to \code{timo}, such as \code{2M} for two months or \code{1W} for one week
+#' @param whichdim which dimension of x to lag over (referred to as integer number of dimension name). By default the last dimension (typically \code{TIME}) but could be any other.
+#' @param constrange logical. If TRUE, then the time range is expande to reflect the 'new'  periods. If FALSE (default), only time periods originally present in x will be preserved.
+#' @param na.pad logical. IF TRUE (default) then the periods at the beginning o(ro end) of the original time range will be returned as NAs. See examples.
+#' @param differences an integer for \code{diff} indicating the order of the difference.
+#' @param logcompounding logical for \code{growth}, default FALSE. If TRUE, the result of \code{growth} is akin to log differences.
+#' \dots not used
+#' @return an md3 object
+#' @seealso \code{\link{zapply}}, \code{\link[zoo]{rollapply}},  \code{\link{rollmean.md3}}
+#' @examples
+#' xx=euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008]
+#' xx
+#'
+#' lag(xx,k=4) #lagging by four quarters
+#' lag(xx,k=4, constrange=FALSE) #lagging by 4 Q, and creating new time periods
+#' lag(xx,k=4, na.pad=FALSE) #lagging by 4 Q, and not keeping old time periods
+#'
+#' lag(xx,k='6M') #lagging by 6 months (using another frequency)
+#' lag(xx,k=-4) #reverse lagging
+#'
+#' growth(xx,lag = 4) #year-on-year growth rates (careful: these are not in percent)
+#' diff(xx,lag = 4) #year-on-year differences
+#'
+#' lag(xx,whichdim = 'geo') # lagging along countries
+#' lag(xx,whichdim = 'geo', constrange=FALSE) # lagging along countries with constrange off
+#'
+#' @export lag.md3
 #' @export
 lag.md3= .md3anylag
 
+
+#' @rdname lag.md3
 #' @export
 diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, differences = 1L,...) {
   if (differences < 0) stop('argument differences has to be a positive integer')
@@ -515,7 +567,7 @@ diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, difference
   if (differences > 1L) { x= diff.md3(x,lag=lag,differences = differences-1L,whichdim=whichdim,na.pad=na.pad)}
   if (is.numeric(whichdim)) {whichdim=names(.getdimnames(x,TRUE))[[whichdim]]}
    if (toupper(whichdim)=='TIME') {
-     xout=x-.lagmd3time(x,k = lag,consttimerange = TRUE)
+     xout=x-.lagmd3time(x,k = lag,consttimerange = TRUE, na.pad=TRUE)
    } else {
     xout=x-.md3anylag(x,k = lag,whichdim = whichdim,constrange = TRUE)
    }
@@ -524,6 +576,7 @@ diff.md3 = function(x, lag = 1L, whichdim=length(dim(x)),na.pad=TRUE, difference
   xout
 }
 
+#' @rdname lag.md3
 #' @export
 growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
    xlaggd=.md3anylag(x,k = lag,whichdim=whichdim)

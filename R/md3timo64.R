@@ -215,6 +215,8 @@ as.integer64.timo = .asint64
     }
 
   }
+  #if (length(fvec)) {fvec[fvec=='h']<-'s'}
+
   if (any(na.omit(ff)=='w' & na.omit(fvec!='w'))) { fvec[which(ff=='w')] = 'w'}
   fpermitted = toupper(fvec) %in% toupper(names(.cttim$fcode))
   if (any(!fpermitted)) { fvec[!fpermitted] =NA}
@@ -288,6 +290,7 @@ as.integer64.timo = .asint64
 .char2timoguessfurhter = function(x, fq=NULL) {
   #this function taxes a string vector (like paste0('2020-Q',1:3))
   if (is.list(x)) { fq=x[[2]]; x=x[[1]]}
+  fq=NULL # this is a temproary fix
   x = gsub('^y','',trimws(x))
   monthnamecandidates=c(month.name,month.abb,format(ISOdate(2000, 1:12, 1), "%b"),format(ISOdate(2000, 1:12, 1), "%B"))
   if (is.null(fq)) {
@@ -646,6 +649,7 @@ timo = function(..., frq=NULL) {
 as.timo.default = function (x, frq=NULL,...){
   if (is.null(frq)) if (any(grepl('POSIX',class(x)))) {frq='N'} else {frq='D'}
   tout=unclass(as.POSIXct(x))
+  if (length(frq)) if (is.character(frq)) if (any(frq=='H'|frq=='h')) { frq[tolower(frq)=='h']<-'S'}
   tout= tout - tout%% 60 + .cttim$frqcodes[toupper(frq),'timosuffix']
   if (!is.null(frq)) { tout=.timo_cfrq(tout,frq,referstoend=FALSE,classit=FALSE)}
   .timo_num2class(tout)
@@ -676,6 +680,7 @@ as.timo.numeric = function (x, frq=NULL, ...) {
 #' @export
 as.timo.character = function (x, frq=NULL,...){
   if (is.null(frq)) return(.char2timo(x))
+  if (length(frq)) if (is.character(frq)) if (any(frq=='H'|frq=='h')) { frq[tolower(frq)=='h']<-'S'}
   as.timo.default(.char2timo(x, frq), frq)
 }
 

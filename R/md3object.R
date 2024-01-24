@@ -26,7 +26,7 @@
   inname=tolower(inname)
   if (any(grepl('^flag',inname))) {inname='status'}
   if (any(grepl('^conf',inname))) {inname='conf'}
-  if (!inname %in% c('value','status','conf','pre_break','footnote','qual','ref','type')) warning('.obs should be value, status (flag), or conf')
+  if (!inname %in% c('value','status','conf','pre_break','footnote','qual','ref','type','com')) warning('.obs should be value, status (flag), or conf')
   return(paste0('_.obs_',tolower(inname)))
 }
 
