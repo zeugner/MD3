@@ -181,6 +181,8 @@ as.integer64.timo = .asint64
 
 .char2timo= function(xstring, frq=NULL, guess =TRUE) {
   fixnas =function(invec) {
+    ixna=which(is.na(ixna))
+    if (!length(ixna)) ixna=grep( '^N',invec)
     if (!length(ixna)) return(invec)
     invec[ixna] = NA
     return(invec)
