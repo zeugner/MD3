@@ -1110,7 +1110,7 @@ fill = function(bigmd3,...) {
   dx=.dt_class(bigmd3)
   mm=.md3_class(dx[0],dn = .getdimnames(bigmd3))
   sdn=.matchixsubset2dn(smallmd3,.getdimnames(mm))
-  if (is.array(smallmd3)) {dimnames(smallmd3)<- sdn; smallmd3=drop(smallmd3)}
+  if (is.array(smallmd3)) {dimnames(smallmd3)<- lapply(sdn,as.character); smallmd3=drop(smallmd3)}
   if (!is.array(smallmd3) && length(smallmd3)>1) {
     if (all(setdiff(dim(as.array(smallmd3)),1)==unlist(lapply(sdn,length)))) {
       smallmd3=as.array(smallmd3); dimnames(smallmd3)=sdn

@@ -588,7 +588,17 @@ as.md3.array = function(x,...) {
               } else {
                 ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
               }
-          } else {ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))}}
+          } else if (!is.numeric(ix[[i]])) {
+            ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
+          } else {
+            if (all((ix[[i]]-as.integer(ix[[i]]))<sqrt(.Machine$double.eps)) & all(abs(range(ix[[i]]))) < length(xdn[[i]])) {
+              ix[[i]] = xdn[[i]][ix[[i]]]
+            } else {
+              ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
+            }
+
+          }
+        }
         if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
         lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
@@ -1318,14 +1328,19 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
   if (is.null(max)) {
     temp = .dim(x)
     if (length(temp) > 1)
-      max = prod(c(temp[0:2], 2))
+      max = prod(c(pmin(temp[0:(length(temp)-1)],2), temp[length(temp)]))
     else if (!length(temp))
       max = NULL
     else max = temp
-    max = base:::min(base:::max(max, 100L), 10000L)
+    max = base:::min(base:::max(max, 10L), 100L)
   }
-  print.default(.md3get(x, as = .asget(as), drop = FALSE),
+  as = .asget(as)
+  if (as=='data.table') {
+    data.table:::print.data.table(.md3get(x, as = as, drop = FALSE),...)
+  } else {
+  print.default(.md3get(x, as = as, drop = FALSE),
                 ..., max = max)
+  }
 }
 
 
@@ -1584,6 +1599,10 @@ print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
       } else if (!length(lixsub)) {
         #this means all ahve been selected
         dtval=.dt_class(value)
+      } else if (length(lixsub)>1) {
+
+        dtval=rbindlist(lapply(as.data.frame(t(.mdsel2codes(lixsub)),stringsAsFactors = FALSE), function(x) cbind(data.table(matrix(x,1)), .dt_class(value))))
+        colnames(dtval)[1:length(lixsub)]=names(lixsub)
       } else {
        dtval=cbind(.mdsel2codes(lixsub,aschar=FALSE),.dt_class(value))
       }
@@ -2130,7 +2149,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
     if (is(x,'data.table')) {x=attr(x,'dcstruct')}
     return(lapply(x,function(x) if(is.data.frame(x)) return(x[[1]]) else return(x)))
   }
-  if(is.array(x)) {adn=attr(x,'dimnames'); if(is.null(adn)) {stop('x has no dimanems set')}; tix=.dn_findtime(adn)[1]; if(tix>0) {adn[[tix]]=as.timo(adn[[tix]])}; return(adn) }
+  if(is.array(x)) {adn=attr(x,'dimnames'); if(is.null(adn)) {stop('x has no dimnames set')}; tix=.dn_findtime(adn)[1]; if(tix>0) {adn[[tix]]=.char2timo(adn[[tix]])}; return(adn) }
   if (!is.null(attr(x,'dcstruct'))) return(.dc2dn(.dimcodesrescue(x)))
   if (!is.list(x)) {stop('object does not have dimcodes set') }
   xclas=unlist(lapply(x,function(i) head(class(i),1)))
