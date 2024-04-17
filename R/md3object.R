@@ -585,6 +585,8 @@ as.md3.array = function(x,...) {
           if (length(ix[[i]])==1L) {
               if (any(grepl(':',ix[[i]]))) {
                 ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]]
+              } else if (is.numeric(ix[[i]])) if (ix[[i]]>=0 && ix[[i]]<=length(xdn[[i]])) {
+                ix[[i]] =  .Primitive('[')(xdn[[i]],ix[[i]])
               } else {
                 ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
               }
@@ -1324,21 +1326,32 @@ dim.md3=function(x) {
 
 
 #' @export
-print.md3 = function (x, ..., max = NULL, as=c('array','data.table')) {
-  if (is.null(max)) {
-    temp = .dim(x)
-    if (length(temp) > 1)
-      max = prod(c(pmin(temp[0:(length(temp)-1)],2), temp[length(temp)]))
-    else if (!length(temp))
-      max = NULL
-    else max = temp
-    max = base:::min(base:::max(max, 10L), 100L)
-  }
+print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table')) {
+
   as = .asget(as)
   if (as=='data.table') {
     data.table:::print.data.table(.md3get(x, as = as, drop = FALSE),...)
+  } else if (as=='md3') {
+    temp=.md3get(x, as = as, drop = FALSE)
+    tempd=.dim(temp)
+    if (length(.dim(temp)) > 2) {
+      temp=.md3get(temp, c(list(character(),character(),1:2),as.list(rep(1,length(tempd)-3))),drop=TRUE, as='array')
+    }
+
+    if (is.null(max)) {
+      if (length(tempd) > 1)
+        max = prod(c(pmin(tempd[0:(length(tempd)-1)],2), tempd[length(tempd)]))
+      else if (!length(tempd))
+        max = NULL
+      else max = tempd
+      max = base:::min(base:::max(max, 10L), 100L)
+    }
+
+
+
+    print.default(temp,...,max=max)
   } else {
-  print.default(.md3get(x, as = as, drop = FALSE),
+    print.default(.md3get(x, as = as, drop = FALSE),
                 ..., max = max)
   }
 }
