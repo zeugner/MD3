@@ -116,7 +116,7 @@ as.md3.array = function(x,...) {
         ix[[i]] = integer(0)
       } else {
         ix[[i]] =suppressWarnings(try(eval(parse(text=paste0("..",i))),silent=TRUE))
-        if (grepl("error",class(ix[[i]])[[1]])) { return(list(gsub("\\s","",deparse(substitute(...))))) }
+        if (grepl("error",class(ix[[i]])[[1]])) { return(list(gsub("\\s","",paste0(deparse(substitute(...)), collapse='')))) }
 
       }
     }
@@ -825,7 +825,7 @@ as.md3.array = function(x,...) {
       return(aout)
     }
 
-
+   
 
     if (as == "array") {
       xout=try(xasarray(obs),silent=TRUE)
@@ -1322,7 +1322,12 @@ dim.md3=function(x) {
   unlist(lapply(attr(x,'dcstruct'),NROW))
 }
 
-
+.nbobs = function(x) {
+  if (.md3_is(x)) {
+    return(data.table:::dim.data.table(x)[1])
+  }
+    NROW(na.omit(x))
+}
 
 
 #' @export
@@ -1348,7 +1353,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     }
 
 
-
+    
     print.default(temp,...,max=max)
   } else {
     print.default(.md3get(x, as = as, drop = FALSE),
