@@ -1,11 +1,10 @@
 Package: MD3
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.2
+Title: Mulidimensional macroeconomic data with metadata
+Version: 0.1.3
 Author: Stefan Zeugner
 Maintainer: Stefan Zeugner <stefan.zeugner@ec.europa.eu>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: This package represents data.table as sparse hyperarrays akin to SDMX concepts. Plus a db.nomics loader
 License: LGPL
 Encoding: UTF-8
 LazyData: true
