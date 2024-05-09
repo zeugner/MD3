@@ -284,7 +284,21 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
   data = as.data.frame(data, stringsAsFactors = FALSE)
   data = .fixfactors(data)
   if (missing(id.vars)) {
+    if (length(attr(data,'dcstruct'))) {
+      id.vars = names(.getdimcodes(data))
+      if (all(id.vars %in% colnames(data))) {
+        return(.stackeddf2md3(data, isdf=FALSE))
+      }
+    } else {
+
+
     id.vars = colnames(data)[sapply(data, function(x) {.timo_is(x) | is.character(x)})]
+    ixval=utils::head(which(unlist(lapply(as.data.table(euhpq),function(x) class(x)[1]))=='numeric'),1)
+    if (length(ixval)) { if (length(id.vars)>=ixval) {
+      message('presuming that everything beyond column ', ixval, '  is an observation attribute')
+      id.vars=id.vars[1:(ixval-1)]
+    }}
+    }
   }
   if (!length(id.vars)) {
     data = cbind(as.character(rownames(data)), data, stringsAsFactors = FALSE)
@@ -392,13 +406,16 @@ anyNA.md3 = function(x, recursive = FALSE) {
 as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
   if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
   dcstruct=attr(x,'dcstruct')
+  if (length(dcstruct))  attr(x,'dcstruct')=.dimcodesrescue(.getdimnames(x,FALSE),dcstruct)
+  if (length(dcstruct))  return(.stackeddf2md3(x,isdf = FALSE))
+
   if (length(obsattr)) {
     if (!missing(split) | missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
       y=.stackeddf2md3(x,isdf = FALSE)
   } else {
       y=.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split )
   }
-  if (length(dcstruct))  attr(y,'dcstruct')=.dimcodesrescue(.getdimnames(y,FALSE),dcstruct)
+
   return(y)
 
 }

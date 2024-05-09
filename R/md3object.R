@@ -66,6 +66,8 @@ as.md3.array = function(x,...) {
 .stackeddf2md3 = function(x,isdf=NA,order=FALSE) {
   if (data.table::is.data.table(x)) {
 
+
+
     ixf = grep('FRE?Q',toupper(colnames(x)))
     if (length(ixf)) { if (all(nchar(x[[ixf]])==1)) { x = x[,-ixf,with=FALSE]} }
     if ('v_a_l' %in% colnames(x)) { colnames(x)[colnames(x)=='v_a_l'] =.md3resnames('value') }
@@ -81,6 +83,15 @@ as.md3.array = function(x,...) {
       if (!is.na(tix)) {
         try(x[[tix]] <- as.timo(x[[tix]]),silent=TRUE)
       }
+      colnames(x)[vix:NCOL(x)] = unlist(lapply(as.list(colnames(x)[vix:NCOL(x)]), .md3resnames))
+
+      if (length(attr(x,'dcstruct'))) {
+        if (all(names(.getdimnames(x)) %in% colnames(x))) {
+          return(.md3_class(x))
+        }
+      }
+
+
       if (data.table:::anyDuplicated.data.table(x[,dix, with=FALSE])) stop ('duplicates in obs identifiers')
       dcsimp =lapply(as.list(x)[1:(vix-1)],unique)
       if (!is.na(tix)) { dcsimp[[tix]] = .timo_class(dcsimp[[tix]]); dcsimp[[tix]]=sort(dcsimp[[tix]]) }
@@ -825,7 +836,7 @@ as.md3.array = function(x,...) {
       return(aout)
     }
 
-   
+
 
     if (as == "array") {
       xout=try(xasarray(obs),silent=TRUE)
@@ -1353,7 +1364,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     }
 
 
-    
+
     print.default(temp,...,max=max)
   } else {
     print.default(.md3get(x, as = as, drop = FALSE),
@@ -2012,7 +2023,7 @@ aperm.md3 = function(a, perm = NULL, resize = TRUE, ...) {
 
 #' @export
 as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
-  if (na.rm) { return(.dt_class(x))}
+  if (na.rm) { y= .dt_class(x); colnames(y)= gsub('^_\\.','',colnames(y)); return(y)}
   dcstruct =attr(x,'dcstruct')
   y=.dt_class(x)
   if (!.simple) {  y=y[.mdsel2codes(.getdimnames(x,TRUE),bylast = TRUE),,on=.NATURAL] }
