@@ -1,5 +1,5 @@
 #problem time(p3)+6m
-suppressPackageStartupMessages(require('bit64',quietly = TRUE))
+#suppressPackageStartupMessages(require('bit64',quietly = TRUE))
 #eutemp
 .naomit_atomic = function(x) {
   if (!is.atomic(x)) stop('x must be atomic')
@@ -1291,6 +1291,8 @@ print.timdif = function(x,digits=NULL,...) {
 
 #' @export
 as.timdif= function (x,units=NULL,...) UseMethod("as.timdif")
+
+#' @export
 as.timdif.default = function(x, units=NULL,...) {
   .char2timdif(x,units=units)
 }
@@ -1510,9 +1512,9 @@ range.timo = function(...,na.rm=FALSE) {
 
 
 
-as.timo.timdif = function(x) {
-  stop(1)
-}
+# as.timo.timdif = function(x) {
+#   stop(1)
+# }
 
 
 #' @export

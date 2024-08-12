@@ -276,6 +276,7 @@ as.md3.array = function(x,...) {
   #temp=lapply(temp,function(x) {strsplit(gsub("\\%","+",x),split="\\+")[[1]]})
   temp=lapply(temp,function(x) {strsplit(x,split="\\+")[[1]]})
   frqshifter = character(0)
+  frqspresent=character()
   if (!is.null(ohihi)) {
     ixt=match('TIME',toupper(names(ohihi)), nomatch = 0)
     if ((length(temp)== 1+length(ohihi)) & as.logical(ixt)) { ixt = ixt +1 }
@@ -290,15 +291,16 @@ as.md3.array = function(x,...) {
     }
     for( i in 1:length(temp)) {
       if (.timo_is(ohihi[[i]])) {
+        frqspresent = .Internal(unique(.timo_frq(ohihi[[i]]),FALSE,FALSE,1000L))
         if (!length(temp[[i]]) & !length(frqshifter)) { temp[[i]] = ohihi[[i]]; next }
         if (!length(temp[[i]])) { temp[[i]] = ohihi[[i]] }
         if (length(temp[[i]])==1L) {
           if (any(grepl(':$',temp[[i]]))) { temp[[i]] = seq.timo(gsub(':$','',temp[[i]]),tail(ohihi[[i]],1)) }
           if (any(grepl('^:',temp[[i]]))) { temp[[i]] = seq.timo(head(ohihi[[i]],1), gsub(':','',temp[[i]])) }
         }
-        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs =FALSE, addifmiss = TRUE )
+        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs ={length(frqspresent)>1}, addifmiss = TRUE )
         if (length(frqshifter)) {
-          if (length(temp)) if (!any(.timo_frq(temp[[ixt]]) %in% frqshifter)) stop('The specified time periods like ',
+          if (length(temp)) if (!any(frqspresent %in% frqshifter)) stop('The specified time periods like ',
               temp[[ixt]][1],' do not match the specified frequencies ',paste(frqshifter,collapse=', '))
           temp[[ixt]] = temp[[ixt]][.timo_frq(temp[[ixt]]) %in% frqshifter]
         }

@@ -9,7 +9,8 @@ imputena(
   proxy = NULL,
   method = c("dlog", "diff"),
   maxgap = 6,
-  direction = c("both", "forward", "backward")
+  direction = c("both", "forward", "backward"),
+  usenames = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ imputena(
 \item{maxgap}{an integer denoting the maximum number of consecutive NAs to be filled}
 
 \item{direction}{only necessary where proxy is not NULL. See details below}
+
+\item{usenames}{TRUE if the proxy's dimension names should be used rather than its internal sorting order. FALSE, if this is a dumb proxy with the same dimensions as x}
 }
 \value{
 an md3 object
@@ -42,7 +45,7 @@ any NAs before. Direction 'both' is a weighted avearge of both methods wherever 
 }
 \examples{
 
-\dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
+w1= euhpq["TOTAL.I15_Q.AT:CY.y2005:y2008"] #make small md3
 w1["BE.2006q4:2007q1"]=NA
 w1["CY.2006:2007"]=NA
 w1['AT.y2006q1']=100

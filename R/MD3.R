@@ -9,7 +9,7 @@
 #' @section Further work:
 #'
 #' This package is still under development; there are certainly some bugs lurking around
-#' Build date: 2024-05-09
+#' Build date: 2024-08-09
 #'
 #'
 #' Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to be added
@@ -20,9 +20,8 @@
 #' @import utils
 #' @import stats
 #' @import MDcountrycode
-#' @import zoo
-#' @import jsonlite
-#' @import bit64
 #' @import data.table
+#' @importFrom bit64 as.integer64
+#' @importFrom zoo as.zoo as.zooreg as.yearmon as.yearqtr rollmax rollmean rollmedian rollsum
 #' @name MD3
 NULL

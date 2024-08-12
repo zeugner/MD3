@@ -838,7 +838,7 @@ c.md3=merge.md3
 
 
 .imputeproxyintoarray = function(a2impute,aproxy,whichdim='TIME',backward=FALSE) {
-  if (!identical(dimnames(a2impute),dimnames(aproxy))) stop('need same dimensions')
+  if (!identical(base::dim(a2impute),base::dim(aproxy))) stop('need same dimensions')
   if (is.null(names(dim(a2impute)))) { stop("need named dimensions")}
   tix=which(names(dim(a2impute))==whichdim)[1]
 
@@ -925,6 +925,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' @param method 'dlog' denotes geometric interpolation, 'diff' denotes linear interpolation
 #' @param maxgap an integer denoting the maximum number of consecutive NAs to be filled
 #' @param direction only necessary where proxy is not NULL. See details below
+#' @param usenames TRUE if the proxy's dimension names should be used rather than its internal sorting order. FALSE, if this is a dumb proxy with the same dimensions as x
 #' @return an md3 object
 #' @details
 #' This refers to interpolation cases where an annual time series e.g. has values for 2000 and 2005, but not for 2001:2004
@@ -939,7 +940,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' @seealso \code{\link{fill.md3}},  \code{\link{aggregate.md3}}, \link{indexMD3}
 #' @examples
 #'
-#' \dontrun{w1= euhpq[TOTAL.I15_Q.AT:CY.y2005:y2008] #make small md3}
+#' w1= euhpq["TOTAL.I15_Q.AT:CY.y2005:y2008"] #make small md3
 #' w1["BE.2006q4:2007q1"]=NA
 #' w1["CY.2006:2007"]=NA
 #' w1['AT.y2006q1']=100
@@ -957,11 +958,14 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' imputena(w1, 1:16)
 #'
 #' @export
-imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c('both','forward','backward')) {
+imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c('both','forward','backward'), usenames=NULL) {
   if(pmatch(method[[1L]],c('dlog','log','growth','diff','delta','shift','level')) < 4) {method='dlog'} else {method='diff'}
   if (is.null(proxy) & !missing(direction)) {stop('The argument "direction" only makes sense for imputing proxy data')}
   if (!is.null(proxy) & !missing(maxgap)) {warning('The argument "maxgap" only makes sense for interpolating, not with proxy data. maxgap will be ignored')}
-
+  if (!is.null(proxy) & !length(usenames)) {
+    usenames=TRUE
+    if (length(base::dim(proxy))) {if (all(base::dim(x) == base::dim(proxy))) { usenames=FALSE}}
+  }
 
   if (is.null(time.md3(x))) { stop('this only works with time series so far. A TIME dimension is necessary')}
   myf=unique(.timo_frq(time.md3(x)))
@@ -993,10 +997,15 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   rm(idgapfirst)
 
   if (!is.null(proxy)) {
+    if (usenames) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
-    if (is.array(proxy)) {dimnames(proxy)<- .matchixsubset2dn(proxy,.getdimnames(mm)); proxy=drop(proxy)}
+    if (is.array(proxy)) {dimnames(proxy)<- lapply(.matchixsubset2dn(proxy,.getdimnames(mm)),as.character); proxy=drop(proxy)}
     mm=.md3set(mm,value=proxy)
-    ax=as.array(x); am=as.array(mm)
+     am=as.array(mm)
+    } else {
+      am=as.array(proxy)
+    }
+    ax=as.array(x)
     if (method=='dlog') { ax=log(ax); am=log(am); unpack=exp} else unpack=function(x) x
     aforward=unpack(.imputeproxyintoarray(ax,am))
     abackward=unpack(.imputeproxyintoarray(ax,am,backward = TRUE))
