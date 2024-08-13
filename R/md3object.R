@@ -1946,6 +1946,18 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 #' euhpq[,,"Dummy",]=0 #add a dummy country
 #' euhpq[2,'I15_Q',,"2011"] #see effect
 #'
+#'
+#'#Note that calling an element that does not exist will return NA,
+#'#similar to data.frames with rownames
+#' mm=euhpq[1,1,1:4,'2022']
+#' testmat=as.data.frame(as.matrix(mm))
+#' testmat['AT',] #has data
+#' mm['AT',,drop=FALSE]
+#' testmat['CH',] #has empty data
+#' mm['CH',]
+#' testmat[c('GG','FF'),]
+#' mm[c('GG','FF'),]
+#'
 #'#Argument usenames, onlyna and justval still to be described
 # @describeIn indexMD3 Get subelements
 #' @rdname indexMD3

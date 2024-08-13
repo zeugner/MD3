@@ -20,7 +20,7 @@ imputena(
 
 \item{method}{'dlog' denotes geometric interpolation, 'diff' denotes linear interpolation}
 
-\item{maxgap}{an integer denoting the maximum number of consecutive NAs to be filled}
+\item{maxgap}{an integer denoting the maximum number of consecutive NAs that can be imputed. If \code{maxgap=6} then any gaps of six or less consecutive NAs will be imputed, but a gap of seven NAs will not be.}
 
 \item{direction}{only necessary where proxy is not NULL. See details below}
 
@@ -61,6 +61,13 @@ using a lower-dimensional proxy
 
 #with trend
 imputena(w1, 1:16)
+
+
+temp=euhpq['TOTAL.I15_Q.AT.']
+temp['2022:']=NA # make a vector with NAs at front and end
+imputena(temp,euhpq["TOTAL.I15_Q.SK."])
+imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="forward" )
+
 
 }
 \seealso{
