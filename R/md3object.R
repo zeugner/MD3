@@ -87,6 +87,9 @@ as.md3.array = function(x,...) {
 
       if (length(attr(x,'dcstruct'))) {
         if (all(names(.getdimnames(x)) %in% colnames(x))) {
+          if (anyNA(x[[vix]])) {
+            x=data.table::copy(x[!is.na(x[[vix]])])
+          }
           return(.md3_class(x))
         }
       }
@@ -1707,8 +1710,8 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
     tempselix=x[tempsel,,on=.NATURAL];
 
-    tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(value)]
-    tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(value)]
+    tempselnew=tempselix[is.na(tempselix[[.md3resnames('value')]]) & !is.na(value)]
+    tempselremove=tempselix[!is.na(tempselix[[.md3resnames('value')]]) & is.na(value)]
     if (NROW(tempselnew)) {
        if (obs=='_.obs_value')  {
           tempattr=attributes(x)[tempan]
@@ -2023,8 +2026,9 @@ aperm.md3 = function(a, perm = NULL, resize = TRUE, ...) {
   .md3_class(a)
 }
 
+#' @describeIn asmd3 Convert MD3 to data.table, optionally with dcast
 #' @export
-as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
+as.data.table.md3 = function(x, ..., na.rm=FALSE, sep='_', .simple=FALSE) {
   if (na.rm) { y= .dt_class(x); colnames(y)= gsub('^_\\.','',colnames(y)); return(y)}
   dcstruct =attr(x,'dcstruct')
   y=.dt_class(x)
@@ -2033,9 +2037,10 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, .simple=FALSE) {
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
   colnames(y)=gsub('^_\\.','',colnames(y))
   if (missing(...)) return(y)
-  data.table::dcast(unflag(y,asDT=TRUE),value.var=gsub('_\\.','',MD3:::.md3resnames('value')),...)
+  data.table::dcast(unflag(y,asDT=TRUE),value.var=gsub('_\\.','',MD3:::.md3resnames('value')),..., sep=sep)
 }
 
+#' @describeIn asmd3 Convert MD3 to data.frame, optionally with dcast
 #' @export
 as.data.frame.md3 = function(x, ..., na.rm=FALSE) {
   data.table:::as.data.frame.data.table(as.data.table.md3(x,...,na.rm=na.rm))
@@ -2458,7 +2463,20 @@ Summary.md3 = function(x,...) {
 
 }
 
-
+#' get or set observation attributes
+#'
+#' puts flags like B for break, or confidentiality status
+#' @param x an md3 object
+#' @param \ldots identifiers (see \link{indexMD3})
+#'
+#' @seealso \code{\link{indexMD3}}
+#' @examples
+#' testmd=euhpq['TOTAL.I15_Q.AT:BG.']
+#' flags(testmd)
+#' flags(testmd['.2015']) <- 'T'
+#'
+#' as.data.table(testmd)
+#'
 #' @export
 flags = function(x,... ) {
   .md3get(x,...,.obs='status')

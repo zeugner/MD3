@@ -4,7 +4,6 @@
 
 
 
-
 .getas =function(x, as=c("md3", "array", "numeric","data.table","data.frame","zoo","2d","1d","pdata.frame")) {
   if (!.md3_is(x)) { stop ('needs to be md3 object!')}
   as=.asget(as)
@@ -33,14 +32,14 @@
 }
 
 #' @export
-as.zoo.md3 = function(x,...) {
+as.zoo.md3 = function(x,...,sep='.') {
   if (!require('zoo')) stop('requires package zoo to be installed.')
   ixt =.dn_findtime(.getdimnames(x)); if (ixt<1) stop('could not find a time dimension in X')
 
   ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
   x=.dt_class(unflag(x));  colnames(x)[[ixt]] ='TIME'
 
-  dxts=data.table(dcast(x,TIME~ ..., sep='.', value.var= '_.obs_value'))
+  dxts=data.table(dcast(x,TIME~ ..., sep=sep, value.var= '_.obs_value'))
 
 
   zoofnc=c('Q'=as.yearqtr.timo,'M'=as.yearmon.timo,'A'=data.table::year,'D'=as.Date.timo,'B'=as.Date.timo,'N'=as.POSIXct.timo,'H'=as.POSIXct.timo,'W'=as.Date,'S'=function(x) {(data.table::quarter(x)-1)/4+data.table::year(x)})
@@ -50,6 +49,7 @@ as.zoo.md3 = function(x,...) {
 
 }
 
+#' @describeIn asmd3 Convert from zoo to an md3 object
 #' @export
 as.md3.zoo = function (x, split = ".", name_for_cols = character(0))
 {
@@ -353,6 +353,11 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
     }
     if (!length(name_for_cols))
       name_for_cols = LETTERS
+    if (split=='') {
+      tempdn = c(id.vars, name_for_cols[1])
+    } else {
+      tempdn = c(id.vars, name_for_cols[1:length(ix0[[1]])])
+    }
     tempdn = c(id.vars, name_for_cols[1:length(ix0[[1]])])
     if (anyNA(tempdn))
       tempdn[is.na(tempdn)] = LETTERS[0:sum(is.na(tempdn))]
@@ -420,6 +425,7 @@ as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsa
 
 }
 
+#' @describeIn asmd3 Convert a data.frame to an md3
 #' @export
 as.md3.data.frame = as.md3.data.table
 
@@ -460,6 +466,54 @@ as.md3.integer64 = function(x,...) {
   as.md3.numeric(as.numeric(x),...)
 }
 
+
+#' Functions to check if an object is md3, or coerce it if possible.
+#' @name asmd3
+#'
+#' @param x an md3 object or data.frame/data.table
+#' @param ... additional parameters: for \code{as.data.frame} this is the optional formula for dcast, for \code{as.md3} this are the parameters forwarded to specific methods, notably those for as.md3.data.frame. See 'Details' below
+#' @param na.rm If \code{FALSE} then the resulting 'molten' data.frame omits any observations with NA values. See also \link[data.table]{melt.data.table}
+#' @param sep see also \link[data.table]{melt.data.table}
+#' @param id.vars see also \link[data.table]{melt.data.table}
+#' @param name_for_cols this is a character vector with the names of the dimensions embedded in the data.frame
+#' @param split if a column name pertains to more than one dimension (e.g., \code{UK.GDP}), this character is used to 'cast' into more than one dimension
+#' @param obsattr this is to indicate the columns that contain observation attributes. see also \code{\link{flags}}
+#' @param .simple Use only in nerdy purposes. If this logical is TRUE, then the function assumes that the data.table provided in x already contains an attribute with dimension names
+#' @return an md3 or data.table/data.frame
+#' @details
+#' TBD
+#'
+#'
+#'
+#' @seealso \code{\link{indexMD3}}
+#' @examples
+#' #data(euhpq) #house prices for EU countries
+#'
+#' testdt=as.data.table(euhpq[1,1,1:2,])
+#' testmd3=as.md3(testdt)
+#' testmd3
+#' flags(testmd3)
+#'
+#' as.md3(LifeCycleSavings)
+#'
+#' as.data.table(euhpq[1,1,"PL:RO","2021:"])
+#' as.data.table(unflag(euhpq[1,1,"PL:RO","2021:"]))
+#' as.data.table(euhpq[1,1,"PL:RO","2021:"] , geo ~ TIME)
+#' as.data.table(euhpq[1:2,1,"PL:RO","2021:"] , TIME ~ ...)
+#'
+#' zz=as.zoo(euhpq[1:2,1,"PL:RO","2021:"],sep=';')
+#' z2=as.md3(zz,split='.'); dimcodes(z2)
+#' z3=as.md3(zz,split='.',name_for_cols=c('type','country')); dimcodes(z3)
+#'
+#' ff=as.md3(as.data.frame(UCBAdmissions),id.vars=1:3)
+#' dimnames(ff)
+#'
+#' testdt2=as.data.table(euhpq[,'I15_Q',1:4,],TIME~ ..., sep=";")
+#' testdt2
+#' testmd2 = as.md3(testdt2,split=';')
+#' dimcodes(testmd2)
+#' testmd2[".AT.2021:"]
+#'
 #' @export
 as.md3 = function(x,...) {
   UseMethod('as.md3')
