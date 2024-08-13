@@ -977,7 +977,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' @param x an md3 object
 #' @param proxy either a vector (applied to each time series), or an array or an md3 with the same dimensions or dimension names as x. If proxy left to NULL then this function will merely interpolate any gaps it finds
 #' @param method 'dlog' denotes geometric interpolation, 'diff' denotes linear interpolation
-#' @param maxgap an integer denoting the maximum number of consecutive NAs to be filled
+#' @param maxgap an integer denoting the maximum number of consecutive NAs that can be imputed. If \code{maxgap=6} then any gaps of six or less consecutive NAs will be imputed, but a gap of seven NAs will not be.
 #' @param direction only necessary where proxy is not NULL. See details below
 #' @param usenames TRUE if the proxy's dimension names should be used rather than its internal sorting order. FALSE, if this is a dumb proxy with the same dimensions as x
 #' @return an md3 object
@@ -1011,6 +1011,13 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
 #' #with trend
 #' imputena(w1, 1:16)
 #'
+#'
+#' temp=euhpq['TOTAL.I15_Q.AT.']
+#' temp['2022:']=NA # make a vector with NAs at front and end
+#' imputena(temp,euhpq["TOTAL.I15_Q.SK."])
+#' imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="forward" )
+#'
+#'
 #' @export
 imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c('both','forward','backward'), usenames=NULL) {
   if(pmatch(method[[1L]],c('dlog','log','growth','diff','delta','shift','level')) < 4) {method='dlog'} else {method='diff'}
@@ -1020,6 +1027,8 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
     usenames=TRUE
     if (length(base::dim(proxy))) {if (all(base::dim(x) == base::dim(proxy))) { usenames=FALSE}}
   }
+  dirforw=TRUE; dirbackw=TRUE;
+  if (length(direction)) {if (grepl('forw',direction[1],ignore.case = TRUE)) {dirbackw=FALSE}; if (grepl('back',direction[1],ignore.case = TRUE)) {dirforw=FALSE}}
 
   if (is.null(time.md3(x))) { stop('this only works with time series so far. A TIME dimension is necessary')}
   myf=unique(.timo_frq(time.md3(x)))
@@ -1105,8 +1114,9 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
   hh=merge(merge(merge(dx,.dt_class(as.md3.array(aforward)),by = dimlab,all = TRUE),.dt_class(as.md3.array(abackward)),by = dimlab,all = TRUE),idgap2,by = dimlab,all = TRUE)
   colnames(hh)[length(dimlab)+1:3]=paste0('_val_',c('d','f','b'))
 
-    hh[is.na(`_val_d`) & !is.na(`_val_b`),`_val_d`:=`_val_b`]
-    hh[is.na(`_val_d`) & !is.na(`_val_f`),`_val_d`:=`_val_f`]
+    if (dirbackw) { hh[is.na(`_val_d`) & !is.na(`_val_b`),`_val_d`:=`_val_b`] }
+    if (dirforw) { hh[is.na(`_val_d`) & !is.na(`_val_f`),`_val_d`:=`_val_f`] }
+    #if (!dirforw) {hh[!is.na(fact),fact:=1]} else if  (!dirbackw) {hh[,fact:=0]}
     if (!all(is.na(hh[,fact]))) {
       hh[!is.na(fact),`_val_d`:=(1-fact)*`_val_f`+fact*`_val_b`]
     }
