@@ -943,7 +943,7 @@ c.md3=merge.md3
 #' as.data.table(unflag(euhpq['TOTAL.I15_Q.BG.']))
 #' unflag(euhpq['TOTAL.I15_Q.BG.'], asDT=TRUE)
 #' @export
-unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
+unflag = function(omd3,asDT=FALSE,attr2keep='obs_value', ignoreNA=FALSE) {
   #asDT=NA: same as .dt_class(unflag(x))
   wasdt=is.data.table(omd3)
   dx=data.table::copy(.dt_class(omd3))
@@ -953,11 +953,11 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value') {
     if (length(tempix)) colnames(dx)[tempix]=paste0('_.',colnames(dx)[tempix])
   }
   dx=dx[,names(dx) %in% c(names(.getdimnames(omd3)),.md3resnames(attr2keep)),with=FALSE]
-  if (NCOL(dx)==orincol) {
-    if (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
+  if (NCOL(dx)!=orincol) {
 
-  } else {
     dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
+  } else {
+    if (!ignoreNA) if (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
   }
   if (.md3resnames(attr2keep)!=.md3resnames('value' )) asDT=TRUE
   if (is.na(asDT)) {return(dx)}
