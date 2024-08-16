@@ -2049,7 +2049,7 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, sep='_', .simple=FALSE) {
   if (length(dcstruct)) attr(y,'dcstruct') =dcstruct
   colnames(y)=gsub('^_\\.','',colnames(y))
   if (missing(...)) return(y)
-  data.table::dcast(unflag(y,asDT=TRUE),value.var=gsub('_\\.','',MD3:::.md3resnames('value')),..., sep=sep)
+  data.table::dcast(unflag(y,asDT=TRUE,ignoreNA=!na.rm),value.var=gsub('_\\.','',MD3:::.md3resnames('value')),..., sep=sep)
 }
 
 #' @describeIn asmd3 Convert MD3 to data.frame, optionally with dcast
