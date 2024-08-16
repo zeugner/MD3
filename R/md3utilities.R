@@ -957,11 +957,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value', ignoreNA=FALSE) {
 
     dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
   } else {
-<<<<<<< HEAD
     if (!ignoreNA) if (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
-=======
-    if (!ignoreNA) (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
->>>>>>> 3ea095aeb62fb20b135162172fd231d372e06ce3
   }
   if (.md3resnames(attr2keep)!=.md3resnames('value' )) asDT=TRUE
   if (is.na(asDT)) {return(dx)}
