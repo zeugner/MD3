@@ -60,7 +60,7 @@ as.md3.zoo = function (x, split = ".", name_for_cols = character(0))
   out = suppressWarnings(.df2md3(cbind(x,TIME=xtime), split = split, name_for_cols = name_for_cols))
   nn = names(attr(out, "dcstruct"))
   if (length(nn) > 1)
-    out = aperm.md3(out, c(nn[-1], "TIME"))
+    out = aperm.md3(out, c(setdiff(nn,"TIME"), "TIME"))
   out
 }
 
