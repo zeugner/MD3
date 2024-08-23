@@ -1675,7 +1675,14 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
       x<-x[!tempselremove,,on=.NATURAL]
     }
     if (NROW(tempselnew)) {
-
+      newcodesthruusenames=lapply(names(xdn), \(x) setdiff(.getdimnames(value)[[x]],xdn[[x]]))
+      if (any(unlist(lapply(newcodesthruusenames,length)))) {
+        nnxdn=names(xdn)
+        xdn=lapply(seq_len(length(xdn)), \(x) union(xdn[[x]],newcodesthruusenames[[x]]))
+        names(xdn)=nnxdn
+        ohihi=.dimcodesrescue(xdn,attributes(x)[[tempan]]);
+        attr(x,tempan)=ohihi
+      }
       tempattr=attributes(x)[tempan]
       x=merge(x,tempselnew[,names(xdn),with=FALSE],all=TRUE)
 
