@@ -4,7 +4,7 @@
 \alias{unflag}
 \title{Drop observation attributes}
 \usage{
-unflag(omd3, asDT = FALSE, attr2keep = "obs_value")
+unflag(omd3, asDT = FALSE, attr2keep = "obs_value", ignoreNA = FALSE)
 }
 \arguments{
 \item{asDT}{logical. Default \code{FALSE} returns an md3. \code{TRUE} returns a data.table}

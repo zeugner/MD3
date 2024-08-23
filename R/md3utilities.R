@@ -308,7 +308,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
   dcl = sapply(data, mode)
   if (any(!(dcl %in% c("character", "logical",
                        "numeric")))) {
-    stop("dsfdasdf")
+    stop("dimension names need to be character or numeric")
   }
   if (ncol(data) - length(id.vars) < 2L & !missing(id.vars)) {
     dd = data
@@ -724,7 +724,8 @@ add.dim=.adddim_md3
 #' @param \dots further MD3 objects with n or n-1 dimensions
 #' @param along name of an existing or new dimension along which to combine x and y. If unspecified, then it tries to guess along whcih deimnsion to paste, depending on the value of \code{overwrite}
 #' @param newcodes name of element names for the thing to be added (see \code{\link{dimcodes}}).
-#' @param overwrite relevant if x and y have the same number of dimnesions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x
+#' @param overwrite relevant if x and y have the same number of dimensions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x
+#' @param ignoreDN if FALSE (not default) then x and y are merged according to their dimension names, no matter the order of such dimensions (i.e. GEO is equal to GEO, but not equal to COUNTRY). If \code{FALSE} and  \code{x} and  \code{y} have the same number of dimensions, then  \code{merge.md3} matches instead the 1st to the 1st , the 2nd to the 2nd dimension, etc.
 #' @param verbose if FALSE, suppress  success messages from the merging
 #' @return an md3 object with n or n+1 dimensions
 #' @seealso \code{\link{drop.md3}}, \code{\link{aggregate.md3}}
@@ -747,11 +748,12 @@ add.dim=.adddim_md3
 #' c(a1,a2)
 #'
 #' @export
-merge.md3=function (x, y, ..., along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE) {
+merge.md3=function (x, y, ..., along = NULL, newcodes = character(0),
+                    overwrite = NULL, ignoreDN=FALSE, verbose=TRUE) {
   ix = list()
   ctargs = nargs() - as.integer(!missing(x)) - as.integer(!missing(y)) -
     as.integer(!missing(along)) - as.integer(!missing(newcodes)) -
-    as.integer(!missing(overwrite))
+    as.integer(!missing(overwrite))- as.integer(!missing(verbose))- as.integer(!missing(ignoreDN))
   if (ctargs)
     for (i in 1:ctargs) {
       if (eval(parse(text = paste0("missing(..",
@@ -767,12 +769,12 @@ merge.md3=function (x, y, ..., along = NULL, newcodes = character(0), overwrite 
       }
     }
   z = .merge2md3(x, y, along = along, newcodes = newcodes,
-                 overwrite = overwrite,verbose=verbose)
+                 overwrite = overwrite,verbose=verbose, ignoreDN=ignoreDN)
   for (i in seq_along(ix)) {
     newcodes2 = ifelse(is.na(newcodes[i + 2]), paste0("X",
                                                       i + 2), newcodes[i + 2])
     z = .merge2md3(z, ix[[i]], along = along, newcodes = newcodes2,
-                   overwrite = overwrite,verbose=verbose)
+                   overwrite = overwrite,verbose=verbose, ignoreDN=ignoreDN)
   }
   z
 }
@@ -780,7 +782,7 @@ merge.md3=function (x, y, ..., along = NULL, newcodes = character(0), overwrite 
 #' @export
 c.md3=merge.md3
 
-.merge2md3 = function (x, y, along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE) {
+.merge2md3 = function (x, y, along = NULL, newcodes = character(0), overwrite = NULL, verbose=TRUE, ignoreDN=FALSE) {
   if (!is.null(along)) {
     if (!is.character(along)) {
       stop("along must be a single character element")
@@ -806,6 +808,16 @@ c.md3=merge.md3
     y = as.md3(y)
   }
   ydn = .getdimnames(y,TRUE); yoldc=attr(y,'dcstruct')
+  if (ignoreDN) {
+    if (!(length(xdn) %in% (length(ydn) +0L:1L))) stop('ignoreDN=TRUE only works if both objects have the same number of dimensions, or their number of dimensions differs by one')
+    if (length(xdn)==length(ydn)) {    names(ydn) = names(xdn) }
+    if (length(xdn)==(length(ydn)+1L)) {
+      if (!base::match(along, names(xdn), nomatch = 0)) stop('please specify parameter "along"')
+      names(ydn) = setdiff(names(xdn),along)
+    }
+    y=.setdimcodes(y,ydn)
+  }
+
   if (is.null(along)) {
     if (abs(length(xdn) - length(ydn)) == 1L) {
       along = c(setdiff(names(xdn),names(ydn)),setdiff(names(ydn),names(xdn)))
@@ -832,26 +844,28 @@ c.md3=merge.md3
     setdiff(names(a1), names(a2))
   }
   if (length(namnotin(ydn, xdn))) {
-    temp = data.table:::copy(x)
-    x = data.table:::copy(y)
-    y = temp
-    rm(temp)
-    xdn = .getdimnames(x,TRUE)
-    ydn = .getdimnames(y,TRUE)
+    if  (!length(namnotin(ydn, xdn))) {
+      temp = data.table:::copy(x)
+      x = data.table:::copy(y)
+      y = temp
+      rm(temp)
+      xdn = .getdimnames(x,TRUE)
+      ydn = .getdimnames(y,TRUE)
+    }
   }
   if (length(namnotin(ydn, xdn))) {
-    if (all(which(names(ydn) %in% names(xdn)) == which(names(xdn) %in%
-                                                       names(ydn)))) {
+    if (all(which(names(ydn) %in% setdiff(names(xdn),along)) == which(setdiff(names(xdn),along) %in% names(ydn)))) {
       tix = which(!(names(ydn) %in% names(xdn)))
-      if (verbose) warning("Dimension names were somewhat confusing: I interpreted ", paste(paste(names(ydn), "as", names(xdn))[tix], collapse = ","), ".")
-      names(ydn) = names(xdn)
-      attr(y, "hihi") = ydn
+      if (verbose) warning("Dimension names were somewhat confusing: I interpreted ", paste(paste(names(ydn), "as", setdiff(names(xdn),along))[tix], collapse = ","), ".")
+      if (length(ydn)==length(xdn)) {names(ydn)[tix] = names(xdn)[tix] } else { names(ydn)[tix] = setdiff(names(xdn),along)[tix] }
+      y =.setdimcodes(y,ydn)
     }
     else {
       stop("dimension names in objects are confusing: dimensions ",
            namnotin(ydn, xdn), " exist in first but not in second.\n\n dimensions ",
            namnotin(xdn, ydn), " exist in second but not in first.\n")
     }
+
   }
   if (!(is.null(along))) {
     if (length(along) > 1) {
@@ -883,7 +897,7 @@ c.md3=merge.md3
 
   zdn=lapply(as.list(names(xdn)),function(i) { union(xdn[[i]],ydn[[i]])})
   names(zdn)  =names(xdn)
-  if (any(names(zdn)=='TIME')) zdn[['TIME']]=.timo_class(zdn[['TIME']])
+  if (any(names(zdn)=='TIME')) zdn[['TIME']]=sort(.timo_class(zdn[['TIME']]))
   z=data.table:::rbind.data.table(x,y,fill=TRUE)
   attr(z,'dcstruct') = .dimcodesrescue(.dimcodesrescue(zdn,xoldc),yoldc)
   return(.md3_class(z))

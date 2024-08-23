@@ -11,6 +11,7 @@
   along = NULL,
   newcodes = character(0),
   overwrite = NULL,
+  ignoreDN = FALSE,
   verbose = TRUE
 )
 }
@@ -25,7 +26,9 @@
 
 \item{newcodes}{name of element names for the thing to be added (see \code{\link{dimcodes}}).}
 
-\item{overwrite}{relevant if x and y have the same number of dimnesions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x}
+\item{overwrite}{relevant if x and y have the same number of dimensions. if TRUE, then key combinations from y are used to overwrite key combinations from x. If FALSE, then the function tries to resolve conflicts by adding a new dimension to x}
+
+\item{ignoreDN}{if FALSE (not default) then x and y are merged according to their dimension names, no matter the order of such dimensions (i.e. GEO is equal to GEO, but not equal to COUNTRY). If \code{FALSE} and  \code{x} and  \code{y} have the same number of dimensions, then  \code{merge.md3} matches instead the 1st to the 1st , the 2nd to the 2nd dimension, etc.}
 
 \item{verbose}{if FALSE, suppress  success messages from the merging}
 }
