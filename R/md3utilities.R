@@ -2,6 +2,12 @@
 #deal with f=='h'  such as xx=mds('ECB/EXR/H.ARS.EUR.SP00.A') resp xx=mds('ECB/EXR/.ARS.EUR.SP00.A')
 
 
+.pselwnames = function(ix, charvec) {
+  if (is.numeric(ix)) return(.Primitive("[")(charvec,ix))
+  charvec[pmatch(ix,charvec, nomatch=NA)]
+}
+
+
 
 
 .getas =function(x, as=c("md3", "array", "numeric","data.table","data.frame","zoo","2d","1d","pdata.frame")) {
@@ -293,7 +299,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
 
 
     id.vars = colnames(data)[sapply(data, function(x) {.timo_is(x) | is.character(x)})]
-    ixval=utils::head(which(unlist(lapply(as.data.table(euhpq),function(x) class(x)[1]))=='numeric'),1)
+    ixval=utils::head(which(unlist(lapply(as.data.table(data),function(x) class(x)[1]))=='numeric'),1)
     if (length(ixval)) { if (length(id.vars)>=ixval) {
       message('presuming that everything beyond column ', ixval, '  is an observation attribute')
       id.vars=id.vars[1:(ixval-1)]
@@ -409,13 +415,26 @@ anyNA.md3 = function(x, recursive = FALSE) {
 
 #' @export
 as.md3.data.table  = function(x,id.vars, name_for_cols = NULL, split = ".", obsattr=character(0), ...) {
-  if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
+  if (!is.data.table(x)) if (is.data.frame(x)) { x= data.table:::as.data.table.data.frame(x)}
   dcstruct=attr(x,'dcstruct')
   if (length(dcstruct))  attr(x,'dcstruct')=.dimcodesrescue(.getdimnames(x,FALSE),dcstruct)
   if (length(dcstruct))  return(.stackeddf2md3(x,isdf = FALSE))
 
+  if (!missing(id.vars)) {
+    id.vars=.pselwnames(id.vars,colnames(x))
+    x[,id.vars] = lapply(x[,id.vars, with =FALSE], function(z) {if(is.numeric(z)) return(as.character(z)); z})
+  }
+
+
   if (length(obsattr)) {
-    if (!missing(split) | missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
+    obsattr=.pselwnames(obsattr,colnames(x))
+    attrix=match(obsattr,colnames(x))
+    if (anyNA(attrix)) {stop('observation attributes need to be column names. ')}
+    if (!missing(split) & missing(name_for_cols)) {stop('observation attributes can only be passed along values in a fully stacked data.frame/data.table. Try using melt() before this function.')}
+    if (base::min(attrix)<=base::max(base::setdiff(seq_len(NCOL(x)),attrix))) {
+      x=x[,c(base::setdiff(colnames(x),obsattr),obsattr),with=FALSE]
+    }
+      x[,obsattr]=lapply(x[,obsattr,with=F],function(z) {if (!is.character(z)) return(z); z=trimws(z); z[!nchar(z)]=NA_character_; z})
       y=.stackeddf2md3(x,isdf = FALSE)
   } else {
       y=.df2md3(x,id.vars = id.vars,name_for_cols = name_for_cols, split=split )
@@ -537,6 +556,13 @@ is.md3 = .md3_is
 #
 #
 
+
+setdiff.timo = function(x,y,...) {
+  .timo_class(data.table:::fsetdiff(data.table::data.table(OASCH=x),data.table::data.table(OASCH=y),...)[[1L]])
+}
+
+
+
 .lagmd3time = function (x, k = 1, consttimerange=TRUE, na.pad = TRUE, ...) {
   mytime=.timo_within(time.md3(x),referstoend = FALSE)
   if (is.null(mytime)) return(x)
@@ -548,12 +574,12 @@ is.md3 = .md3_is
   dy$TIME = .timo_within(dy$TIME +k,referstoend = FALSE)
   mydc$TIME=.timo_within(mytime +k,referstoend = FALSE)
 
-  if (consttimerange | na.pad) { mydc$TIME=sort(c(.timo_class(setdiff(mytime,mydc$TIME)),mydc$TIME))}
+  if (consttimerange | na.pad) { mydc$TIME=sort(c(.timo_class(setdiff.timo(mytime,mydc$TIME)),mydc$TIME))}
   if (consttimerange) {
 
     addedobs=.timo_class(setdiff(mydc$TIME,mytime));
     dy=dy[!(TIME %in% addedobs)]
-    mydc$TIME=.timo_class(setdiff(mydc$TIME,addedobs))
+    mydc$TIME=setdiff.timo(mydc$TIME,addedobs)
   }
   if (!na.pad & k!=0) {
     if (k<0) {mydc$TIME=mydc$TIME[seq_len(length(mydc$TIME)-k+1)]} else{mydc$TIME=mydc$TIME[-seq_len(k)]}
@@ -1589,3 +1615,7 @@ disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), .
   .timedisaggregate(x,frq=frq_grp,FUN,...)
 
 }
+
+
+
+
