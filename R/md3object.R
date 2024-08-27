@@ -1761,11 +1761,14 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
   mydn = .getdimnames(x,TRUE)
   mydc = attr(x,"dcstruct")
-  class(x)="list"
+
 
 
 
   tempix = .mdindexelem(vix,mydn)
+  if (!NROW(tempix)) {return(.md3_class(x))}
+
+  class(x)="list"
   ixt=.dn_findtime(mydn)
 
   vixhead=head(tempix,5L)
@@ -1777,6 +1780,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
   matix=.mdrest2codes(tempix)
+
   #this is to adjust for the y prefix when time periods are referred to in name
   if (any(grepl("^y[0-9]|[\\.]y[0-9]",vixhead))) {
     matix[,ixt]=gsub("y","",matix[,ixt,drop=TRUE])
@@ -2457,15 +2461,14 @@ Ops.md3=function(e1,e2) {
 #' @param asarray if this is TRUE, the function behavres like is.na on an array and returns an array. if \code{FALSE} then the funciton returns a vecotr, which is faster
 #' @return logical vector or array of the same dimensions as x
 #' @details
-#' The sparse formulation of md3 objects means that, under the hood, NAs are thos edimension names that are not present in the underlying data.table.
-#' For this reason, md3 require an is.na function that is specific to them
-#' Note that \code{asarray=FALSE} is not psossible when calling the 'mother' method \code{is.na}
+#' The sparse formulation of md3 obejcts means that, under the hood, NAs are thos edimension names that are not present in the underlying data.table.
+#' For this reason, md3 require an is.na function that is specfic to them
 #' @seealso \code{\link{dimnames}}
 #' @examples
 #' aa=eupop['NL:PT..TOTAL.1984']
 #'
 #' is.na(aa)
-#'
+#' is.na(aa,FALSE)
 #'
 #' aa[is.na(aa)]<-0
 #' #aa[onlyna=TRUE]<-0 # would have been faster
