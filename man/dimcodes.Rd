@@ -22,7 +22,7 @@ dimcodes(x, ...) <- value
 \method{dimcodes}{md3}(x) <- value
 }
 \arguments{
-\item{x}{an md0 object or any base object}
+\item{x}{an md3 object or any base object}
 
 \item{...}{no effect}
 

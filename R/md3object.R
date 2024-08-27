@@ -1800,7 +1800,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
   datix=data.table(matix);
   ixt=.dn_findtime(datix)
-  datix[[ixt]] = as.timo(datix[[ixt]])
+  if (ixt) datix[[ixt]] = as.timo(datix[[ixt]])
   value=.recycle(value,rep(NA,NROW(datix)))[[1L]]
   dx=.dt_class(x)
 
@@ -2320,7 +2320,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
 #' Set/get dimension and element names, labels and attributes
 #'
 #'
-#' @param x an md0 object or any base object
+#' @param x an md3 object or any base object
 #' @param value sets dimcodes equal to value
 #' @param ... no effect
 #' @return list of dimcodes (for getting) resp. md0/generic object (for setting)
@@ -2450,11 +2450,35 @@ Ops.md3=function(e1,e2) {
 #euhpq[1,1,1,][euhpq[1,1,1,]>euhpq[1,1,2,]]
 
 
+#' Apply is.na to md3 objects
+#'
+#'
+#' @param x an md3 object or any base object
+#' @param asarray if this is TRUE, the function behavres like is.na on an array and returns an array. if \code{FALSE} then the funciton returns a vecotr, which is faster
+#' @return logical vector or array of the same dimensions as x
+#' @details
+#' The sparse formulation of md3 objects means that, under the hood, NAs are thos edimension names that are not present in the underlying data.table.
+#' For this reason, md3 require an is.na function that is specific to them
+#' Note that \code{asarray=FALSE} is not psossible when calling the 'mother' method \code{is.na}
+#' @seealso \code{\link{dimnames}}
+#' @examples
+#' aa=eupop['NL:PT..TOTAL.1984']
+#'
+#' is.na(aa)
+#'
+#'
+#' aa[is.na(aa)]<-0
+#' #aa[onlyna=TRUE]<-0 # would have been faster
 #' @export
-is.na.md3 = function(x) {
-  ds=.mdsel2codes(.getdimnames(attr(x,'dcstruct'))) #$$$$$$$$$
+is.na.md3 = function(x,asarray=TRUE) {
+  lix=.getdimnames(attr(x,'dcstruct'))
+  ds=.mdsel2codes(rev(lix)) #$$$$$$$$$
   dx=.dt_class(x)[ds,,on=.NATURAL]
-  is.na(dx[['_.obs_value']])
+  vna=is.na(dx[['_.obs_value']])
+  if (!asarray) return(vna)
+  aout=array(logical(0),dim=sapply(lix,length),dimnames=lapply(lix,as.character))
+  aout[as.matrix(dx[,names(lix), with=FALSE])]=vna
+  aout
 }
 #is.na(euhpq)
 
