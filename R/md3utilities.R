@@ -45,8 +45,8 @@ as.zoo.md3 = function(x,...,sep='.') {
   ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
   x=.dt_class(unflag(x));  colnames(x)[[ixt]] ='TIME'
 
-  dxts=data.table(dcast(x,TIME~ ..., sep=sep, value.var= '_.obs_value'))
-
+  #dxts=data.table(dcast(x,TIME~ ..., sep=sep, value.var= '_.obs_value'))
+  dxts=dcast(as.data.table.md3(x,na.rm = FALSE),TIME~ ..., value.var= 'obs_value', )
 
   zoofnc=c('Q'=as.yearqtr.timo,'M'=as.yearmon.timo,'A'=data.table::year,'D'=as.Date.timo,'B'=as.Date.timo,'N'=as.POSIXct.timo,'H'=as.POSIXct.timo,'W'=as.Date,'S'=function(x) {(data.table::quarter(x)-1)/4+data.table::year(x)})
   y=zoo::zoo(as.matrix(dxts[,2:NCOL(dxts),with=FALSE]), frequency=.cttim$basetbl()[ixf,'frqzoo'], order.by=zoofnc[[ixf]](dxts[['TIME']]))
@@ -1103,6 +1103,16 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
     if (usenames) {
     mm=.md3_class(dx[0],dn = .getdimnames(x))
     if (is.array(proxy)) {dimnames(proxy)<- lapply(.matchixsubset2dn(proxy,.getdimnames(mm)),as.character); proxy=drop(proxy)}
+    if (length(dim(proxy)) == length(dim(mm))) {
+      if (any(dim(proxy)!=dim(mm))) {
+        #warning('Dimensions of proxy are not aligned with dimensions of x')
+        dd=lapply(lapply(names(dim(proxy)),\(x) MD3:::.recycle(dimnames(proxy)[[x]],dimnames(mm)[[x]])),`[[`,1L)
+        names(dd)=names(dim(proxy))
+        stop('Dimensions of proxy are not aligned with dimensions of x')
+
+      }
+    }
+
     mm=.md3set(mm,value=proxy)
      am=as.array(mm)
     } else {
@@ -1352,6 +1362,9 @@ end.md3 = function(x,...,drop=TRUE) {
   dy[,TIME:=.char2timo(`_.perdaggs`,guess = FALSE)]
   dy[['_.perdaggs']]<-NULL
   attr(dy,'dcstruct') = .dimcodesrescue(ydn,attr(x,'dcstruct'))
+
+  if (!na.rm) { if (anyNA(dy[['_.obs_value']])) { dy=dy[!is.na(`_.obs_value`),]  }}
+
   y=.md3_class(dy)
   if (drop) { y=drop.md3(y)}
   y
@@ -1371,6 +1384,20 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @param complete.periods logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).
 #' @param drop Logical, default \code{TRUE}. See \code{\link{drop.md3}}
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
+#' #' @details
+#'
+#' Parameter \code{frq_grp} mostly is a single frequency code. See also \code{\link{frequency.timo}}.
+#' The following denotes the existing frequency codes and their notation
+#' \itemize{
+#' \item \code{A} annual, notation \code{'2011'}
+#' \item \code{S} semi-annual, notation \code{'2011s2'}, second half of 2011
+#' \item \code{Q} quarterly, notation \code{'2011q3'}, third quarter of 2011
+#' \item \code{M} monthly, notation \code{'2011m10'}, October 2011
+#' \item \code{W} weekly, notation \code{'2011w39'}, 39th week of 2011
+#' \item \code{D} daily, notation \code{'2011-10-02'}, 2 October 2011
+#' \item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
+#' }
+#'
 #' @seealso \code{\link{fill.md3}},  \code{\link{disaggregate}}, \link{indexMD3}, \code{\link{imputena}}
 #' @examples
 #' #data("oecdgdp_aq")

@@ -34,6 +34,19 @@
 }
 \value{
 an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
+#' @details
+
+Parameter \code{frq_grp} mostly is a single frequency code. See also \code{\link{frequency.timo}}.
+The following denotes the existing frequency codes and their notation
+\itemize{
+\item \code{A} annual, notation \code{'2011'}
+\item \code{S} semi-annual, notation \code{'2011s2'}, second half of 2011
+\item \code{Q} quarterly, notation \code{'2011q3'}, third quarter of 2011
+\item \code{M} monthly, notation \code{'2011m10'}, October 2011
+\item \code{W} weekly, notation \code{'2011w39'}, 39th week of 2011
+\item \code{D} daily, notation \code{'2011-10-02'}, 2 October 2011
+\item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
+}
 }
 \description{
 Can sum, average, etc. to lower frequencies, or along entire dimensions, or along user-defined aggregates (such as country groups)

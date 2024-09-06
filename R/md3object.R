@@ -1624,6 +1624,9 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     if (usenames) {
 
       if (length(lix)<length(dimval)) { stop('You seem to have overidentified what you want to change. Try usenames=FALSE.')}
+      llindividsel=lapply(names(dimval),function(j) setdiff(dimval[[j]],lix[[j]]))
+      if (length(unlist(llindividsel))) { warning('the value you assign seems to contain more observations than your selection. For instance the code ',unlist(llindividsel),'i is present on hte right-hand side.')}
+
       lixsub=lix[setdiff(names(lix),names(dimval))]
 #message('???'); browser()
       if (length(lixsub)==1L) {
@@ -2228,7 +2231,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
   return(lout)
 }
 
-.dimcodesrescue = function(ohihi,olddc=list()) {
+.dimcodesrescue = function(ohihi,olddc=list(),sorttime=TRUE) {
   #if ('md3' %in%  class(ohihi)) { if (missing(olddc)) olddc=attr(ohihi,'dcstruct'); ohihi=attr(ohihi,'dcsimp'); }
   if (.md3_is(ohihi) | is(ohihi,'data.table')) {  ohihi=attr(ohihi,'dcstruct')}
   if (.md3_is(olddc) | is(olddc,'data.table')) {  olddc=attr(olddc,'dcstruct')}
@@ -2315,6 +2318,10 @@ dimnames.md3=function(x) {  .getdimnames(x) }
     outdc[[l]] = idc
   }
 
+  if (sorttime) {
+    tix=.dn_findtime(outdc)
+    if (tix>0) { outdc[[tix]] = sort(outdc[[tix]])}
+  }
 
   outdc
 }
