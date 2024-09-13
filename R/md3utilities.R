@@ -175,7 +175,7 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
   if (length(myf) == 0L)
     stop("requires time series")
   if (length(myf) == 1L)
-    return(zapply_perfrq(X, FUN, ...))
+    return(zapply_perfrq(X, FUN, sep='{',...))
 
 
   emptyrest = sapply(.dim(X), function(x) "")
