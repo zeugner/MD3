@@ -46,7 +46,7 @@ as.zoo.md3 = function(x,...,sep='.') {
   x=.dt_class(unflag(x));  colnames(x)[[ixt]] ='TIME'
 
   #dxts=data.table(dcast(x,TIME~ ..., sep=sep, value.var= '_.obs_value'))
-  dxts=dcast(as.data.table.md3(x,na.rm = FALSE),TIME~ ..., value.var= 'obs_value', )
+  dxts=dcast(as.data.table.md3(x,na.rm = FALSE),TIME~ ..., value.var= 'obs_value', sep=sep)
 
   zoofnc=c('Q'=as.yearqtr.timo,'M'=as.yearmon.timo,'A'=data.table::year,'D'=as.Date.timo,'B'=as.Date.timo,'N'=as.POSIXct.timo,'H'=as.POSIXct.timo,'W'=as.Date,'S'=function(x) {(data.table::quarter(x)-1)/4+data.table::year(x)})
   y=zoo::zoo(as.matrix(dxts[,2:NCOL(dxts),with=FALSE]), frequency=.cttim$basetbl()[ixf,'frqzoo'], order.by=zoofnc[[ixf]](dxts[['TIME']]))
@@ -131,8 +131,8 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
   myf=unique(.timo_frq(time(X)))
     #mdin = as.md3(X)
 
-  zapply_perfrq = function(mdin, FUN, ...) {
-    y0 = as.zoo.md3(mdin)
+  zapply_perfrq = function(mdin, FUN, sep='{', ...) {
+    y0 = as.zoo.md3(mdin,sep=sep)
     FUN2 = FUN
     if (is.function(FUN2)) {
       FUN2 = deparse(substitute(FUN))
@@ -161,11 +161,11 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
         attr(y2,'dcstruct') <- attr(mdin,'dcstruct')[names(.dim(y2))]
       } else {
         ff=data.table(TIME=rownames(y1),y1)
-        y2=as.md3.data.table(ff,id.vars = 'TIME',split = '.',name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+        y2=as.md3.data.table(ff,id.vars = 'TIME',split = sep,name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
       }
 
     } else {
-      y2 = as.md3.zoo(y1, name_for_cols = setdiff(names(.dim(mdin)),'TIME'))
+      y2 = as.md3.zoo(y1, name_for_cols = setdiff(names(.dim(mdin)),'TIME'), split = sep)
     }
 
 
