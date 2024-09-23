@@ -298,8 +298,14 @@ as.md3.array = function(x,...) {
         if (!length(temp[[i]]) & !length(frqshifter)) { temp[[i]] = ohihi[[i]]; next }
         if (!length(temp[[i]])) { temp[[i]] = ohihi[[i]] }
         if (length(temp[[i]])==1L) {
-          if (any(grepl(':$',temp[[i]]))) { temp[[i]] = seq.timo(gsub(':$','',temp[[i]]),tail(ohihi[[i]],1)) }
-          if (any(grepl('^:',temp[[i]]))) { temp[[i]] = seq.timo(head(ohihi[[i]],1), gsub(':','',temp[[i]])) }
+          if (!is.null(ohihi)) {
+            if (any(grepl(':$',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]>=.char2timo(gsub(':$','',temp[[i]]))]}
+            if (any(grepl('^:',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]<=.char2timo(gsub('^:','',temp[[i]]))]}
+            if (length(frqshifter)) { temp[[i]] = temp[[i]][.timo_frq(temp[[i]]) %in% frqshifter]}
+          } else {
+            if (any(grepl(':$',temp[[i]]))) { myper=.char2timo(gsub(':$','',temp[[i]]));  temp[[i]] = seq.timo(myper, tail(ohihi[[i]],1), frq=frqshifter) }
+            if (any(grepl('^:',temp[[i]]))) { myper=.char2timo(gsub('^:','',temp[[i]]));  temp[[i]] = seq.timo(head(ohihi[[i]],1), myper, frq=frqshifter) }
+          }
         }
         temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs ={length(frqspresent)>1}, addifmiss = TRUE, coverlowerfrqs =frqshifter)
         if (length(frqshifter)) {
