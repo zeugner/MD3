@@ -2234,6 +2234,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
 
 .dimcodesrescue = function(ohihi,olddc=list(),sorttime=TRUE) {
   #if ('md3' %in%  class(ohihi)) { if (missing(olddc)) olddc=attr(ohihi,'dcstruct'); ohihi=attr(ohihi,'dcsimp'); }
+  if (is(ohihi, "data.table") & !length(attr(ohihi,"dcstruct"))) {ohihi=lapply(ohihi[,!(grepl('^obs_',colnames(ohihi)) | grepl('^_\\.',colnames(ohihi))),drop=FALSE,with=FALSE],unique)}
   if (.md3_is(ohihi) | is(ohihi,'data.table')) {  ohihi=attr(ohihi,'dcstruct')}
   if (.md3_is(olddc) | is(olddc,'data.table')) {  olddc=attr(olddc,'dcstruct')}
 
