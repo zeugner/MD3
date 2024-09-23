@@ -301,7 +301,7 @@ as.md3.array = function(x,...) {
           if (any(grepl(':$',temp[[i]]))) { temp[[i]] = seq.timo(gsub(':$','',temp[[i]]),tail(ohihi[[i]],1)) }
           if (any(grepl('^:',temp[[i]]))) { temp[[i]] = seq.timo(head(ohihi[[i]],1), gsub(':','',temp[[i]])) }
         }
-        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs ={length(frqspresent)>1}, addifmiss = TRUE )
+        temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs ={length(frqspresent)>1}, addifmiss = TRUE, coverlowerfrqs =frqshifter)
         if (length(frqshifter)) {
           if (length(temp)) if (!any(frqspresent %in% frqshifter)) stop('The specified time periods like ',
               temp[[ixt]][1],' do not match the specified frequencies ',paste(frqshifter,collapse=', '))
@@ -590,9 +590,10 @@ as.md3.array = function(x,...) {
   missadded=FALSE
   #if (any(names(ix)=='TIME')) ix[[which(names(ix)=='TIME')]] = as.character(ix[names(ix)=='TIME'][[1]])
   #if (any(names(xdn)=='TIME')) xdn[[which(names(xdn)=='TIME')]] = as.character(xdn[names(xdn)=='TIME'][[1]])
-
+  mycoverlowerfrqs=FALSE
   if (is.null(frq)) if (!is.null(attr(ix,'frqshifter'))) { frq=attr(ix,'frqshifter') }
   if (!is.null(frq)) ixt=.dn_findtime(xdn) else ixt=0
+  if (length(frq)) {mycoverlowerfrqs=frq}
   for (i in 1:length(ix)) {
     if (length(ix[[i]])) {
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
@@ -618,7 +619,7 @@ as.md3.array = function(x,...) {
           }
         }
         if (!is.null(frq)) { ix[[i]]=ix[[i]][.timo_frq(ix[[i]]) %in% frq]}
-        lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE) #hier eingreifen
+        lix[[i]]=.timo_subset(nvec,ix[[i]], coverhigherfrqs = dotimosubset, addifmiss=TRUE, coverlowerfrqs=mycoverlowerfrqs) #hier eingreifen
         if (.timo_is(ix[[i]])) { lix[[i]] = unique.timo(c(ix[[i]],lix[[i]]))}
       } else {
         lix[[i]]=.subset(nvec,ix[[i]])

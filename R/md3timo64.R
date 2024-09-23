@@ -863,7 +863,7 @@ Sys.timo = function(frq=NULL) {
 
 
 
-.timo_subset = function(x,...,coverhigherfrqs=TRUE,addifmiss=FALSE) {
+.timo_subset = function(x, ..., coverhigherfrqs=TRUE, addifmiss=FALSE, coverlowerfrqs=FALSE) {
   # tt=MD3:::.timo_seq('1999m06','2003m05')
   # MD3:::.timo_subset(tt,paste0('1999m0',7:9))
   # MD3:::.timo_subset(tt,23:27)
@@ -886,18 +886,19 @@ Sys.timo = function(frq=NULL) {
 
   if (length(ixl)!=1L) {
     #stop('sdafasdf')
-    return(.timo_class(unlist(lapply(ixl,function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs)))))
+    return(.timo_class(unlist(lapply(ixl,function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs, coverlowerfrqs = coverlowerfrqs)))))
   }
 
 
 
   ix=ixl[[1]]
+  if (!length(coverlowerfrqs)) {coverlowerfrqs = FALSE}
   if (!.timo_is(ix)) {
 
     if (!is.character(ix) ) return(x[unlist(ixl)])
     if (length(ix)!=1L) {
       #stop('sdafasdf')
-      return(.timo_class(unlist(lapply(as.list(ix),function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs)))))
+      return(.timo_class(unlist(lapply(as.list(ix),function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs, coverlowerfrqs = coverlowerfrqs)))))
     }
 
     ix=gsub("y","",ix)
@@ -906,8 +907,11 @@ Sys.timo = function(frq=NULL) {
     ixl = as.list(ix)
   }
     #xPOSIXct = character()
+
   for( i in 1:length(ixl)) {
     ixl[[i]] = as.character(ixl[[i]])
+
+
     bla=list()
     colonpresent=FALSE
     while (any(grepl(":",unclass(ixl[[i]])))) {
@@ -921,10 +925,20 @@ Sys.timo = function(frq=NULL) {
         #if (!length(xPOSIXct)) { xPOSIXct = .mdt_asPOSIXct(x) }
     }
     if (!length(bla)) bla[[2]] = bla[[1]] = .char2timo(ixl[[i]])
+    if (is.character(coverlowerfrqs)) {
+      xmy=x[.timo_frq(x) %in% coverlowerfrqs]
+    } else if (!coverlowerfrqs[[1L]]) {
+      xmy=x[.timo_frq(x) == .timo_frq(bla[[1L]])]
+
+    } else {
+      xmy=x
+    }
+    if (!length(xmy)) { xmy =x}
+
     maxfrq=NULL; if (!coverhigherfrqs) maxfrq=toupper(names(.cttim$fcode))[match(.timo_frq(c(bla[[1]],bla[[2]])),toupper(names(.cttim$fcode)))]
     ixsmaller = 1L + bit64:::`>.integer64`(.asint64(bla[[1]]),.asint64(bla[[2]]))
 
-    xout=try(x[.timo_within(.timo_class(bla[[3-ixsmaller]]), TRUE, FALSE)>=x & x >=.timo_within(.timo_class(bla[[ixsmaller]]), FALSE, FALSE)],silent=TRUE)
+    xout=try(xmy[.timo_within(.timo_class(bla[[3-ixsmaller]]), TRUE, FALSE)>=xmy & xmy >=.timo_within(.timo_class(bla[[ixsmaller]]), FALSE, FALSE)],silent=TRUE)
 
     if (!length(xout)) if (all(.timo_frq(.unlist_keepclass(bla)) %in% .timo_frq(x) )) {
       xout=.timo_subperiods(bla[[1L]],.timo_frq(bla[[1L]]),bla[[2L]])
@@ -940,7 +954,7 @@ Sys.timo = function(frq=NULL) {
 
     if (addifmiss & colonpresent) {
       tempadd=seq.timo(bla[1],bla[2]);
-        if (all(unique(.timo_frq(tempadd)) %in% .timo_frq(x))) {
+        if (all(unique(.timo_frq(tempadd)) %in% .timo_frq(xmy))) {
           xout=sort(unique(c(tempadd,xout)))
         }
     }
