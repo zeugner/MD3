@@ -375,6 +375,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
   }
   #browser()
   lix = list()
+  if (ixval <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
   for (i in seq_along(tempdn)) {
     lix[[tempdn[[i]]]] = unique(dd[, i])
   }
@@ -396,6 +397,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
 
     }
   } else {
+    if (ixval <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
     colnames(dd) = c(names(lix), .md3resnames('value'))
   }
 
