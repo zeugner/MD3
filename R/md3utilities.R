@@ -129,7 +129,8 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
   #require(zoo)
   if (!.md3_is(X)) X=as.md3(X)
   myf=unique(.timo_frq(time(X)))
-    #mdin = as.md3(X)
+  indc=.getdimcodes(X)
+  #mdin = as.md3(X)
 
   zapply_perfrq = function(mdin, FUN, sep='{', ...) {
     y0 = as.zoo.md3(mdin,sep=sep)
@@ -174,8 +175,11 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
 
   if (length(myf) == 0L)
     stop("requires time series")
-  if (length(myf) == 1L)
-    return(zapply_perfrq(X, FUN, sep='{',...))
+  if (length(myf) == 1L) {
+    x2=zapply_perfrq(X, FUN, sep='{',...)
+    x2=.setdimcodes(x2,indc,ignore.old=TRUE)
+    return(x2)
+  }
 
 
   emptyrest = sapply(.dim(X), function(x) "")
@@ -186,6 +190,7 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
     temp = zapply_perfrq(X[mysel, drop = FALSE], FUN, ...)
     X[.dimnames(temp)] = temp
   }
+  X=.setdimcodes(X,indc,ignore.old=TRUE)
   return(X)
 }
 
@@ -301,7 +306,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
     id.vars = colnames(data)[sapply(data, function(x) {.timo_is(x) | is.character(x)})]
     ixval=utils::head(which(unlist(lapply(as.data.table(data),function(x) class(x)[1]))=='numeric'),1)
     if (length(ixval)) { if (length(id.vars)>=ixval) {
-      message('presuming that everything beyond column ', ixval, '  is an observation attribute')
+      #message('This input md3 object likely contains flags, which have been dismissed here')
       id.vars=id.vars[1:(ixval-1)]
     }}
     }

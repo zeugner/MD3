@@ -2104,7 +2104,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
   if (!is.list(value)) stop("invalid 'dimcodes' given for array")
   #if (!is.md0(x)) x=as.md0(x)
   newdc=.dimcodesrescue(value,olddc = olddc)
-  if (identical(.dc2dn(newdc),.dc2dn(olddc))) {
+  if (identical(.dc2dn(newdc),.dc2dn(olddc))|ignore.old) {
     attr(x,'dcstruct') = newdc
     return(x)
   }
