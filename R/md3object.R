@@ -1669,7 +1669,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     tempselix=x[dtval[,names(xdn),with=FALSE],,on=.NATURAL]
     tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
     tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
-    if (onlyna | justval) { tempselremove=tempselremove[0,]}
+
     if (usenames) {
       #warning('have to deal with setting NA under usenames')
 
@@ -1680,6 +1680,8 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
         tempselremove= .mdsel2codes(lix)[ .mdsel2codes(uebrigbleiber),,on=.NATURAL]
       }
     }
+    if (onlyna | justval) { tempselremove=tempselremove[0,]}
+
     if (NROW(tempselremove)) {
       #browser()
       x<-x[!tempselremove,,on=.NATURAL]
