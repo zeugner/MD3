@@ -177,7 +177,7 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
     stop("requires time series")
   if (length(myf) == 1L) {
     x2=zapply_perfrq(X, FUN, sep='{',...)
-    x2=.setdimcodes(x2,indc,ignore.old=TRUE)
+    x2=.setdimcodes(x2,indc[names(indc) %in% colnames(x2)],ignore.old=TRUE)
     return(x2)
   }
 
@@ -190,7 +190,7 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
     temp = zapply_perfrq(X[mysel, drop = FALSE], FUN, ...)
     X[.dimnames(temp)] = temp
   }
-  X=.setdimcodes(X,indc,ignore.old=TRUE)
+  X=.setdimcodes(X,indc[names(indc) %in% colnames(X)],ignore.old=TRUE)
   return(X)
 }
 
@@ -375,7 +375,8 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
   }
   #browser()
   lix = list()
-  if (ixval <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
+  ixvalstacked = utils::head(which(unlist(lapply(dd,function(x) class(x)[1]))=='numeric'),1)
+  if (ixvalstacked <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
   for (i in seq_along(tempdn)) {
     lix[[tempdn[[i]]]] = unique(dd[, i])
   }
@@ -397,7 +398,8 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "rig
 
     }
   } else {
-    if (ixval <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
+    ixvalstacked = utils::head(which(unlist(lapply(dd,function(x) class(x)[1]))=='numeric'),1)
+    if (ixvalstacked <= length(id.vars)) { dd=cbind(dd[,-ixvalstacked,drop=FALSE],dd[,ixvalstacked])}
     colnames(dd) = c(names(lix), .md3resnames('value'))
   }
 
