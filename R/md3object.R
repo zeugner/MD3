@@ -1632,7 +1632,16 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
       if (length(lix)<length(dimval)) { stop('You seem to have overidentified what you want to change. Try usenames=FALSE.')}
       llindividsel=lapply(names(dimval),function(j) setdiff(dimval[[j]],lix[[j]]))
-      if (length(unlist(llindividsel))) { warning('the value you assign seems to contain more observations than your selection. For instance the code ',unlist(llindividsel),'i is present on hte right-hand side.')}
+      if (length(unlist(llindividsel))) { 
+        if (sum(lapply(llindividsel,length)>0)==1) {
+           warning('The value you assign seems to contain more observations than your left-hand side selection. This affects dimension ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
+        } else {
+          
+          swout='The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions'; 
+          for (jj in seq_along(dimval)) { if (length(llindividsel[[jj]])) {swout=paste0(swout, ifelse(nchar(swout<120),'',',') ,' "',names(dimval)[[jj]],'" (with codes such as "',head(llindividsel[[jj]],1),'" )')}}
+           warning('The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
+        }
+      }
 
       lixsub=lix[setdiff(names(lix),names(dimval))]
 #message('???'); browser()
