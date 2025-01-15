@@ -694,35 +694,62 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
    #exp(yy)-1
 }
 
-.adddim_md3 = function(x,.dimname='XY', .dimcodes=NULL,.fillall=FALSE,...) {
+.adddim_md3 = function(x,.dimname=NULL, .dimcodes=NULL,.fillall=FALSE,...) {
   if (!.md3_is(x)) stop("needs md3")
-  if (length(.dimname)>1) stop('dimname needs to be a single string element')
-  #if (length(.dimcodes)>1) browser()
   mydn=.getdimnames(x,TRUE); olddc=attr(x,'dcstruct')
-  if (!length(.dimcodes)) {.dimcodes=1}
-  if (.timo_is(.dimcodes)) {
+
+  if (!length(.dimcodes)) {
+    .dimcodes=1
+    if (!length(.dimname)) {.dimname='XY'}
+  } else if (.timo_is(.dimcodes)) {
     .dimname='TIME'
-  } else {
-    .dimcodes = make.names(.dimcodes, unique = TRUE)
-    .dimname = tail(make.names(c(names(mydn), .dimname), unique = TRUE), 1)
+  } else if (!is.list(.dimcodes)) {
+    if (length(.dimname)>1) stop('dimname needs to be a single string element. \nAlternatively dimcodes needs to a named list (see help(add.dim)).')
   }
 
-  temp = c(list(.dimcodes), mydn)
-  names(temp)[[1]] = .dimname
+  if (is.list(.dimcodes)) {
+    if (length(.dimname)) stop('If .dimcodes is a named list, it already contains the dimension names. So please do not provide .dimnames in this case.')
+  } else {
+    .dimname = tail(make.names(c(names(mydn), .dimname), unique = TRUE), 1)
+    .dimcodes = list(.dimcodes)
+    names(.dimcodes) = .dimname
+  }
+  tempix=grepl('TIME',names(.dimcodes),ignore.case = TRUE)
+  if (any(tempix)) {
+    .dimcodes[[which(tempix)]] = as.timo(.dimcodes[[which(tempix)]])
+    names(.dimcodes)[[which(tempix)]] = 'TIME'
+  }
+  ix2fix=setdiff(seq_along(.dimcodes),which(tempix))
+  .dimcodes[ix2fix] = lapply(.dimcodes[ix2fix], make.names, unique=TRUE)
+  .dimcodes[ix2fix] = lapply(.dimcodes[ix2fix],function(z) gsub('\\.','',z))
+  #if (length(.dimcodes)>1) browser()
+
+
+
+
+  temp = c(.dimcodes, mydn)
   x=.dt_class(x)
   if (.fillall) {
-    .dimcodes=unlist(lapply(as.list(.dimcodes),rep,NROW(x)))
-    if (.dimname=='TIME') {.dimcodes=.timo_class(.dimcodes)}
+    ugl=data.table(NULL)
+    for (dn in rev(names(.dimcodes))) {
+      ugl=data.table:::cbind.data.table(unlist(lapply(as.list(.dimcodes[[dn]]),rep,max(NROW(x),NROW(ugl)))),  ugl)
+    }
+    browser()
   } else {
-    .dimcodes=.dimcodes[[1L]]
+    ugl=data.table::as.data.table(lapply(.dimcodes,'[',1L))
   }
-  x=data.table:::cbind.data.table(.dimcodes,x)
+
+  y=data.table:::cbind.data.table(ugl,x)
+  if (any(colnames(y)=='TIME')) {
+    y[['TIME']]=.timo_class(y[['TIME']])
+  }
 
 
-  names(x)[[1L]] =.dimname
-  attr(x,'dcstruct') = .dimcodesrescue(temp,olddc)
-  .md3_class(x)
+  attr(y,'dcstruct') = .dimcodesrescue(temp,olddc)
+  .md3_class(y)
 }
+
+
 
 
 
@@ -735,6 +762,10 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
 #' @param .fillall if FALSE and length(.dimcodes)>1 then the first element will contain the existing data while the others will be NA
 #'                if TRUE and length(.dimcodes)>1 then each new element will be filled with the same data as the first one
 #' @param \dots unused
+#' @details
+#' If you want\ to add more than one dimension at once, you need to leave \code{.dimname} empty and
+#' define \code{.dimcodes} as a named list (see examples below)
+#'
 #' @return an md3
 #' @examples
 #'
@@ -742,6 +773,13 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
 #' print(p1[,1,1,4,])
 #' p2=add.dim(euhpq,'Residence',c('Primary','Secondary'),.fillall=TRUE)
 #' print(p2[,1,1,4,])
+#'
+#' #define small array for testing
+#' atemp0=eupop["BG",,1,'2020:']
+#' str(atemp0)
+#'
+#' atemp1=add.dim(atemp0,.dimcodes=list('lang'=c('BG','other' ),religion=c('ortho','other')))
+#' str(atemp1)
 #'
 #' @export
 add.dim=.adddim_md3
@@ -1115,7 +1153,7 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
     if (length(dim(proxy)) == length(dim(mm))) {
       if (any(dim(proxy)!=dim(mm))) {
         #warning('Dimensions of proxy are not aligned with dimensions of x')
-        dd=lapply(lapply(names(dim(proxy)),\(x) MD3:::.recycle(dimnames(proxy)[[x]],dimnames(mm)[[x]])),`[[`,1L)
+        dd=lapply(lapply(names(dim(proxy)),\(x) .recycle(dimnames(proxy)[[x]],dimnames(mm)[[x]])),`[[`,1L)
         names(dd)=names(dim(proxy))
         stop('Dimensions of proxy are not aligned with dimensions of x')
 
@@ -1578,6 +1616,10 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
     if (any(grepl('head',head(body(FUN),10)))) { conversion='first'}
     if (any(grepl('tail',head(body(FUN),10)))) { conversion='last'}
     if (any(grepl('mean',head(body(FUN),10)))) { conversion='mean'}
+    if (any(grepl('start',head(body(FUN),10)))) { conversion='first'}
+    if (any(grepl('end',head(body(FUN),10)))) { conversion='last'}
+    if (any(grepl('average',head(body(FUN),10)))) { conversion='mean'}
+    
   }
 
 
@@ -1593,7 +1635,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
   if (ofb!=nfb) { stop('x has frequency ',of,' (a multiple of ',ofb,') -  while frq is specified as ',frq, ' (a multiple of ',nfb,').\nCannot disaggregate into irergular subperiods')}
   xdn=.getdimnames(x)
   mz=as.zoo.md3(x)
-
+  mz=mz[,!unlist(lapply(mz, function(m) all(is.na(m))))]
   lz=lapply(mz,.tsdisagg,to=attr(ofb,'multiple')/attr(nfb,'multiple'),conversion=conversion,method=method,criterion=criterion,...)
 
   nt=seq(min(vt),max(vt),frq=frq)

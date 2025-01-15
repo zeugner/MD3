@@ -1632,12 +1632,12 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
       if (length(lix)<length(dimval)) { stop('You seem to have overidentified what you want to change. Try usenames=FALSE.')}
       llindividsel=lapply(names(dimval),function(j) setdiff(dimval[[j]],lix[[j]]))
-      if (length(unlist(llindividsel))) { 
+      if (length(unlist(llindividsel))) {
         if (sum(lapply(llindividsel,length)>0)==1) {
            warning('The value you assign seems to contain more observations than your left-hand side selection. This affects dimension ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
         } else {
-          
-          swout='The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions'; 
+
+          swout='The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions';
           for (jj in seq_along(dimval)) { if (length(llindividsel[[jj]])) {swout=paste0(swout, ifelse(nchar(swout<120),'',',') ,' "',names(dimval)[[jj]],'" (with codes such as "',head(llindividsel[[jj]],1),'" )')}}
            warning('The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
         }
@@ -2450,24 +2450,57 @@ Ops.md3=function(e1,e2) {
   #  return(get(.Generic)(as.vector(as.array.md3(e1)),as.vector(as.array.md3(e2))))
   #}
   if (missing(e2)) { e2=e1; e1=0 }
+
+  if (!is.md3(e1) & !is.numeric(e1)) { stop('Argument must be MD3 or numeric')}
+  if (!is.md3(e2) & !is.numeric(e2)) { stop('Argument must be MD3 or numeric')}
+
+  if (is.array(e1)) { e1=as.md3(e1)}
+  if (is.array(e2)) { e2=as.md3(e2)}
+
+  if (is.md3(e1) & is.md3(e2)) {
+    dn1=names(.getdimnames(e1)); dn2=names(.getdimnames(e2))
+    if (length(setdiff(dn2,dn1))) {
+      if (length(dn1)==length(dn2)) if (all(.dim(e1)==.dim(e2)))  {
+        dn2 <- names(dimnames(e2)) <- dn1
+      } else {
+        stop('dimension names do not match')
+      }
+
+    }
+
+      surplusdim=setdiff(dn1,dn2)
+      xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
+      names(xx) = intersect(dn1,dn2)
+      if (any(xx>0)) {
+        if (sum(xx)==1L) {
+          warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+        } else {
+          warning('In ',sum(xx>0),' dimensions, the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+        }
+      }
+      m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
+      m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
+      y=m1[,colnames(.dt_class(e1)),with=FALSE]
+      #attr(y,)
+      if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
+      return(.md3_class(y,dn = .getdimcodes(e1)))
+
+  }
+
+
+
+
+
+
+
   if (.md3_is(e1)) o1=as.array.md3(e1) else o1=e1
   if (.md3_is(e2)) o2=as.array.md3(e2) else o2=e2
+
+
+
   y=try(get(.Generic)(o1,o2),silent=TRUE)
   if (any(grepl('error',class(y)))) {
-    if(.md3_is(e1) & !is.null(names(dimnames(o2)))) {
-      surplusdim=setdiff(names(dimnames(o1)),names(dimnames(o2)))
-      if  (length(surplusdim)==1L) {
-
-        e2a=.adddim_andfill(e2,.dimname = surplusdim,.dimcodes = .getdimnames(e1,TRUE)[[surplusdim]])
-        e2a=aperm(e2a,perm =names(.getdimnames(e1,TRUE)))
-        y=get(.Generic)(o1,as.array.md3(e2a))
-
-      } else {
         stop('Indexing  error.')
-      }
-    } else {
-      stop(y)
-    }
   }
   if (any(grepl('=|>|<|!',.Generic))) {return(y)}
   if (inherits(y,'array')) {return(as.md3.array(y))}
@@ -2566,7 +2599,7 @@ str.md3 = function (object,...) {
   cat('An MD3 object of', length(mydims),'dimensions with',prod(mydims), 'elements: ', paste(paste(names(mydims),mydims,sep=": "),collapse=', '))
   cat("\nIt contains",data.table:::dim.data.table(object)[1], "non-empty elements")
   cat("\nThe ID of the first element is",paste(lapply((lapply(.getdimnames(object,TRUE),"[",1)),as.character),collapse = '.'),
-      'and of the last element',paste(lapply((lapply(.getdimnames(object,TRUE),function(x) x[length(x)])),as.character),collapse = '.'))
+      'and the last element',paste(lapply((lapply(.getdimnames(object,TRUE),function(x) x[length(x)])),as.character),collapse = '.'))
 }
 
 

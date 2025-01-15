@@ -4,7 +4,7 @@
 \alias{add.dim}
 \title{Adds a new dimension to an MD3 array}
 \usage{
-add.dim(x, .dimname = "XY", .dimcodes = NULL, .fillall = FALSE, ...)
+add.dim(x, .dimname = NULL, .dimcodes = NULL, .fillall = FALSE, ...)
 }
 \arguments{
 \item{x}{an md3 object}
@@ -24,11 +24,22 @@ an md3
 \description{
 Adds new dimension to an MD3 object, optionally to be filled with a number of new elements
 }
+\details{
+If you want\ to add more than one dimension at once, you need to leave \code{.dimname} empty and
+define \code{.dimcodes} as a named list (see examples below)
+}
 \examples{
 
 p1=add.dim(euhpq,'Residence',c('Primary','Secondary'))
 print(p1[,1,1,4,])
 p2=add.dim(euhpq,'Residence',c('Primary','Secondary'),.fillall=TRUE)
 print(p2[,1,1,4,])
+
+#define small array for testing
+atemp0=eupop["BG",,1,'2020:']
+str(atemp0)
+
+atemp1=add.dim(atemp0,.dimcodes=list('lang'=c('BG','other' ),religion=c('ortho','other')))
+str(atemp1)
 
 }
