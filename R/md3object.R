@@ -2468,7 +2468,15 @@ Ops.md3=function(e1,e2) {
 
     }
 
-      surplusdim=setdiff(dn1,dn2)
+      surplusdim1=setdiff(dn1,dn2); surplusdim2=setdiff(dn2,dn1)
+      if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
+      if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=TRUE}
+      if (e2islarger) {
+        temp=copy(e2); e2=copy(e1); e2=temp
+        temp=dn2; dn1=dn2; dn2=temp
+        rm(temp)
+      }  
+      
       xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
       names(xx) = intersect(dn1,dn2)
       if (any(xx>0)) {
@@ -2479,7 +2487,7 @@ Ops.md3=function(e1,e2) {
         }
       }
       m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
-      m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
+      m1[['_.obs_value']]<-get(.Generic)(m1[[paste0('_.obs_value.',ifelse(e2islarger,'y','x'))]],m1[[paste0('_.obs_value.',ifelse(e2islarger,'x','y'))]])
       y=m1[,colnames(.dt_class(e1)),with=FALSE]
       #attr(y,)
       if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}

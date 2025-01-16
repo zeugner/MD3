@@ -40,10 +40,13 @@
 #' @export
 as.zoo.md3 = function(x,...,sep='.') {
   if (!require('zoo')) stop('requires package zoo to be installed.')
-  ixt =.dn_findtime(.getdimnames(x)); if (ixt<1) stop('could not find a time dimension in X')
+  dn=.getdimnames(x)
+  ixt =.dn_findtime(dn); if (ixt<1) stop('could not find a time dimension in X')
 
   ixf=unique(.timo_frq(.getdimnames(x,TRUE)[[ixt]])); if (length(ixf)!=1) stop('cannot do this with mixed frequencies')
-  x=.dt_class(unflag(x));  colnames(x)[[ixt]] ='TIME'
+  x=.dt_class(unflag(x));
+  x=x[,c(names(dn),setdiff(colnames(x),names(dn))),with=FALSE]
+  colnames(x)[[ixt]] ='TIME'
 
   #dxts=data.table(dcast(x,TIME~ ..., sep=sep, value.var= '_.obs_value'))
   dxts=dcast(as.data.table.md3(x,na.rm = FALSE),TIME~ ..., value.var= 'obs_value', sep=sep)
@@ -1411,6 +1414,7 @@ end.md3 = function(x,...,drop=TRUE) {
   attr(dy,'dcstruct') = .dimcodesrescue(ydn,attr(x,'dcstruct'))
 
   if (!na.rm) { if (anyNA(dy[['_.obs_value']])) { dy=dy[!is.na(`_.obs_value`),]  }}
+  dy=dy[,c(names(ydn),setdiff(colnames(dy),names(ydn))), with=FALSE]
 
   y=.md3_class(dy)
   if (drop) { y=drop.md3(y)}
@@ -1619,7 +1623,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
     if (any(grepl('start',head(body(FUN),10)))) { conversion='first'}
     if (any(grepl('end',head(body(FUN),10)))) { conversion='last'}
     if (any(grepl('average',head(body(FUN),10)))) { conversion='mean'}
-    
+
   }
 
 
