@@ -2,10 +2,13 @@
 % Please edit documentation in R/md3timo64.R
 \name{frequency.timo}
 \alias{frequency.timo}
+\alias{frequency<-}
 \alias{frequency<-.timo}
 \title{Getting, setting or converting the frequency of a timo period object}
 \usage{
 \method{frequency}{timo}(x, frq = NULL, refersto = "start", ...)
+
+frequency(x, frq = NULL, ...) <- value
 
 \method{frequency}{timo}(x, refersto = c("start", "end")) <- value
 }
@@ -14,7 +17,7 @@
 
 \item{frq}{a frequency character like '\code{A}', 'M' or 'D' to convert x to}
 
-\item{refersto}{an optional character vector. If frq is higher frequency than the original x, then this chooses the first a last eleigible subperiod.}
+\item{refersto}{an optional character \code{'start'}, \code{'middle'}, or \code{'end'}. If frq is higher frequency than the original x, then this chooses the first a last eligible subperiod.}
 }
 \value{
 a timo obejct if frq is specifed. A character vector with frequency codes (like 'D','B','A') otherwise

@@ -2470,7 +2470,7 @@ Ops.md3=function(e1,e2) {
 
       surplusdim1=setdiff(dn1,dn2); surplusdim2=setdiff(dn2,dn1)
       if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
-      if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=TRUE}
+      if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=FALSE}
       if (e2islarger) {
         temp=copy(e2); e2=copy(e1); e2=temp
         temp=dn2; dn1=dn2; dn2=temp

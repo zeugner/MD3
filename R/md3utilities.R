@@ -1701,3 +1701,56 @@ disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), .
 
 
 
+
+#' Getting, setting or converting the frequency of an MD3 object
+#'
+#' @param x an \code{md3} object
+#' @param value the frequency to which the object is to be changed to, expressed as a single character such as \code{'Q'}
+#' @param refersto an optional character \code{'start'}, \code{'middle'}, or \code{'end'}. If \code{frq} is higher frequency than the original x, then this chooses the first a last eligible subperiod.
+#' @return A character vector with the unique frequency codes (like 'D','B','A') that \code{x} contains. Empty character if \code{x} contains not TIME dimension
+#' @details
+#'
+#' The following denotes the existing frequency codes and their notation
+#' \itemize{
+#' \item \code{A} annual, notation \code{'2011'}
+#' \item \code{S} semi-annual, notation \code{'2011s2'}, second half of 2011
+#' \item \code{Q} quarterly, notation \code{'2011q3'}, third quarter of 2011
+#' \item \code{M} monthly, notation \code{'2011m10'}, October 2011
+#' \item \code{W} weekly, notation \code{'2011w39'}, 39th week of 2011
+#' \item \code{D} daily, notation \code{'2011-10-02'}, 2 October 2011
+#' \item \code{N} minutely, notation \code{'2011-10-02t13:24'}, 2 October 2011, 13:24h (default GMT)
+#' }
+#'
+#' @seealso \code{\link{frequency.timo}}, \code{\link{timo}}
+#' @examples
+#' frequency(eupop)
+#'
+#' @export
+frequency.md3 = function(x, ...) {
+  #if (!is.md3(x)) stop('x needs to be an md3 object')
+  dn=.getdimnames(x)
+  ixt=MD3:::.dn_findtime(dn)
+  if (ixt==0) {return(character())}
+  unique(.timo_frq(dn[[ixt]]))
+}
+
+
+#' @rdname frequency.md3
+#' @export
+`frequency<-.md3` = function(x, value, refersto='end') {
+  if (missing(value)) stop('please specify the new frequency as a single character, such as "A", "Q", "M", "D", or "B"')
+  if (length(value)!=1 | !is.character(value)) stop('please specify the new frequency as a single character, such as "A", "Q", "M", "D", or "B"')
+  frq=trimws(toupper(utils::head(value,1)))
+  if (length(refersto)==1) {refersto2=c(TRUE,FALSE)[pmatch(tolower(trimws(refersto[[1]])),c('end','start','middle'))]} else { refersto2 = (tolower(refersto)=='end')}
+
+  dn=.getdimnames(x)
+  ixt=MD3:::.dn_findtime(dn)
+  if (ixt==0) {return(character())}
+  if (length(unique(.timo_frq(dn[[ixt]])))>1) stop('setting a new frequncy in this manner does not work for mixed-frequency objects')
+  dc=.getdimcodes(x)
+  y=.dt_class(x)
+  y[[names(dn)[ixt]]]=.timo_cfrq(y[[names(dn)[ixt]]],frq=frq, referstoend=refersto2)
+  dc[[ixt]]=.timo_cfrq(dc[[ixt]],frq=frq, referstoend=refersto2)
+  .md3_class(.setdimcodes(y,dc,ignore.old = TRUE))
+
+}

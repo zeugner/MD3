@@ -1046,7 +1046,7 @@ Sys.timo = function(frq=NULL) {
 #'
 #' @param x a \code{\link{timo}}  period vector
 #' @param frq a frequency character like '\code{A}', 'M' or 'D' to convert x to
-#' @param refersto an optional character vector. If frq is higher frequency than the original x, then this chooses the first a last eleigible subperiod.
+#' @param refersto an optional character \code{'start'}, \code{'middle'}, or \code{'end'}. If frq is higher frequency than the original x, then this chooses the first a last eligible subperiod.
 #' @return a timo obejct if frq is specifed. A character vector with frequency codes (like 'D','B','A') otherwise
 #' @details
 #'
@@ -1092,7 +1092,8 @@ frequency.timdif = function(x, frq=NULL, ...) {
   stop('cannot convert time difference of ', .cttim$frqcodes[toupper(attributes(x)[['units']]),'desc'], ' frequency to ', .cttim$frqcodes[toupper(frq),'desc'], ' without context')
 }
 
-
+#' @rdname frequency.timo
+#' @export
 `frequency<-`= function (x,frq=NULL,...) UseMethod("frequency<-")
 
 #' @rdname frequency.timo

@@ -55,6 +55,8 @@ lines.md3 = function(x, y=NULL,...) {
   invisible(lapply(as.list(as.ts.md3(x)),getS3method("lines","ts"),col=4))
 }
 
+
+
 #' Plot md3 time series
 #'
 #' Plotting method for objects inheriting from class \code{md3}. Converts md3 to time series of class \code{ts} and applies \code{\link[graphics]{barplot}}
