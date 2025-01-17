@@ -52,7 +52,7 @@ plot.md3 = function (x, y = NULL, plot.type = c("single", "multiple"),
 #' @rdname plot.md3
 #' @export
 lines.md3 = function(x, y=NULL,...) {
-  getS3method("lines","ts")(as.ts.md3(x),...)
+  invisible(lapply(as.list(as.ts.md3(x)),getS3method("lines","ts"),col=4))
 }
 
 #' Plot md3 time series
