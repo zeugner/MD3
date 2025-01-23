@@ -2469,30 +2469,32 @@ Ops.md3=function(e1,e2) {
     }
 
       surplusdim1=setdiff(dn1,dn2); surplusdim2=setdiff(dn2,dn1)
-      if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
-      if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=FALSE}
-      if (e2islarger) {
-        temp=copy(e2); e2=copy(e1); e2=temp
-        temp=dn2; dn1=dn2; dn2=temp
-        rm(temp)
-      }  
-      
-      xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
-      names(xx) = intersect(dn1,dn2)
-      if (any(xx>0)) {
-        if (sum(xx)==1L) {
-          warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
-        } else {
-          warning('In ',sum(xx>0),' dimensions, the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+      if (length(c(surplusdim1,surplusdim2))>0 | !identical(unname(.dim(e1)),unname(.dim(e2)))) {
+        if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
+        if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=FALSE}
+        if (e2islarger) {
+          temp=copy(e2); e2=copy(e1); e2=temp
+          temp=dn2; dn1=dn2; dn2=temp
+          rm(temp)
         }
-      }
-      m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
-      m1[['_.obs_value']]<-get(.Generic)(m1[[paste0('_.obs_value.',ifelse(e2islarger,'y','x'))]],m1[[paste0('_.obs_value.',ifelse(e2islarger,'x','y'))]])
-      y=m1[,colnames(.dt_class(e1)),with=FALSE]
-      #attr(y,)
-      if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
-      return(.md3_class(y,dn = .getdimcodes(e1)))
 
+
+        xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
+        names(xx) = intersect(dn1,dn2)
+        if (any(xx>0)) {
+          if (sum(xx)==1L) {
+            warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+          } else {
+            warning('In ',sum(xx>0),' dimensions, the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+          }
+        }
+        m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
+        m1[['_.obs_value']]<-get(.Generic)(m1[[paste0('_.obs_value.',ifelse(e2islarger,'y','x'))]],m1[[paste0('_.obs_value.',ifelse(e2islarger,'x','y'))]])
+        y=m1[,colnames(.dt_class(e1)),with=FALSE]
+        #attr(y,)
+        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
+        return(.md3_class(y,dn = .getdimcodes(e1)))
+      }
   }
 
 

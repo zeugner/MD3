@@ -736,8 +736,9 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
     ugl=data.table(NULL)
     for (dn in rev(names(.dimcodes))) {
       ugl=data.table:::cbind.data.table(unlist(lapply(as.list(.dimcodes[[dn]]),rep,max(NROW(x),NROW(ugl)))),  ugl)
+      names(ugl)=names(.dimcodes)
     }
-    browser()
+    
   } else {
     ugl=data.table::as.data.table(lapply(.dimcodes,'[',1L))
   }
