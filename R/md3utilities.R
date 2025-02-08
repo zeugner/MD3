@@ -738,7 +738,7 @@ growth  = function(x,lag=1L, whichdim=length(dim(x)),logcompounding=FALSE) {
       ugl=data.table:::cbind.data.table(unlist(lapply(as.list(.dimcodes[[dn]]),rep,max(NROW(x),NROW(ugl)))),  ugl)
       names(ugl)=names(.dimcodes)
     }
-    
+
   } else {
     ugl=data.table::as.data.table(lapply(.dimcodes,'[',1L))
   }
@@ -1752,6 +1752,11 @@ frequency.md3 = function(x, ...) {
   y=.dt_class(x)
   y[[names(dn)[ixt]]]=.timo_cfrq(y[[names(dn)[ixt]]],frq=frq, referstoend=refersto2)
   dc[[ixt]]=.timo_cfrq(dc[[ixt]],frq=frq, referstoend=refersto2)
+  if (refersto2) {
+    #within that period, orient the count
+    y[[names(dn)[ixt]]]=.timo_cfrq(y[[names(dn)[ixt]]],frq=frq, referstoend=FALSE)
+    dc[[ixt]]=.timo_cfrq(dc[[ixt]],frq=frq, referstoend=FALSE)
+  }
   .md3_class(.setdimcodes(y,dc,ignore.old = TRUE))
 
 }
