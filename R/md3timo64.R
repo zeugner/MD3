@@ -68,9 +68,9 @@
   return(ix)
 }
 
-.unlist_keepclass = function(x) {
+.unlist_keepclass = function(x, recursive = FALSE, use.names = FALSE) {
   lclasses=rapply(x,class,how = 'list')
-  temp=unlist(x)
+  temp=unlist(x, recursive=recursive,  use.names= use.names)
   if (!(class(temp)[1] %in% lclasses)) {
   if (length(unique(lclasses))>1) stop('not possible to mix classes here')
   class(temp) = lclasses[[1]]
