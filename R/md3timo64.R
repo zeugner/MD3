@@ -179,7 +179,121 @@ as.integer64.timo = .asint64
   return(TRUE)
 }
 
-.char2timo= function(xstring, frq=NULL, guess =TRUE) {
+
+
+
+.char2timo_simplest = function(x, frq=NULL) {
+  if (anyNA(x)) stop('no NAs permitted.')
+  x=trimws(x)
+  z=bit64::integer64(length(x))
+  dictinteger= c(0:9,0:55)
+  names(dictinteger)= c(0:9,sprintf('%02d',0:55))
+
+  aa=MD3:::.cttim[['yearstartposixfrom1800']]()
+  ww=(7-as.integer(format(MD3:::as.Date.timo(aa),'%u')))*86400+aa
+
+  gurgl=1800L:2200L; names(gurgl)=gurgl
+  #kurkl=c(1L:12L,1L:4L); names(kurkl) = c(sprintf('%02d',1:12),1:4)
+  fdict=c('Q'='q','S'='s','H'='s','M'='m','W'='w','0'=NA,'1'=NA); fdict2= fdict; names(fdict2)=tolower(names(fdict)); fdict=c(fdict,fdict2); rm(fdict2)
+
+  monthbased=setdiff(MD3:::.cttim[['frqcodes']][MD3:::.cttim[['frqcodes']][,'baseunit']=='M','fcode'],'A')
+
+
+  if (!length(frq)) {
+    #y1=as.integer(substr(x,0,4))
+
+    frql=substr(x,5,5)
+    istiret = {frql=='-' | frql==' '}
+    frql0=substr(x,5+istiret,5+istiret)
+    frql=fdict[frql0]; frql[frql0=='']='a'
+
+
+
+    strrest=substr(x,5+istiret+!is.na(frql),50)
+    frql[nchar(strrest)<3 & is.na(frql)] = 'm'
+    ym=substr(strrest,0,2)
+    frql[nchar(strrest)<6 & is.na(frql)] = 'd'
+    frql[is.na(frql)] = 'n'
+    frq=frql
+  } else {
+    if (length(frq) ==1) frq=rep(frq,length(x))
+    if (length(frq) !=length(x)) stop('argument frq has to have the same length as x, or be a singleton')
+    permissiblef =rep(tolower(MD3:::.cttim[['frqcodes']][,'fcode']),2); names(permissiblef) =c(tolower(MD3:::.cttim[['frqcodes']][,'fcode']),toupper(MD3:::.cttim[['frqcodes']][,'fcode']))
+    frq=permissiblef[frq]
+    if (anyNA(frq)) stop('argument frq has to be a character vector containing elements ',paste(MD3:::.cttim[['frqcodes']][,'fcode'], collapse = ', '))
+    #strrest=gsub('^[-A-z ]*','',substr(x,5,50))
+    #strrest=substr(x,5,50)
+    #strrest=ifelse (substr(strrest,0,1)==' ' | substr(strrest,0,1)=='-', substr(strrest,2,49), strrest)
+    #strrest=ifelse (!is.na(substr(strrest,0,1)), substr(strrest,2,49), strrest)
+    ttt=c(LETTERS,letters,' ', '-'); names(ttt)=ttt
+    strrest=substr(x,5+!is.na(ttt[substr(x,5,5)])+!is.na(ttt[substr(x,6,6)]),50)
+  }
+  yy=gurgl[substr(x,0,4)]
+
+
+  #frq2u=toupper(frq)
+  f2U = MD3:::.cttim[['frqcodes']][,"fcode"]; names(f2U) = tolower(f2U)
+  frq2u=f2U[frq]
+  ixmb= frq %in% tolower(monthbased)
+  ixyb= frq=='a'
+  ixhf= !ixmb & !ixyb
+
+  if (any(ixyb)) {
+
+    ix=(yy[ixyb] - 1800L +1L)
+    z[ixyb]=(aa[ix] + MD3:::.cttim[['frqcodes']]['A','timosuffix'])
+    if (all(ixyb)) {return(MD3:::.timo_class(z))}
+  }
+
+  if (any(ixmb)) {
+    ix=dictinteger[strrest[ixmb]]*MD3:::.cttim[['frqcodes']][frq2u[ixmb],'multiple'] + (yy[ixmb] - 1900)*12
+    mm=MD3:::.cttim[['monthstartposixfrom1900']]()
+    z[ixmb]=(mm[ix] + MD3:::.cttim[['frqcodes']][frq2u[ixmb],'timosuffix'])
+    if (all(ixyb|ixmb)) {return(MD3:::.timo_class(z))}
+  }
+
+
+  if (any(ixhf)) {
+    if (any(frq=='w')) {
+      z[frq=='w'] = ww[yy[frq=='w']-1800 + 1L ] + dictinteger[strrest[frq=='w']]*86400L*7L  + MD3:::.cttim$frqcodes['W','timosuffix']
+    }
+    ixd=frq %in% c('d','b')
+    if (any(ixd)) {
+      temp =  list(sec=MD3:::.cttim$frqcodes['D','timosuffix'], min=0, hour=0, mday=as.integer(gsub('^[^- ]*[- ]','',strrest[ixd])), mon=as.integer(substr(strrest[ixd],0,2))-1, year=yy[ixd]-1900,
+                   wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA)
+      class(temp) = 'POSIXlt'
+      z[ixd] = bit64::as.integer64(as.POSIXct.POSIXlt(temp,tz = 'UTC'))
+    }
+    if (any(frq=='n')) {
+      temp=strsplit(gsub(':','-',x[frq=='n']),split='[A-z -]')
+      ltemp=lapply(temp,function(q) { p=list(sec=MD3:::.cttim$frqcodes['N','timosuffix'], min=as.integer(q[5]), hour=as.integer(q[4]), mday=as.integer(q[3]), mon=as.integer(q[2])-1, year=as.integer(q[1])-1900,
+                                             wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA); class(p)='POSIXlt'; p})
+      z[frq=='n']=MD3:::.unlist_keepclass(lapply(ltemp,function(r) MD3:::as.timo.POSIXct(as.POSIXct.POSIXlt(r))))
+    }
+
+  }
+  MD3:::.timo_class(z)
+}
+
+
+.asmd3f = function(md3c) {
+  dx=MD3:::.dt_class(md3c)
+  mydc=MD3:::.getdimcodes(md3c)
+  mydn = lapply(mydc,\(x) if(MD3:::.timo_is(x)) return(x) else return(x[,1,drop=TRUE]))
+  for (i in setdiff(names(mydn),'TIME')) {
+    temp=match(dx[[i]], mydn[[i]])
+    attr(temp,'levels') <- mydn[[i]]
+    class(temp)='factor'
+    dx[[i]] = temp
+  }
+  MD3:::.md3_class(dx)
+}
+
+
+
+
+
+.char2timo_standard= function(xstring, frq=NULL, guess =TRUE) {
   fixnas =function(invec) {
     ixna=which(is.na(ixna))
     if (!length(ixna)) ixna=grep( '^N',invec)
@@ -407,6 +521,47 @@ as.integer64.timo = .asint64
   #browser()
   #return(.timo_num2class(vout))
 }
+
+
+
+
+
+.char2timo = function (xstring, frq = NULL, guess = FALSE) {
+
+
+
+  if (!length(xstring)) {
+    return(.timo_class(bit64::integer64()))
+  }
+
+
+  if (base::is.numeric(xstring)) {
+    return(as.timo(xstring,frq=frq))
+  }
+
+  xstring=as.character(xstring)
+  xfactor=as.factor(xstring)
+  xperiods=levels(xfactor)
+  mytimo=.timo_class(bit64::integer64())
+  if (!guess & (anyNA(utils::head(xperiods,2000)))) {
+    mytimo=.char2timo_simplest(as.character(xperiods),frq)
+    if (anyNA(mytimo)) {mytimo=.timo_class(bit64::integer64())  }
+  }
+
+  if (!length(mytimo)) {
+    mytimo = .char2timo_standard(xperiods,frq=frq,guess=guess)
+  }
+
+  if (anyNA(mytimo)) {
+    stop('Cannot interpret time periods like ', head(xperiods[is.na(mytimo)],1), ifelse(length(frq),'\n.Try pass into another format.',' \nTry specifying argument frq'))
+  }
+
+
+  mytimo[as.integer(xfactor)]
+
+
+}
+
 
 
 .timo2char = function(intimo) {
@@ -681,7 +836,7 @@ as.timo.numeric = function (x, frq=NULL, ...) {
 
 #' @export
 as.timo.character = function (x, frq=NULL,...){
-  if (is.null(frq)) return(.char2timo(x))
+  if (is.null(frq)) return(.char2timo(x,guess = TRUE))
   if (length(frq)) if (is.character(frq)) if (any(frq=='H'|frq=='h')) { frq[tolower(frq)=='h']<-'S'}
   as.timo.default(.char2timo(x, frq), frq)
 }

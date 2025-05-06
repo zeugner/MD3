@@ -1721,6 +1721,10 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     if (anyNA(dtval[[obs]])) {
       x=x[!is.na(`_.obs_value`)]
     }
+    if (length(setdiff(names(xdn),colnames(x)))) {
+        stop('Something went wrong with assigned to the left hand side, notably the following dimensions: ' ,
+        paste(setdiff(names(xdn),colnames(x)),collapse=', '), '. Try whether assigning time range by time range works')
+    }
     return(.md3_class(x))
     #attributes(x)[tempan] <- tempattr[tempan]
 
@@ -2674,6 +2678,29 @@ str.md3 = function (object,...) {
   }
 
   stopfn()
+}
+
+
+
+.md3tofactvers = function(x) {
+  y=.dt_class(x)
+  odn=.getdimnames(x)
+
+  for (cc in setdiff(names(odn),'TIME')) {
+    y[[cc]]=factor(y[[cc]],levels = odn[[cc]],ordered = FALSE,nmax=length(odn[[cc]]))
+  }
+  .md3_class(y)
+}
+
+
+.md3fromfactvers = function(x) {
+  y=MD3:::.dt_class(x)
+  ndn=names(attr(x,'dcstruct'))
+
+  for (cc in setdiff(ndn,'TIME')) {
+    y[[cc]]=as.character(y[[cc]])
+  }
+  MD3:::.md3_class(y)
 }
 
 

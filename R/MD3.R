@@ -9,13 +9,13 @@
 #' @section Further work:
 #'
 #' This package is still under development; there are certainly some bugs lurking around
-#' Build date: 2025-01-17
+#' Build date: 2025-05-05
 #'
 #'
 #' Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to be added
 #'
 #' @section Author:
-#' Stefan Zeugner ECFIN.B1
+#' Stefan Zeugner, European Commission
 #
 #' @import utils
 #' @import stats

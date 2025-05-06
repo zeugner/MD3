@@ -16,7 +16,7 @@ Use function \code{Nomics} and function \code{helpNomics} to load data
 
 
 This package is still under development; there are certainly some bugs lurking around
-Build date: 2025-01-17
+Build date: 2025-05-05
 
 
 Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to be added
@@ -24,6 +24,6 @@ Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to b
 
 \section{Author}{
 
-Stefan Zeugner ECFIN.B1
+Stefan Zeugner, European Commission
 }
 

@@ -1760,3 +1760,57 @@ frequency.md3 = function(x, ...) {
   .md3_class(.setdimcodes(y,dc,ignore.old = TRUE))
 
 }
+
+
+
+
+
+
+
+#' @rdname ctc
+#' @export
+cfc <- function(header=TRUE, row.names=NULL, na.strings=c("","#N/A","#NUM!","#REF!","#VALUE!","#DIV/0!","#NAME?"), sep="\t", ...) {
+  #copy table from Excel
+  return(read.table("clipboard-32768",header=header,row.names=row.names, sep=sep, na.strings=na.strings,comment.char="",stringsAsFactors=FALSE,...))
+}
+
+
+
+#' Utility functions - copy to-from clipbaord
+#'
+#' Can decompose sums, averages, etc. to higher frequencies, or to constituent parts (e.g. countries in country groups)
+#' @param x any object containing data, such a data.frame, data.table, array, matrix, or  md3 object,
+#' @param row.names whether to copy rownames
+#' @param col.names whether to copy colnames (for ctc)
+#' @param na how to copy NA. E.g. \code{=na()} for copying to Excel
+#' @param ... any other arguments to \code{\link[utils]{write.table}} , respectively \code{\link[utils]{read.table}}
+#' @param na.strings a characer vector that identifies NAs. Default is to recognize Excel NAs
+#' @param sep which separator to use when copying form clipboard default is (Windows) tab
+#' @examples
+#'
+#' ctc(matrix(1:4,2),row.names = FALSE)
+#' cfc()
+#'
+#' @export
+ctc<- function(x,..., row.names=TRUE,col.names=TRUE,na='') {
+  #copy table to Excel
+  if (col.names & row.names) { col.names=NA }
+  if (!length(na)) { na='=NA()'}
+  if (MD3:::.md3_is(x)) {
+    x=as.array(x)
+  }
+  write.table(x,file="clipboard-32768", sep="\t", row.names=row.names, col.names=col.names,na = na,...)
+}
+
+
+#' Utility functions - paste operator
+#'
+#' Pastes two strings without having to type paste
+#' @param ... things to paste
+#' @examples
+#'
+#' "A" %&% "B"
+#' LETTERS %&% 2
+#'
+#' @export
+`%&%` <- paste0
