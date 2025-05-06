@@ -543,13 +543,19 @@ as.integer64.timo = .asint64
   xfactor=as.factor(xstring)
   xperiods=levels(xfactor)
   mytimo=.timo_class(bit64::integer64())
-  if (!guess & (anyNA(utils::head(xperiods,2000)))) {
-    mytimo=.char2timo_simplest(as.character(xperiods),frq)
+  if (!guess & !anyNA(utils::head(xperiods,2000))) {
+    mytimo=.char2timo_simplest(as.character(xperiods))
     if (anyNA(mytimo)) {mytimo=.timo_class(bit64::integer64())  }
   }
 
   if (!length(mytimo)) {
-    mytimo = .char2timo_standard(xperiods,frq=frq,guess=guess)
+    mytimo = .char2timo_standard(xperiods,guess=guess)
+    if (anyNA(mytimo)) {mytimo=.timo_class(bit64::integer64())  }
+  }
+
+
+  if (!length(mytimo)) {
+    mytimo = .char2timo_standard(xstring,frq=frq,guess=guess)
   }
 
   if (anyNA(mytimo)) {
