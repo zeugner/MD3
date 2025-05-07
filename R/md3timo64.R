@@ -569,8 +569,72 @@ as.integer64.timo = .asint64
 }
 
 
+.timo2char = function(intimo, possperiods=NULL) {
+  
+  if (length(possperiods)) {
+    possperiods=MD3:::.asint64(possperiods)
+  } else {
+    possperiods=unique(MD3:::.asint64(intimo))
+  }
+  ixperiods=match(MD3:::.asint64(intimo),possperiods)
+  tout=.timo2char_fast(possperiods)[ixperiods]
+  if (!anyNA(tout)) return(tout)
+  
+  tout[is.na(tout)] = .timo2char_native(intimo[is.na(tout)])
+}
 
-.timo2char = function(intimo) {
+
+.timo2char_fast = function(intimo) {
+  myf=MD3:::.timo_frq(intimo)
+  if (anyNA(myf)) myf[is.na(myf)] = ''
+  # mformat=.cttim$frqcodes[toupper(myf),'formatc']
+  # if (anyNA(mformat)) { mformat[is.na(mformat)]=""}
+  # if (!length(mformat)) {if (!length(myf)) return(character()) else stop('unknown frequency')}
+  #intimoct=as.POSIXct.timo(intimo)
+  mdict=MD3:::.cttim$monthstartposixfrom1900()
+  mwhich=findInterval(intimo,mdict)
+  monthbased=MD3:::.cttim$frqcodes[myf,'baseunit']=='M'
+  yyy=(mwhich-1) %/% 12 + 1900
+  mmm=mwhich %% 12 
+  cout =rep(NA_character_,length(intimo))
+  if (any (monthbased)) {
+    qqss=MD3:::.cttim$frqcodes[myf[monthbased],'baseunit']=='M' & myf[monthbased]!='M'
+    subper=mmm[monthbased]
+    subper[qqss] = mmm[monthbased][qqss] %/% MD3:::.cttim$frqcodes[myf[monthbased][qqss],'multiple'] +1
+    subper[!qqss] = sprintf('%02d',   subper[!qqss] )
+    f2low=names(MD3:::.cttim$fcode); names(f2low) = toupper(f2low)
+    cout[monthbased] =sprintf('%04d%s%s',yyy[monthbased],f2low[myf[monthbased]],subper)
+  #  cout[monthbased] =stringi::stri_c(yyy[monthbased],f2low[myf[monthbased]],subper)
+   # cout[monthbased]=paste0(yyy[monthbased], f2low[myf[monthbased]], subper )
+    cout[myf=='A'] = yyy[myf=='A']
+    if (all(monthbased)) return(cout)
+  }
+  
+  
+  doybased = myf %in% 'W'
+  if (any (doybased)) {
+    startday=mdict[(yyy-1899)*12-11]
+    
+    dayoy=(MD3:::.asint64(intimo)-startday +1) %/% 86400 +1  
+    wdict=c(0,6:1); names(wdict)=1:7
+    www=(dayoy-wdict[(format.Date(MD3:::as.Date.timo(startday),'%u'))]) %/% 7 +1
+    cout[doybased] = sprintf('%04dw%02d',yyy[doybased],as.integer(www))
+  }
+  
+ 
+  minbased=(MD3:::.cttim$frqcodes[myf,'baseunit']=='N' | MD3:::.cttim$frqcodes[myf,'baseunit']=='B') & myf!='W'
+  if (!any(minbased)) return(cout)
+  dayom=as.integer((MD3:::.asint64(intimo)-mdict[mwhich]) %/% 86400 +1)
+  cout[minbased] = sprintf('%04d-%02d-%02d',yyy[minbased],mmm[minbased], dayom[minbased] )
+  cout[myf=='N'] = sprintf('%st%02d:%02d',cout[myf=='N'],as.integer((MD3:::.asint64(intimo)[myf=='N'] ) %% 86400 %/% 3600), 
+                           as.integer(MD3:::.asint64(intimo)[myf=='N']  %% 86400 %% 3600 %/% 60))
+  
+  return(cout)
+}
+
+
+
+.timo2char_native = function(intimo) {
   myf=.timo_frq(intimo)
   if (anyNA(myf)) myf[is.na(myf)] = ''
   mformat=.cttim$frqcodes[toupper(myf),'formatc']
@@ -1384,7 +1448,7 @@ months.timo = function(x, abbreviate=FALSE, ...) {
 
 #' @export
 weekdays.timo = function(x, abbreviate=FALSE, ...) {
-  format.Date(as.Date.timo(x), ifelse(abbreviate, "%b", "%B"))
+  format.Date(as.Date.timo(x), ifelse(abbreviate, "%u", "%A"))
 }
 
 
