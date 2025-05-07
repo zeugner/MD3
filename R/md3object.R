@@ -2499,6 +2499,14 @@ Ops.md3=function(e1,e2) {
         #attr(y,)
         if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
         return(.md3_class(y,dn = .getdimcodes(e1)))
+      } else if (length(intersect(dn2,dn1))==length(dn1)) {
+        m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
+        m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
+        y=m1[,colnames(.dt_class(e1)),with=FALSE]
+        #attr(y,)
+        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
+        return(.md3_class(y,dn = .getdimcodes(e1)))
+
       }
   }
 
