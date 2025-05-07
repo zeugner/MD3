@@ -1569,6 +1569,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
   codesinxdn=lapply(as.list(names(lix)),function(dname) lix[[dname]] %in% xdn[[dname]]);
   if (all(!unlist(lapply(codesinxdn,length)))) { codesinxdn= lapply(as.list(seq_along(lix)),function(dix) ix[[dix]] %in% xdn[[dix]]);  }
   if (any(!unlist(codesinxdn)))  {
+    unseenelement=any(unlist(lapply(codesinxdn,all)))
     names(codesinxdn) = names(lix)
     lix=lix[names(xdn)]; ixd=
       for (ixd in which(unlist(lapply(codesinxdn,function(d) any(!d))))) {
