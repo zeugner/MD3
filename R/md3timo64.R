@@ -576,7 +576,9 @@ as.integer64.timo = .asint64
   } else {
     possperiods=unique(MD3:::.asint64(intimo))
   }
+  if (anyNA(possperiods)) return(.timo2char_native(possperiods))
   ixperiods=match(MD3:::.asint64(intimo),possperiods)
+  
   tout=.timo2char_fast(possperiods)[ixperiods]
   if (!anyNA(tout)) return(tout)
   

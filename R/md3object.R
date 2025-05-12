@@ -527,6 +527,20 @@ as.md3.array = function(x,...) {
 
 
 
+.mdcodesinsel = function(dtcodes,lix,simplylogical=TRUE) {
+  #dtcodes: a data.table with codes (like those arising from as.data.table.md3)
+  #lix, a list with dimnames (like those arising of dimnames.md3)
+  if (is(dtcodes,'md3')) { dtcodes=as.data.table(dtcodes,na.rm=TRUE, sep='_', .simple=TRUE)}
+  if (!is(dtcodes,'data.table')) { dtcodes=as.data.table(dtcodes)}
+  if (!all(match(names(lix),names(dtcodes),nomatch=0))) stop('names of dtcodes need to be present in names of lix')
+  rr=lapply(as.list(names(lix)),\(x) match(dtcodes[[x]],lix[[x]],nomatch=NA_integer_) )
+  r2=as.matrix(as.data.frame(rr,stringsAsFactors = FALSE,col.names = names(lix)))
+  if (!simplylogical) return(r2)
+  apply(r2,1, function(x) {!anyNA(x)})
+}
+
+
+
 .mdsel2rest = function(lix) {
 
 
@@ -1507,60 +1521,12 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
-  #if (all(sapply(ix,class)=="data.frame")) { ix = lapply(ix,"[[","code") } #if dimcodes instead of hihi has been supplied
-
-
-
-  # if (usenames) {
-  #   sublix=.dimnames(value)
-  #   if (is.null(names(sublix))) {
-  #     names(sublix) = names(xdn)[!sapply(ix,length)]
-  #   }
-  #   if (!all(names(sublix) %in% names(xdn))) {
-  #     dimnameinquestion = setdiff(names(sublix),names(xdn))
-  #     pctinnames =0
-  #     if (length(dimnameinquestion)==1L) {
-  #       pctinnames = unlist(lapply(xdn[setdiff(names(xdn),names(sublix))],
-  #                                  function(x) sum(sublix[[dimnameinquestion]] %in% x)/length(sublix[[dimnameinquestion]])))
-  #       #TBD
-  #     }
-  #     if (any(pctinnames> .49)) {
-  #       mynewname=names(pctinnames)[(pctinnames>.49)][1]
-  #       warning('Dimension names were somewhat confusing: I assume that ', dimnameinquestion, ' matches dimension name ', mynewname)
-  #       names(sublix)[names(sublix)==dimnameinquestion] = mynewname
-  #
-  #     } else {
-  #       stop("dimension named ",paste(names(sublix)[!(names(sublix) %in% names(xdn))],collapse=", "),"cannot be found")
-  #
-  #     }
-  #   }
-  #   #if (length(sublix)!=length(ix)) stop("wrongnumber of dimensions assigned when usenames==TRUE")
-  #   lix = .matchgen2dim(sublix,ix,xdn)
-  #   if (length(value) > 1L) if (prod(unlist(lapply(lix,length)))> length(value)) { warning('number of items to replace is longer than length of update. Values will be recycled.')}
-  #   .dimnames(value) = lix[names(sublix)]
-  #
-  #
-  # } else {
     lix=.match2dim(ix,xdn,TRUE)
-  # }
 
 
 
 
 
-  # if (!identical(lix,.match2dim(ix,xdn,FALSE))) {
-  #   for (i in seq_along(xdn)) {
-  #     missstuff=lix[[i]][!(lix[[i]] %in% xdn[[i]])]
-  #     if (length(missstuff)) {
-  #       xdn[[i]]=c(xdn[[i]],missstuff)
-  #     }
-  #   }
-  #   #attr(x,"hihi") = .fixhihi(xdn)
-  # }
-
-  #xdn = .mdfixindexfreq(xdn, stopifwrong =  TRUE)
-  #attr(x,"hihi") = .fixhihi(xdn, ignore.time=FALSE) #this is in case a new time period got added. things need to be sorted right
-  #ixf =  .mdfindfreqdim(xdn)
   ixt =  .dn_findtime(xdn)
 
 
@@ -1678,19 +1644,25 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
     tempselix=x[dtval[,names(xdn),with=FALSE],,on=.NATURAL]
     tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
-    tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
 
-    if (usenames) {
-      #warning('have to deal with setting NA under usenames')
+    if (onlyna | justval) {
+      tempselremove=tempselix[0,]
+    } else {
+      if (usenames) {
+        #warning('have to deal with setting NA under usenames')
 
-      uebrigbleiber=lapply(names(dimval),function(x) {dimval[[x]][!(dimval[[x]] %in% dtval[[x]])]}); names(uebrigbleiber)=names(dimval)
-      if (any(as.logical(unlist(lapply(uebrigbleiber,length))))) {
+        uebrigbleiber=lapply(names(dimval),function(x) {dimval[[x]][!(dimval[[x]] %in% dtval[[x]])]}); names(uebrigbleiber)=names(dimval)
+        if (any(as.logical(unlist(lapply(uebrigbleiber,length))))) {
 
-        #tempselremove=data.table::as.data.table(lix)[data.table::as.data.table(uebrigbleiber),,on=.NATURAL]
-        tempselremove= .mdsel2codes(lix)[ .mdsel2codes(uebrigbleiber),,on=.NATURAL]
+          #tempselremove=data.table::as.data.table(lix)[data.table::as.data.table(uebrigbleiber),,on=.NATURAL]
+          tempselremove2=copy(tempselix[!is.na(tempselix[[obs]])])
+          tempselremove=tempselremove2[.mdcodesinsel(tempselremove2, uebrigbleiber),]
+          #tempselremove= .mdsel2codes(lix)[ .mdsel2codes(uebrigbleiber),,on=.NATURAL]
+        }
+      } else {
+      tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
       }
     }
-    if (onlyna | justval) { tempselremove=tempselremove[0,]}
 
     if (NROW(tempselremove)) {
       #browser()
