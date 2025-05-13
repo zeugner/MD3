@@ -1644,7 +1644,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
     tempselix=x[dtval[,names(xdn),with=FALSE],,on=.NATURAL]
     tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
-
+    tempselremove =NULL
     if (onlyna | justval) {
       tempselremove=tempselix[0,]
     } else {
