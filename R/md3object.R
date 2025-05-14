@@ -1531,12 +1531,13 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
-  expanding=FALSE
+  expanding=FALSE; allnewinexpandset=FALSE
   codesinxdn=lapply(as.list(names(lix)),function(dname) lix[[dname]] %in% xdn[[dname]]);
   if (all(!unlist(lapply(codesinxdn,length)))) { codesinxdn= lapply(as.list(seq_along(lix)),function(dix) ix[[dix]] %in% xdn[[dix]]);  }
   if (any(!unlist(codesinxdn)))  {
     unseenelement=any(unlist(lapply(codesinxdn,all)))
     names(codesinxdn) = names(lix)
+    allnewinexpandset=any(!unlist(lapply(codesinxdn,all)))
     lix=lix[names(xdn)]; ixd=
       for (ixd in which(unlist(lapply(codesinxdn,function(d) any(!d))))) {
         xdn[[ixd]] = c(xdn[[ixd]], lix[[ixd]][!codesinxdn[[ixd]]])
@@ -1545,7 +1546,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     attr(x,'dcstruct') <- .dimcodesrescue(xdn,xdc)
     expanding=TRUE
   }
-
+  if (allnewinexpandset) {onlyna=TRUE}
 
   if (!length(usenames)) {
     if (inherits(value,c('md3','array'))) usenames=TRUE else usenames=FALSE
@@ -2459,6 +2460,17 @@ Ops.md3=function(e1,e2) {
         xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
         names(xx) = intersect(dn1,dn2)
         if (any(xx>0)) {
+          if (!length(c(surplusdim1,surplusdim2))) if (!any(.dim(e1) %% .dim(e2))) {
+            #obviously this is a recycling case
+            tt=.recycle(as.array.md3(e1),as.array.md3(e2))
+            y=try(get(.Generic)(tt[[1]],tt[[2]]),silent=TRUE)
+            if (any(grepl('error',class(y)))) {
+              stop('Indexing  error.')
+            }
+            if (any(grepl('=|>|<|!',.Generic))) {return(y)}
+            if (inherits(y,'array')) {return(as.md3.array(y))}
+          }
+
           if (sum(xx)==1L) {
             warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
           } else {
@@ -2472,9 +2484,15 @@ Ops.md3=function(e1,e2) {
         if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
         return(.md3_class(y,dn = .getdimcodes(e1)))
       } else if (length(intersect(dn2,dn1))==length(dn1)) {
-        m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
+        dt1=.dt_class(e1); dt2=.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE]
+        if (all(.dim(e1)==.dim(e2))) {
+          #in this case there is no usenames. You wnat both things to add / substract one by one
+          dnn1=.getdimnames(e1); dnn2=.getdimnames(e2)
+          for (i in dn2) { dt2[[i]] = dnn1[[i]][match(dt2[[i]],dnn2[[i]])]}
+        }
+        m1=merge(dt1,dt2,by=dn2,all.x=TRUE)
         m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
-        y=m1[,colnames(.dt_class(e1)),with=FALSE]
+        y=m1[,colnames(dt1),with=FALSE]
         #attr(y,)
         if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
         return(.md3_class(y,dn = .getdimcodes(e1)))

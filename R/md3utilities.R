@@ -498,6 +498,13 @@ as.md3.integer64 = function(x,...) {
 }
 
 
+#' @export
+as.numeric.md3 = function(x,...) {
+  as.numeric(as.array.md3(x),...)
+}
+
+
+
 #' Functions to check if an object is md3, or coerce it if possible.
 #' @name asmd3
 #'
