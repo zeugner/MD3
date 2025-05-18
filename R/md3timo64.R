@@ -246,7 +246,7 @@ as.integer64.timo = .asint64
   }
 
   if (any(ixmb)) {
-    ix=dictinteger[strrest[ixmb]]*MD3:::.cttim[['frqcodes']][frq2u[ixmb],'multiple'] + (yy[ixmb] - 1900)*12
+    ix=(dictinteger[strrest[ixmb]]-1)*MD3:::.cttim[['frqcodes']][frq2u[ixmb],'multiple'] + 1 + (yy[ixmb] - 1900)*12
     mm=MD3:::.cttim[['monthstartposixfrom1900']]()
     z[ixmb]=(mm[ix] + MD3:::.cttim[['frqcodes']][frq2u[ixmb],'timosuffix'])
     if (all(ixyb|ixmb)) {return(MD3:::.timo_class(z))}
