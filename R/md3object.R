@@ -935,12 +935,19 @@ as.md3.array = function(x,...) {
   #lix = .mdfixindexfreq(lix,stopifwrong = FALSE)
 
   if (as %in% c('md3','data.table','data.frame')) {
+    # if (obs=='_.obs_value') {
+    #   dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),,on=.NATURAL]
+    # } else {
+    #   dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),c(names(lix),obs),on=names(lix),with=FALSE]
+    # }
+    # dx=dx[!is.na(dx[[obs]])]
+    lixsubset=MD3:::.mdsel2codes(lix[names(setdiff(lix,xdn))])
     if (obs=='_.obs_value') {
-      dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),,on=.NATURAL]
+      dx=.dt_class(x,aschar=FALSE)[lixsubset,                 ,on=colnames(lixsubset),           nomatch=0]
     } else {
-      dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),c(names(lix),obs),on=names(lix),with=FALSE]
+      dx=.dt_class(x,aschar=FALSE)[lixsubset,c(names(lix),obs),on=colnames(lixsubset),with=FALSE,nomatch=0]
     }
-    dx=dx[!is.na(dx[[obs]])]
+
     x = .md3_class( dx, dn=.dimcodesrescue(lix,xdc));
     if (drop) x= .drop(x)
     if (as=='data.table') { return(.dt_class(x))}
