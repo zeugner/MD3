@@ -870,6 +870,7 @@ as.md3.array = function(x,...) {
       return(xout)
     } else if (as == "md3") {
       #class(x) = "md3"
+      if (is(x,'list')) { class(x) = c('data.table','data.frame')}
       return(.md3_class(x))
     } else if (as == "data.table") {
       x=.dt_class(x); attributes(x)[['dcstruct']]<-NULL
