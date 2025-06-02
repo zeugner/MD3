@@ -11,8 +11,10 @@
   plot.type = c("single", "multiple"),
   xlab = NULL,
   ylab = NULL,
+  col = 1,
   ...,
-  plotflags = FALSE
+  plotflags = FALSE,
+  plotlegend = TRUE
 )
 
 \method{lines}{md3}(x, y = NULL, ...)
@@ -22,23 +24,36 @@
 
 \item{plot.type}{either 'single' or 'multiple'. Also wiorks by partial matching ('s' or 'm')}
 
+\item{xlab}{same as in \code{\link[stats]{plot.ts}}}
+
+\item{ylab}{same as in \code{\link[stats]{plot.ts}}}
+
+\item{col}{specfies color (same as in \code{\link[graphics]{par}}) default integer sequence}
+
 \item{...}{arguments passed on to \code{\link[stats]{plot.ts}}}
 
 \item{plotflags}{boolean. If TRUE then the charts indicats any flags (obsrvation status) on top of the data}
+
+\item{plotlegend}{boolean. plots a legend for convenience if plot.type=='single'}
 }
 \description{
 Plotting method for objects inheriting from class \code{md3}. Converts md3 to time series of class \code{ts} and applies \code{\link[stats]{plot.ts}}
 }
 \examples{
-data(euca)
-plot(euca[PC_GDP.SE.:2010])
-plot(euca[PC_GDP.AT+SE.])
-plot(euca[PC_GDP.AT+SE.],plot.type="single",col=1:2)
-plot(euca[PC_GDP.LT.],euca[PC_GDP.LV.], xlab="Lithuania",ylab="Latvia")
-lines(euca[PC_GDP.FR.],lwd=2,col='blue')
 
-#barplot contribution of major countries to euro area current account
-barplot(euca[MIO_NAC.DE+FR+IT+ES.])
+str(eupop)
+plot(eupop[SE.T.TOTAL.y:1990])
+plot(eupop[AT+SE.T.TOTAL.])
+plot(eupop[AT+SE.T.TOTAL.],plot.type="single",col=1, plotlegend = FALSE)
+plot(eupop[AT+SE.T.TOTAL.], plot.type='multiple', main= 'population')
+plot(eupop[LT.T.TOTAL.],eupop[LV.T.TOTAL.], xlab="Lithuania",ylab="Latvia",col=1)
+
+graphics.off()
+plot(eupop[DE+ES.T.TOTAL.1990:y]/1000000)
+lines(eupop[FR.T.TOTAL.]/1e6,lwd=2,col='blue')
+
+#barplot contribution of major countries to EU population
+barplot(eupop[DE+FR+IT+ES+PL.T.TOTAL.2000:y])
 }
 \seealso{
 \code{\link[stats]{plot.ts}} for the underlying method, \code{\link{barplot.md3}}

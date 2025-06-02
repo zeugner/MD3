@@ -54,7 +54,7 @@ or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 #Austrian & Slovak HP growth year-on-year
 #these five commands are equivalent:
 euhpq["TOTAL","RCH_A",c("AT","SK"),]
-euhpq["TOTAL.AT+SK."]
+euhpq["TOTAL.RCH_A.AT+SK."]
 euhpq[3,3,c(1, 35),]
 euhpq[3,3,c("AT", "SK"),]
 euhpq[3,3,"AT+SK",]
@@ -80,9 +80,11 @@ euhpq[3,2,c("FR","NL"),1:12]
 #these four commands are equivalent:
 euhpq[.RCH_A.AT+SK.:2006]=0
 euhpq[.RCH_A.AT+SK.y:y2006]=0
-euhpq[".RCH_A.AT+SK.:2006"]=0
+euhpq[".RCH_A.AT+SK.:2006"] <- 0
 euhpq[,"RCH_A",c(1,33),1:8]=0
 
+# See result of value assignment
+euhpq[.RCH_A.SK.]
 
 #Adding elements:
 euhpq[,,"Dummy",]=0 #add a dummy country

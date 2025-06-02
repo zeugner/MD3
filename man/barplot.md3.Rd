@@ -37,13 +37,13 @@ a vector with mid-points for bars. USe for additional plotting
 Plotting method for objects inheriting from class \code{md3}. Converts md3 to time series of class \code{ts} and applies \code{\link[graphics]{barplot}}
 }
 \examples{
-data(euca)
-barplot(euca[PC_GDP.SE.:2010])
+
+barplot(eupop[SE.F+M.TOTAL.])
 
 #barplot contribution of major countries to euro area current account
-temp=barplot(euca[MIO_NAC.DE+FR+IT+ES+NL.]/1000, ylim=c(-100,500), ylab='bn EUR')
-eaca=apply(euca['MIO_NAC',cgrp(EA),],2,sum,na.rm=TRUE)/1000
-lines(temp,eaca,col='red',lwd=2) # adding a line with EA CA
+temp=barplot(eupop[DE+FR+IT+ES+PL.T.TOTAL.2000:y]/1000000, ylim=c(0,500), ylab='mn residents')
+euto=apply(eupop[cgrp(EU),'T','TOTAL','2000:'],2,sum,na.rm=TRUE)/1000000
+lines(temp,euto,col='red',lwd=2) # adding a line with EU population
 
 }
 \seealso{

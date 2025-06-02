@@ -473,13 +473,12 @@ as.md3.array = function(x,...) {
 }
 
 
-
-
-
-
-
-
-
+.Indarray = function(arrInd,.dim){
+  #reverse of base::arrayInd
+  multler = unlist(lapply(as.list((seq_len(length(.dim)-1))), function(x) prod(.dim[seq_len(x)])))
+  arrInd=as.matrix(arrInd)
+  colSums(apply(arrInd - 1, 1, '*', c(1,multler))) + 1
+}
 
 
 
@@ -942,12 +941,14 @@ as.md3.array = function(x,...) {
     #   dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),c(names(lix),obs),on=names(lix),with=FALSE]
     # }
     # dx=dx[!is.na(dx[[obs]])]
-    lixsubset=MD3:::.mdsel2codes(lix[names(setdiff(lix,xdn))])
-    if (obs=='_.obs_value') {
-      dx=.dt_class(x,aschar=FALSE)[lixsubset,                 ,on=colnames(lixsubset),           nomatch=0]
-    } else {
-      dx=.dt_class(x,aschar=FALSE)[lixsubset,c(names(lix),obs),on=colnames(lixsubset),with=FALSE,nomatch=0]
-    }
+    seldims=lix[names(setdiff(lix,xdn))]
+    if (length(seldims)) {
+      if (obs=='_.obs_value') {
+        dx=.dt_class(x,aschar=FALSE)[MD3:::.mdsel2codes(seldims),                 ,on=names(seldims),           nomatch=0]
+      } else {
+        dx=.dt_class(x,aschar=FALSE)[MD3:::.mdsel2codes(seldims),c(names(lix),obs),on=names(seldims),with=FALSE,nomatch=0]
+      }
+    } else { dx=.dt_class(x,aschar=FALSE) }
 
     x = .md3_class( dx, dn=.dimcodesrescue(lix,xdc));
     if (drop) x= .drop(x)
@@ -995,10 +996,30 @@ as.md3.array = function(x,...) {
   if (length(vix)==1) if (is.na(vix)) return(NA_character_)
 
   if (is.logical(vix)) {
-    if (length(vix)<prod(mydim))
-      if (prod(mydim)%%length(vix) != 0) warning("index has length ",length(vix)," and length of x (",prod(mydim),") is not a multiple of that")
-    vix=rep(vix,prod(mydim)/length(vix))
-    vix=which(vix,arr.ind = TRUE,useNames=FALSE)
+    isfullsubset = FALSE
+    if (length(vix)<prod(mydim)) {
+      vdn=try(.getdimnames(vix), silent=TRUE)
+      if (is(vdn,'list')) isfullsubset=all(unlist(lapply(lapply(as.list(names(vdn)), \(x) vdn[[x]] %in% mydn[[x]]),all)))
+
+      if (!isfullsubset) {
+        if (prod(mydim)%%length(vix) != 0) warning("index has length ",length(vix)," and length of x (",prod(mydim),") is not a multiple of that")
+
+        vix=rep(vix,prod(mydim)/length(vix))
+      }
+
+    }
+    vix2=which(vix,arr.ind = TRUE,useNames=FALSE)
+    if (isfullsubset) {
+      colnames(vix2) = names(dim(vix))
+      for (idn in setdiff(names(dnorig), names(dim(vix))  )) {
+        vix2=data.table::rbindlist(lapply(as.list(seq_len(length(dnorig[[idn]]))), function(x) data.frame(x,vix2)))
+        colnames(vix2)[1] = idn
+      }
+      vix2=as.matrix(vix2)[,names(dnorig)]
+      vix2=.Indarray(vix2,mydimorig)
+    }
+    vix=vix2
+
   }
 
 
@@ -1763,11 +1784,12 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 }
 
-.md3setelem = function(x,vix,value,.obs="_.obs_value",onlyna=FALSE, justval=FALSE) {
+.md3setelem = function(x,vix,value,.obs="_.obs_value",onlyna=FALSE, justval=FALSE, usenames=TRUE) {
   #setting elements of x equal to value when vix is a vector of integers logical, or IDs
 
   mydn = .getdimnames(x,TRUE)
   mydc = attr(x,"dcstruct")
+
 
 
 
@@ -1802,8 +1824,6 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
       mydn[[i]]=c(mydn[[i]],missstuff)
     }
   }
-
-
 
 
 
@@ -1930,7 +1950,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 #' #Austrian & Slovak HP growth year-on-year
 #' #these five commands are equivalent:
 #' euhpq["TOTAL","RCH_A",c("AT","SK"),]
-#' euhpq["TOTAL.AT+SK."]
+#' euhpq["TOTAL.RCH_A.AT+SK."]
 #' euhpq[3,3,c(1, 35),]
 #' euhpq[3,3,c("AT", "SK"),]
 #' euhpq[3,3,"AT+SK",]
@@ -1956,9 +1976,11 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 #' #these four commands are equivalent:
 #' euhpq[.RCH_A.AT+SK.:2006]=0
 #' euhpq[.RCH_A.AT+SK.y:y2006]=0
-#' euhpq[".RCH_A.AT+SK.:2006"]=0
+#' euhpq[".RCH_A.AT+SK.:2006"] <- 0
 #' euhpq[,"RCH_A",c(1,33),1:8]=0
 #'
+#' # See result of value assignment
+#' euhpq[.RCH_A.SK.]
 #'
 #'#Adding elements:
 #' euhpq[,,"Dummy",]=0 #add a dummy country
@@ -2502,7 +2524,7 @@ Ops.md3=function(e1,e2) {
         m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
         y=m1[,colnames(dt1),with=FALSE]
         #attr(y,)
-        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
+        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y,dn = .getdimcodes(e1))))}
         return(.md3_class(y,dn = .getdimcodes(e1)))
 
       }

@@ -5,44 +5,69 @@
 #' Plotting method for objects inheriting from class \code{md3}. Converts md3 to time series of class \code{ts} and applies \code{\link[stats]{plot.ts}}
 #' @param x,y an md3 object
 #' @param plot.type either 'single' or 'multiple'. Also wiorks by partial matching ('s' or 'm')
+#' @param xlab same as in \code{\link[stats]{plot.ts}}
+#' @param ylab same as in \code{\link[stats]{plot.ts}}
+#' @param col specfies color (same as in \code{\link[graphics]{par}}) default integer sequence
 #' @param ... arguments passed on to \code{\link[stats]{plot.ts}}
 #' @param plotflags boolean. If TRUE then the charts indicats any flags (obsrvation status) on top of the data
+#' @param plotlegend boolean. plots a legend for convenience if plot.type=='single'
 #' @return NULL
 #' @seealso \code{\link[stats]{plot.ts}} for the underlying method, \code{\link{barplot.md3}}
 #' @examples
-#' data(euca)
-#' plot(euca[PC_GDP.SE.:2010])
-#' plot(euca[PC_GDP.AT+SE.])
-#' plot(euca[PC_GDP.AT+SE.],plot.type="single",col=1:2)
-#' plot(euca[PC_GDP.LT.],euca[PC_GDP.LV.], xlab="Lithuania",ylab="Latvia")
-#' lines(euca[PC_GDP.FR.],lwd=2,col='blue')
 #'
-#' #barplot contribution of major countries to euro area current account
-#' barplot(euca[MIO_NAC.DE+FR+IT+ES.])
+#' str(eupop)
+#' plot(eupop[SE.T.TOTAL.y:1990])
+#' plot(eupop[AT+SE.T.TOTAL.])
+#' plot(eupop[AT+SE.T.TOTAL.],plot.type="single",col=1, plotlegend = FALSE)
+#' plot(eupop[AT+SE.T.TOTAL.], plot.type='multiple', main= 'population')
+#' plot(eupop[LT.T.TOTAL.],eupop[LV.T.TOTAL.], xlab="Lithuania",ylab="Latvia",col=1)
+#'
+#' graphics.off()
+#' plot(eupop[DE+ES.T.TOTAL.1990:y]/1000000)
+#' lines(eupop[FR.T.TOTAL.]/1e6,lwd=2,col='blue')
+#'
+#' #barplot contribution of major countries to EU population
+#' barplot(eupop[DE+FR+IT+ES+PL.T.TOTAL.2000:y])
 #' @export
 plot.md3 = function (x, y = NULL, plot.type = c("single", "multiple"),
-        xlab = NULL, ylab = NULL, ..., plotflags=FALSE)
+                     xlab = NULL, ylab = NULL, col=1, ..., plotflags=FALSE, plotlegend=TRUE)
 {
   if (missing(xlab)) {
     xlab = ""
   }
+
+
+
   plot.type = c("single", "multiple")[pmatch(plot.type[[1]],
                                              c("single", "multiple"))]
-  if (!is.null(y))
+  if (!is.null(y)) {
     getS3method("plot", "ts")(as.ts.md3(x), as.ts(y),
-                              xlab = xlab, ylab = ylab, ...)
-  else yy = as.ts.md3(x)
+                              xlab = xlab, ylab = ylab, col=col, ...)
+    return(invisible(NULL))
+  } else yy = as.ts.md3(x)
+
+  if (missing(col)) { col = seq_len(NCOL(yy)) }
+
   if (missing(ylab)) {
     ylab = paste(colnames(yy), collapse = "+")
   }
   if (NCOL(yy) > 6L) {
     message("Many lines in one plot. Consider using plot.type=\"multiple\"")
   }
-  getS3method("plot", "ts")(yy, plot.type = plot.type,
-                            xlab = xlab, ylab = ylab, ...)
+
+  if (plotlegend & NCOL(yy)>1 & !match('col',names(.dotsaslist(... )),nomatch=0)) {
+    getS3method("plot", "ts")(yy, plot.type = plot.type,
+                              xlab = xlab, ylab = ylab, col=col, ...)
+    legend('bottomright',colnames(yy), col=col, lwd = 1)
+
+  } else {
+    getS3method("plot", "ts")(yy, plot.type = plot.type,
+                              xlab = xlab, ylab = ylab, col=col, ...)
+  }
+
   if (!plotflags || is.null(y)) { return(invisible(NULL))}
   dd=.dt_class(x)
-  warnings('plotflags not implemnted yet')
+  warnings('plotflags not implemented yet')
   return(invisible(NULL))
 
 }
@@ -70,13 +95,13 @@ lines.md3 = function(x, y=NULL,...) {
 #' @return a vector with mid-points for bars. USe for additional plotting
 #' @seealso \code{\link[stats]{plot.ts}} for the underlying method, \code{\link[stats]{sd}}
 #' @examples
-#' data(euca)
-#' barplot(euca[PC_GDP.SE.:2010])
+#'
+#' barplot(eupop[SE.F+M.TOTAL.])
 #'
 #' #barplot contribution of major countries to euro area current account
-#' temp=barplot(euca[MIO_NAC.DE+FR+IT+ES+NL.]/1000, ylim=c(-100,500), ylab='bn EUR')
-#' eaca=apply(euca['MIO_NAC',cgrp(EA),],2,sum,na.rm=TRUE)/1000
-#' lines(temp,eaca,col='red',lwd=2) # adding a line with EA CA
+#' temp=barplot(eupop[DE+FR+IT+ES+PL.T.TOTAL.2000:y]/1000000, ylim=c(0,500), ylab='mn residents')
+#' euto=apply(eupop[cgrp(EU),'T','TOTAL','2000:'],2,sum,na.rm=TRUE)/1000000
+#' lines(temp,euto,col='red',lwd=2) # adding a line with EU population
 #'
 #' @export
 barplot.md3 = function (height, ..., main = NULL, col = NULL, legend = TRUE,
