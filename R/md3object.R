@@ -941,7 +941,9 @@ as.md3.array = function(x,...) {
     #   dx=.dt_class(x,aschar=FALSE)[.mdsel2codes(lix,aschar=FALSE),c(names(lix),obs),on=names(lix),with=FALSE]
     # }
     # dx=dx[!is.na(dx[[obs]])]
-    seldims=lix[names(setdiff(lix,xdn))]
+    sdn=character(); for (i in seq_along(xdn)) { if (!identical(xdn[[i]],lix[[names(xdn)[i]]])) { sdn=c(sdn,names(xdn)[i])}}
+    #seldims=lix[names(setdiff(lix,xdn))]
+    seldims=lix[sdn]; rm(sdn)
     if (length(seldims)) {
       if (obs=='_.obs_value') {
         dx=.dt_class(x,aschar=FALSE)[MD3:::.mdsel2codes(seldims),                 ,on=names(seldims),           nomatch=0]
