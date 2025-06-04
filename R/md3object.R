@@ -1001,7 +1001,7 @@ as.md3.array = function(x,...) {
     isfullsubset = FALSE
     if (length(vix)<prod(mydim)) {
       vdn=try(.getdimnames(vix), silent=TRUE)
-      if (is(vdn,'list')) isfullsubset=all(unlist(lapply(lapply(as.list(names(vdn)), \(x) vdn[[x]] %in% mydn[[x]]),all)))
+      if (is(vdn,'list')) isfullsubset=all(unlist(lapply(lapply(as.list(names(vdn)), \(x) vdn[[x]] %in% dnorig[[x]]),all)))
 
       if (!isfullsubset) {
         if (prod(mydim)%%length(vix) != 0) warning("index has length ",length(vix)," and length of x (",prod(mydim),") is not a multiple of that")
