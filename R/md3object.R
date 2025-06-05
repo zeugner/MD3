@@ -1850,8 +1850,9 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
-  tempselnew=   tempsel[is.na(`_.obs_value`) & !is.na(value),-NCOL(tempsel),with=FALSE]
-  tempselremove=tempsel[!is.na(`_.obs_value`) & is.na(value),-NCOL(tempsel),with=FALSE]
+  tempselnew=   tempsel[is.na(`_.obs_value`) & !is.na(value),names(mydn),with=FALSE]
+
+  tempselremove=tempsel[!is.na(`_.obs_value`) & is.na(value),names(mydn),with=FALSE]
   datix=datix[!is.na(value)]; value=value[!is.na(value)]
 
   if (NROW(tempselnew)) {
@@ -1869,14 +1870,26 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
   }
 
 
-  if (obs=='_.obs_value' & NROW(tempselremove)) {
+  if (!onlyna & obs=='_.obs_value' & NROW(tempselremove)) {
     dx=dx[-.naomit_atomic(dx[tempselremove,on=.NATURAL,which=TRUE])]
 
   }
 
+   if (onlyna) {
+     subdatix=dx[datix[,names(mydn),with=FALSE],,on=.NATURAL]
+     if (anyNA(subdatix[[obs]])) {
+       if (NROW(value)>1) {
+         dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value[is.na(subdatix[[obs]])],on=.NATURAL]
+       } else {
+         dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value,on=.NATURAL]
+       }
 
+     }
 
-  dx[datix[,names(mydn),with=FALSE],unlist(list(obs)):=value,on=.NATURAL]
+   } else {
+
+      dx[datix[,names(mydn),with=FALSE],unlist(list(obs)):=value,on=.NATURAL]
+   }
 
   return(.md3_class(dx))
 
