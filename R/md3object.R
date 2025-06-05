@@ -1861,7 +1861,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
     #dx=rbind(dx,tempselnew,fill=TRUE)
-    dx=data.table::merge.data.table(dx,tempselnew,all=TRUE)
+    dx=data.table::merge.data.table(dx,tempselnew,all=TRUE,by=names(mydn))
     #attr(dx,"dcsimp") = mydn
     attr(dx,"dcstruct")=mydc
     }
