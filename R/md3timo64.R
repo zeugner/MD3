@@ -1116,12 +1116,28 @@ Sys.timo = function(frq=NULL) {
     return(.timo_class(unlist(lapply(ixl,function(y) .timo_subset(x,y,coverhigherfrqs=coverhigherfrqs, coverlowerfrqs = coverlowerfrqs)))))
   }
 
-
+  if (!length(coverlowerfrqs)) {coverlowerfrqs = FALSE}
 
   ix=ixl[[1]]
-  if (!length(coverlowerfrqs)) {coverlowerfrqs = FALSE}
-  if (!.timo_is(ix)) {
 
+  if (.timo_is(ix)) {
+    if (identical(ix,x)) { return(ix)}
+
+    idix = bit64::match(ix,x)
+    if (!anyNA(idix) & !coverhigherfrqs) {
+      if (!is.character(coverlowerfrqs)) {
+        if (!coverlowerfrqs) return(x[idix])
+      } else {
+        if (all(.timo_frq(ix)==coverlowerfrqs)) return(x[idix])
+      }
+    }
+
+
+    ixl = as.list(ix)
+
+  } else {
+
+    if (!length(coverlowerfrqs)) {coverlowerfrqs = FALSE}
     if (!is.character(ix) ) return(x[unlist(ixl)])
     if (length(ix)!=1L) {
       #stop('sdafasdf')
@@ -1130,8 +1146,6 @@ Sys.timo = function(frq=NULL) {
 
     ix=gsub("y","",ix)
     ixl=as.list(strsplit(ix,split="\\+")[[1]])
-  } else {
-    ixl = as.list(ix)
   }
     #xPOSIXct = character()
 

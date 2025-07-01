@@ -614,7 +614,15 @@ as.md3.array = function(x,...) {
   if (!is.null(frq)) ixt=.dn_findtime(xdn) else ixt=0
   if (length(frq)) {mycoverlowerfrqs=frq}
   for (i in 1:length(ix)) {
+    if (length(ix[[i]]) & identical(ix[i],xdn[i])) { 
+      lix[[i]] = ix[[i]]
+      next
+    
+    }
+    
+    
     if (length(ix[[i]])) {
+
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
       if (.timo_is(xdn[[i]]) ) {
         if (!.timo_is(ix[[i]])) {
@@ -945,13 +953,17 @@ as.md3.array = function(x,...) {
     #seldims=lix[names(setdiff(lix,xdn))]
     seldims=lix[sdn]; rm(sdn)
     if (length(seldims)) {
-      if (obs=='_.obs_value') {
+      if (obs==.md3resnames('value')) {
         dx=.dt_class(x,aschar=FALSE)[MD3:::.mdsel2codes(seldims),                 ,on=names(seldims),           nomatch=0]
       } else {
         dx=.dt_class(x,aschar=FALSE)[MD3:::.mdsel2codes(seldims),c(names(lix),obs),on=names(seldims),with=FALSE,nomatch=0]
       }
+      if (anyNA(dx[,.md3resnames('value'),with=FALSE])) {
+        dx=dx[!is.na(get(.md3resnames('value'))),]
+      }
+      
     } else { dx=.dt_class(x,aschar=FALSE) }
-
+    
     x = .md3_class( dx, dn=.dimcodesrescue(lix,xdc));
     if (drop) x= .drop(x)
     if (as=='data.table') { return(.dt_class(x))}
@@ -983,6 +995,9 @@ as.md3.array = function(x,...) {
 
 
 
+
+
+#Ostarrichi
 
 .mdindexelem = function(vix,dn) {
   #takes a vector vix (e.g. 1:2, c(T,F), or "Q.E.A.F"), or an integer matrix with nb rows = length(dn)
@@ -1710,7 +1725,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
         attr(x,tempan)=ohihi
       }
       tempattr=attributes(x)[tempan]
-      x=merge(x,tempselnew[,names(xdn),with=FALSE],all=TRUE)
+      x=rbind(x,tempselnew[,names(xdn),with=FALSE],fill=TRUE)
 
       attributes(x)[tempan] <- tempattr[tempan]
     }

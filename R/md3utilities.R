@@ -34,7 +34,7 @@
 .couldbetimo= function(x) {
   #x is a list, usually a dcsimp attribute
   if (is.atomic(x)) { x =list(x)}
-  which(unlist(lapply(lapply(x, function(y) class(try(.char2timo(head(y,20)),silent=TRUE))),function(z) any(z=='timo'))))
+  which(unlist(lapply(lapply(x, function(y) class(try(.char2timo_standard(head(y,20)),silent=TRUE))),function(z) any(z=='timo'))))
 }
 
 #' @export
