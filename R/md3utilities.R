@@ -1443,7 +1443,8 @@ end.md3 = function(x,...,drop=TRUE) {
 #' @param complete.periods logical. Applies only in case of time aggregation and \code{na.rm=FALSE}. if e.g. \code{FALSE} and \code{FUN=end} then this takes the last value of the last available subperiod in case x ends within a period  (see examples).
 #' @param drop Logical, default \code{TRUE}. See \code{\link{drop.md3}}
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
-#' #' @details
+#' @details
+#' For details on FUN see
 #'
 #' Parameter \code{frq_grp} mostly is a single frequency code. See also \code{\link{frequency.timo}}.
 #' The following denotes the existing frequency codes and their notation
@@ -1621,7 +1622,30 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 }
 
 .timedisaggregate = function(x, frq, FUN = c(sum,mean,end,start), method = "chow-lin-maxlog",criterion = "proportional",...) {
+  x=unflag(x)
+  xdn=.getdimnames(x)
+  frq=toupper(trimws(frq[[1]]))
+  vt=time.md3(x)
+  vf=.timo_frq(vt)
+  nt=seq(min(vt),max(vt),frq=frq)
 
+
+  if (is.character(FUN)) if (grepl('^step',tolower(FUN))) {
+      #separate treatemnt
+      dx=.dt_class(x)
+      mnt=matrix(nt,length(vt),byrow = TRUE); rownames(mnt) = as.character(.timo_class(vt))
+      dy=dx[0,]
+      for (i in seq_len(length(nt)/length(vt))) {
+        temp=copy(dx)
+        temp[['TIME']] = .timo_class(mnt[as.character(temp[['TIME']]),i])
+        dy=rbind(dy,temp,fill=TRUE)
+
+      }
+      xdc=.getdimcodes(x)
+      xdc$TIME = nt
+      attr(dy,'dcstruct') = xdc
+      return(.md3_class(dy))
+  }
   FUN=.FUNfixer(FUN)
   conversion='sum'
   if (length(body(FUN))) {
@@ -1636,21 +1660,17 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 
 
   if (!require('tempdisagg')) stop('temporal disaggregation requires package "tempdisagg" to be installed.')
-  x=unflag(x)
-  frq=toupper(trimws(frq[[1]]))
-  vt=time.md3(x)
-  vf=.timo_frq(vt)
 
     of=unique(vf)
   if (length(of)!=1) stop('mixed frq not allowed for disaggregation')
   ofb=.cttim$basedon(of); nfb=.cttim$basedon(frq)
   if (ofb!=nfb) { stop('x has frequency ',of,' (a multiple of ',ofb,') -  while frq is specified as ',frq, ' (a multiple of ',nfb,').\nCannot disaggregate into irergular subperiods')}
-  xdn=.getdimnames(x)
+
   mz=as.zoo.md3(x)
   mz=mz[,!unlist(lapply(mz, function(m) all(is.na(m))))]
   lz=lapply(mz,.tsdisagg,to=attr(ofb,'multiple')/attr(nfb,'multiple'),conversion=conversion,method=method,criterion=criterion,...)
 
-  nt=seq(min(vt),max(vt),frq=frq)
+
   ntmatch=.timo_class(unlist(lapply(as.list(vt),rep,length(nt)/length(vt))))
   lt=lapply(lapply(mz,function(z) vt[!is.na(z)]),function(t)  nt[ntmatch %in% t])
   ly=lapply(names(lz),function(i) {y=data.table(.mdrest2codes(i),lt[[i]],lz[[i]]); colnames(y)=c(names(xdn),.md3resnames('value')); y})
@@ -1677,22 +1697,50 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 #' @param x an md3 object,
 #' @param frq_grp what to disaggregate to: A single character frequency code like \code{"M"},  \code{"W"} or  \code{"B"} when aggregating along time, or a user-defined aggregate list (see \link{frequency.timo})
 #' @param along character vector: the dimensions along which to aggregate. Default is \code{TIME} - Note that all otehr dimensions are not possible for the moment
-#' @param FUN the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end} and  \code{start} are also possible (passed along as a function or the string name of that function)
+#' @param FUN the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end},  \code{start}, and \code{"stepwise"} are also possible (passed along as a function or the string name of that function)
+#' @param method The method used for temporal disaggregation. See function \code{\link[tempdisagg]{td}} for explanations. Default \code{"chow-lin-maxlog"}
+#' @param criterion The method used for temporal disaggregation. See function \code{\link[tempdisagg]{td}} for explanations. Default \code{"proportional"}
 #' @param \dots other arguments to FUN
+#' @details
+#' Temporal disaggregation relies on the function \code{\link[tempdisagg]{td}} from package \code{tempdisagg}.
+#'
+#' \code{FUN} determines how the aggregate series 'aggregates' the disaggregated series.
+#' So if \eqn{X_{t}} represents the annual series to be disaggregated into quarterly series codes \eqn{x_{t1}} to \eqn{x_{t4}}, then
+#'
+#' \itemize {
+#'
+#' \item \code{mean}: \eqn{X_t} is the mean of \eqn{x_{t1}} to \eqn{x_{t4}}. \eqn{x_{t1}} is also strongly affected by \eqn{X_{t-1}}
+#' \item \code{sum}: \eqn{X_t} is the sum of \eqn{x_{t1}} to \eqn{x_{t4}}
+#' \item \code{start}: \eqn{X_t} equals  \eqn{x_{t1}}
+#' \item \code{end}: \eqn{X_t} equals  \eqn{x_{t4}}
+#' \item \code{"stepwise"}: \eqn{x_{t1}} to \eqn{x_{t4}} equal \eqn{X_t}
+#'
+#'
+#' }
+#'
+#'
 #' @return an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
-#' @seealso \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{aggregate.md3}}
+#' @seealso \code{\link{frequency.md3}} to change the frequency of an md3, \code{\link{aggregate.md3}} to aggregate over time, \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}},
 #' @examples
-#' #data("oecdgdp_aq")
+#'
 #'
 #' #Take some quarterly data: e.g. house price index for Austria and Belgium
 #' x0=euhpq[TOTAL.I15_Q.AT+BE.y2020:y]
 #' x0
+#' plot(x0,type='p')
 #'
 #' #now disaggregate to monthly data
 #' x1=disaggregate(x0,'M', FUN=mean)
 #' x1
-#' plot(x1)
+#' lines(x1)
 #'
+#' y0=x0
+#' frequency(y0)='M'
+#' points(y0,col=3)
+#' lines(disaggregate(x0,'M', FUN=end),col=4)
+#'
+#'
+#' lines(disaggregate(x0,'M', FUN='stepwise'),col=5)
 #'
 #' @export
 disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), ...) {
@@ -1767,6 +1815,22 @@ frequency.md3 = function(x, ...) {
   .md3_class(.setdimcodes(y,dc,ignore.old = TRUE))
 
 }
+
+
+
+#'  @export
+mean.md3  = function(x, na.rm=FALSE,...) {
+ if (na.rm==TRUE) { return(mean(MD3:::.dt_class(x)[[MD3:::.md3resnames('value')]],...))}
+ mean(MD3:::.md3get(x, as = "array", drop = FALSE),...)
+}
+
+#'  @export
+median.md3  = function(x, na.rm=FALSE,...) {
+  if (na.rm==TRUE) { return(median(.dt_class(x)[[.md3resnames('value')]],...))}
+  median(.md3get(x, as = "array", drop = FALSE),...)
+}
+
+
 
 
 

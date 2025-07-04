@@ -3,6 +3,7 @@
 \name{plot.md3}
 \alias{plot.md3}
 \alias{lines.md3}
+\alias{points.md3}
 \title{Plot md3 time series}
 \usage{
 \method{plot}{md3}(
@@ -18,6 +19,8 @@
 )
 
 \method{lines}{md3}(x, y = NULL, ...)
+
+\method{points}{md3}(x, y = NULL, ...)
 }
 \arguments{
 \item{x, y}{an md3 object}

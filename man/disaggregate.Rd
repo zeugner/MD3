@@ -13,9 +13,13 @@ disaggregate(x, frq_grp, along = "TIME", FUN = c(sum, mean, end, start), ...)
 
 \item{along}{character vector: the dimensions along which to aggregate. Default is \code{TIME} - Note that all otehr dimensions are not possible for the moment}
 
-\item{FUN}{the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end} and  \code{start} are also possible (passed along as a function or the string name of that function)}
+\item{FUN}{the function to use for aggregation. Default is \code{sum}, but \code{mean},  \code{end},  \code{start}, and \code{"stepwise"} are also possible (passed along as a function or the string name of that function)}
 
 \item{\dots}{other arguments to FUN}
+
+\item{method}{The method used for temporal disaggregation. See function \code{\link[tempdisagg]{td}} for explanations. Default \code{"chow-lin-maxlog"}}
+
+\item{criterion}{The method used for temporal disaggregation. See function \code{\link[tempdisagg]{td}} for explanations. Default \code{"proportional"}}
 }
 \value{
 an md3 object. Note that any flags or observation metadata from the original MD3 will be dropped and not contained in the resulting md3.
@@ -23,20 +27,45 @@ an md3 object. Note that any flags or observation metadata from the original MD3
 \description{
 Can decompose sums, averages, etc. to higher frequencies, or to constituent parts (e.g. countries in country groups)
 }
+\details{
+Temporal disaggregation relies on the function \code{\link[tempdisagg]{td}} from package \code{tempdisagg}.
+
+\code{FUN} determines how the aggregate series 'aggregates' the disaggregated series.
+So if \eqn{X_{t}} represents the annual series to be disaggregated into quarterly series codes \eqn{x_{t1}} to \eqn{x_{t4}}, then
+
+\itemize{
+
+\item \code{mean}: \eqn{X_t} is the mean of \eqn{x_{t1}} to \eqn{x_{t4}}. \eqn{x_{t1}} is also strongly affected by \eqn{X_{t-1}}
+\item \code{sum}: \eqn{X_t} is the sum of \eqn{x_{t1}} to \eqn{x_{t4}}
+\item \code{start}: \eqn{X_t} equals  \eqn{x_{t1}}
+\item \code{end}: \eqn{X_t} equals  \eqn{x_{t4}}
+\item \code{"stepwise"}: \eqn{x_{t1}} to \eqn{x_{t4}} equal \eqn{X_t}
+
+
+}
+}
 \examples{
-#data("oecdgdp_aq")
+
 
 #Take some quarterly data: e.g. house price index for Austria and Belgium
 x0=euhpq[TOTAL.I15_Q.AT+BE.y2020:y]
 x0
+plot(x0,type='p')
 
 #now disaggregate to monthly data
 x1=disaggregate(x0,'M', FUN=mean)
 x1
-plot(x1)
+lines(x1)
 
+y0=x0
+frequency(y0)='M'
+points(y0,col=3)
+lines(disaggregate(x0,'M', FUN=end),col=4)
+
+
+lines(disaggregate(x0,'M', FUN='stepwise'),col=5)
 
 }
 \seealso{
-\code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{aggregate.md3}}
+\code{\link{frequency.md3}} to change the frequency of an md3, \code{\link{aggregate.md3}} to aggregate over time, \code{\link{fill.md3}}, \link{indexMD3}, \code{\link{imputena}},
 }

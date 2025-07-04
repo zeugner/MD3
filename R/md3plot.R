@@ -77,8 +77,16 @@ plot.md3 = function (x, y = NULL, plot.type = c("single", "multiple"),
 #' @rdname plot.md3
 #' @export
 lines.md3 = function(x, y=NULL,...) {
-  invisible(lapply(as.list(as.ts.md3(x)),getS3method("lines","ts"),col=4))
+  invisible(lapply(as.list(as.ts.md3(x)),getS3method("lines","zoo"),...))
 }
+
+
+#' @rdname plot.md3
+#' @export
+points.md3 = function(x, y=NULL,...) {
+  invisible(lapply(as.list(MD3:::as.zoo.md3(x)),getS3method("points","zoo"),...))
+}
+
 
 
 

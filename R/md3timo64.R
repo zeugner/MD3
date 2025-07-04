@@ -1098,12 +1098,12 @@ Sys.timo = function(frq=NULL) {
   # MD3:::.timo_subset(tt,'2001m02:2001m05+2002m02')
   # MD3:::.timo_subset(tt,'2001q2:2001q4')
   # MD3:::.timo_subset(tt,'2001q2:y')
-  #MD3:::.timo_subset(tt,'2004:y')
+  # MD3:::.timo_subset(tt,'2004:y')
   # MD3:::.timo_subset(tt,'2014')
   # MD3:::.timo_subset(tt,'2002-01-02',cover=T)
   #  MD3:::.timo_subset(tt,'2002-01-02',cover=F)
-  #MD3:::.timo_subset(tt,c('2002-01-02','2002-01-03'),coverhigherfrqs =F) #porblemm
-  #MD3:::.timo_subset(tt,'2002-01-02',coverhigherfrqs =F) #porblemm
+  # MD3:::.timo_subset(tt,c('2002-01-02','2002-01-03'),coverhigherfrqs =F) #porblemm
+  # MD3:::.timo_subset(tt,'2002-01-02',coverhigherfrqs =F) #porblemm
 
   ixl=list(...)
 
@@ -1128,7 +1128,7 @@ Sys.timo = function(frq=NULL) {
       if (!is.character(coverlowerfrqs)) {
         if (!coverlowerfrqs) return(x[idix])
       } else {
-        if (all(.timo_frq(ix)==coverlowerfrqs)) return(x[idix])
+        if (all(.timo_frq(ix) %in% coverlowerfrqs)) return(x[idix])
       }
     }
 
