@@ -614,13 +614,13 @@ as.md3.array = function(x,...) {
   if (!is.null(frq)) ixt=.dn_findtime(xdn) else ixt=0
   if (length(frq)) {mycoverlowerfrqs=frq}
   for (i in 1:length(ix)) {
-    if (length(ix[[i]]) & identical(ix[i],xdn[i])) { 
+    if (length(ix[[i]]) & identical(ix[i],xdn[i])) {
       lix[[i]] = ix[[i]]
       next
-    
+
     }
-    
-    
+
+
     if (length(ix[[i]])) {
 
       nvec=xdn[[i]]; names(nvec)=xdn[[i]]
@@ -961,9 +961,9 @@ as.md3.array = function(x,...) {
       if (anyNA(dx[,.md3resnames('value'),with=FALSE])) {
         dx=dx[!is.na(get(.md3resnames('value'))),]
       }
-      
+
     } else { dx=.dt_class(x,aschar=FALSE) }
-    
+
     x = .md3_class( dx, dn=.dimcodesrescue(lix,xdc));
     if (drop) x= .drop(x)
     if (as=='data.table') { return(.dt_class(x))}
@@ -2111,7 +2111,7 @@ aperm.md3 = function(a, perm = NULL, resize = TRUE, ...) {
 #' @describeIn asmd3 Convert MD3 to data.table, optionally with dcast
 #' @export
 as.data.table.md3 = function(x, ..., na.rm=FALSE, sep='_', .simple=FALSE) {
-  if (na.rm) { y= .dt_class(x); colnames(y)= gsub('^_\\.','',colnames(y)); return(y)}
+  if (na.rm & missing(...)) { y= .dt_class(x); colnames(y)= gsub('^_\\.','',colnames(y)); return(y)}
   dcstruct =attr(x,'dcstruct')
   y=.dt_class(x)
   if (!.simple) {  y=y[.mdsel2codes(.getdimnames(x,TRUE),bylast = TRUE),,on=.NATURAL] }
@@ -2125,6 +2125,7 @@ as.data.table.md3 = function(x, ..., na.rm=FALSE, sep='_', .simple=FALSE) {
 #' @describeIn asmd3 Convert MD3 to data.frame, optionally with dcast
 #' @export
 as.data.frame.md3 = function(x, ..., na.rm=FALSE) {
+  if (!missing(...)) {na.rm=FALSE}
   data.table:::as.data.frame.data.table(as.data.table.md3(x,...,na.rm=na.rm))
 }
 
