@@ -5,7 +5,7 @@
 
 
 .onLoad <- function(libname, pkgname) {
-   suppressPackageStartupMessages(require(data.table,quietly = TRUE))
+  suppressPackageStartupMessages(require(data.table,quietly = TRUE))
   requiresilent=function(...) {
     suppressWarnings(suppressMessages(suppressPackageStartupMessages(require(...))))
   }
@@ -71,6 +71,18 @@ as.md3.array = function(x,...) {
     ixf = grep('FRE?Q',toupper(colnames(x)))
     if (length(ixf)) { if (all(nchar(x[[ixf]])==1)) { x = x[,-ixf,with=FALSE]} }
     if ('v_a_l' %in% colnames(x)) { colnames(x)[colnames(x)=='v_a_l'] =.md3resnames('value') }
+    if (any(grepl('^_\\.',colnames(x)))) { #has already been formatted  a la .md3resnames
+      cnvalandflags=grep('^_\\.',colnames(x),value=TRUE)
+      if (sum(grepl('^_\\.',colnames(x)))>1) {
+        if (cnvalandflags[1L]!=.md3resnames('value')) {
+          x=x[,c(setdiff(colnames(x),cnvalandflags),c(.md3resnames('value'),setdiff(cnvalandflags,.md3resnames('value')))),with=FALSE]
+        }
+      } else {
+        if (grep('^_\\.',colnames(x))[1L]!=NCOL(x)) {
+          x=x[,c(setdiff(colnames(x),cnvalandflags[1L]),cnvalandflags[1L]),with=FALSE]
+        }
+      }
+    }
 
     vix = match(.md3resnames('value'), colnames(x),nomatch = 0)
     if (vix==0) { vix=which(sapply(x,is.numeric)); if (length(vix)!=1) stop('Could not clearly identify which col is the data col') }
@@ -164,24 +176,24 @@ as.md3.array = function(x,...) {
 
 
 
- .asget = function (as = c("md3", "array", "numeric","data.table","zoo","2d","1d","pdata.frame"),defaultas="md3") {
+.asget = function (as = c("md3", "array", "numeric","data.table","zoo","2d","1d","pdata.frame"),defaultas="md3") {
   possibs=c("md3", "array", "numeric","data.table","zoo","2d","1d","pdata.frame")
-   if (length(as)> 1L) { as = as[[1]] }
+  if (length(as)> 1L) { as = as[[1]] }
   if (!length(as)) {return(defaultas)}
   if (is.na(as)) {return(defaultas)}
-   as=trimws(as)
+  as=trimws(as)
 
-   ix=pmatch(tolower(as), possibs, nomatch = 0)
-   if (ix>0) {
-     as = possibs[[ix]]
-     return(as)
-   }
-   as=tolower(as)
-   if (substr(as,0,1)=='a') return("array")
-   if (substr(as,0,1)=='n') return("numeric")
-   if (substr(as,0,1)=='d') return("data.table")
-   if (substr(as,0,1)=='z') return("zooreg")
-   return("md3")
+  ix=pmatch(tolower(as), possibs, nomatch = 0)
+  if (ix>0) {
+    as = possibs[[ix]]
+    return(as)
+  }
+  as=tolower(as)
+  if (substr(as,0,1)=='a') return("array")
+  if (substr(as,0,1)=='n') return("numeric")
+  if (substr(as,0,1)=='d') return("data.table")
+  if (substr(as,0,1)=='z') return("zooreg")
+  return("md3")
 
 }
 
@@ -223,7 +235,7 @@ as.md3.array = function(x,...) {
   dout=data.table(xout)
   if (NROW(dout)>0) { if (grepl('^[1-2]',dout[[NCOL(dout)]][1L])) {
     dout[[NCOL(dout)]]=.char2timo(dout[[NCOL(dout)]],guess = FALSE)
-    }}
+  }}
   dout
 }
 
@@ -310,7 +322,7 @@ as.md3.array = function(x,...) {
         temp[[i]] = .timo_subset(ohihi[[i]], temp[[i]], coverhigherfrqs ={length(frqspresent)>1}, addifmiss = TRUE, coverlowerfrqs =frqshifter)
         if (length(frqshifter)) {
           if (length(temp)) if (!any(frqspresent %in% frqshifter)) stop('The specified time periods like ',
-              temp[[ixt]][1],' do not match the specified frequencies ',paste(frqshifter,collapse=', '))
+                                                                        temp[[ixt]][1],' do not match the specified frequencies ',paste(frqshifter,collapse=', '))
           temp[[ixt]] = temp[[ixt]][.timo_frq(temp[[ixt]]) %in% frqshifter]
         }
         next
@@ -448,7 +460,7 @@ as.md3.array = function(x,...) {
   if (any(tix0)) { names(lix)[tix0] = make.names(LETTERS[seq_along(lix)])[tix0]}
   if (any(unlist(lapply(lix,length))!=dim(aa))) {
     for (i in which(unlist(lapply(lix,length))!=dim(aa))) {
-    lix[[i]] =paste0(substr(names(lix)[[i]],0,1),sprintf(paste0('%0',floor(log10(dim(aa)[[i]]))+1,'d'),seq_len(dim(aa)[[i]])))
+      lix[[i]] =paste0(substr(names(lix)[[i]],0,1),sprintf(paste0('%0',floor(log10(dim(aa)[[i]]))+1,'d'),seq_len(dim(aa)[[i]])))
     }
   }
   dimnames(aa)<-lix
@@ -579,7 +591,7 @@ as.md3.array = function(x,...) {
       vout = data.table:::cbind.data.table( .unlist_keepclass(lapply(as.list(lix[[i]]),rep,nrow(vout))), rbindlist(rep(list(vout),length(lix[[i]]))) )
     } else {
       vout = cbind(as.character(lix[[i]]),matrix(rep(vout,length(lix[[i]])),ncol = j, byrow=TRUE))
-        stop('to be fixed')
+      stop('to be fixed')
     }
     #sout=unlist(lapply(as.list(lix[[i]]),cbind,sout,sep="."),recursive = FALSE,use.names = FALSE)
     #sout=vapply(as.list(lix[[i]]),paste,character(length(sout)),sout,sep=".",USE.NAMES = FALSE)
@@ -627,13 +639,13 @@ as.md3.array = function(x,...) {
       if (.timo_is(xdn[[i]]) ) {
         if (!.timo_is(ix[[i]])) {
           if (length(ix[[i]])==1L) {
-              if (any(grepl(':',ix[[i]]))) {
-                ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]]
-              } else if (is.numeric(ix[[i]])) if (ix[[i]]>=0 && ix[[i]]<=length(xdn[[i]])) {
-                ix[[i]] =  .Primitive('[')(xdn[[i]],ix[[i]])
-              } else {
-                ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
-              }
+            if (any(grepl(':',ix[[i]]))) {
+              ix[[i]] = .trafoRestQuery(ix[[i]],xdn[i])[[1L]]
+            } else if (is.numeric(ix[[i]])) if (ix[[i]]>=0 && ix[[i]]<=length(xdn[[i]])) {
+              ix[[i]] =  .Primitive('[')(xdn[[i]],ix[[i]])
+            } else {
+              ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
+            }
           } else if (!is.numeric(ix[[i]])) {
             ix[[i]] = .char2timo(ix[[i]],frq=attr(ix,'frqshifter'))
           } else {
@@ -729,7 +741,7 @@ as.md3.array = function(x,...) {
 
   names(lix) = names(xdn)
   if (any(names(lix)=='TIME')) lix[[which(names(lix)=='TIME')]] = .char2timo(lix[[which(names(lix)=='TIME')]])
-#  if (missadded) lix=.mdcheckcodes(lix,sorttime = FALSE,stopatwrongfrqpair=TRUE)
+  #  if (missadded) lix=.mdcheckcodes(lix,sorttime = FALSE,stopatwrongfrqpair=TRUE)
   return(lix)
 }
 
@@ -792,8 +804,8 @@ as.md3.array = function(x,...) {
   mdc=mdc[names(mdc) %in% colnames(y)]
   if (length(mdc)) {
     for (i in seq_along(mdc)) { mdc[[i]] = intersect(mdc[[i]],unique(y[[i]]))}
-     if (length(mdc[['TIME']])) { mdc[['TIME']] = .timo_class(mdc[['TIME']])}
-       attributes(y)[['dcstruct']] = .dimcodesrescue(mdcmdcold)
+    if (length(mdc[['TIME']])) { mdc[['TIME']] = .timo_class(mdc[['TIME']])}
+    attributes(y)[['dcstruct']] = .dimcodesrescue(mdcmdcold)
   }
 
   y =.drop(y)
@@ -939,7 +951,7 @@ as.md3.array = function(x,...) {
   }
 
   #lix=.match2dim(ix,xdn,addifmiss = TRUE) #initially, this was set to FALSE
-   lix=.match2dim(ix,xdn,addifmiss = TRUE,frq = attr(ix,'frqshifter'), dotimosubset = !subsetdonealready)
+  lix=.match2dim(ix,xdn,addifmiss = TRUE,frq = attr(ix,'frqshifter'), dotimosubset = !subsetdonealready)
   #lix = .mdfixindexfreq(lix,stopifwrong = FALSE)
 
   if (as %in% c('md3','data.table','data.frame')) {
@@ -969,7 +981,7 @@ as.md3.array = function(x,...) {
     if (as=='data.table') { return(.dt_class(x))}
     if (as=='data.frame') { return(data.table:::as.data.frame.data.table(.dt_class(x)))}
     if (.md3_is(x)) if (data.table:::dim.data.table(x)[1]==0) {
-     # return(rep(NA_real_,prod(unlist(lapply(lix,length)))))
+      # return(rep(NA_real_,prod(unlist(lapply(lix,length)))))
     }
     return(x)
   }
@@ -1189,11 +1201,11 @@ as.md3.array = function(x,...) {
 
 
 .md3_printasdt = function (x, topn = getOption("datatable.print.topn"),
-          nrows = getOption("datatable.print.nrows"), class = getOption("datatable.print.class"),
-          row.names = getOption("datatable.print.rownames"),
-          col.names = getOption("datatable.print.colnames"),
-          print.keys = getOption("datatable.print.keys"), trunc.cols = getOption("datatable.print.trunc.cols"),
-          quote = FALSE, timezone = FALSE, ...)
+                           nrows = getOption("datatable.print.nrows"), class = getOption("datatable.print.class"),
+                           row.names = getOption("datatable.print.rownames"),
+                           col.names = getOption("datatable.print.colnames"),
+                           print.keys = getOption("datatable.print.keys"), trunc.cols = getOption("datatable.print.trunc.cols"),
+                           quote = FALSE, timezone = FALSE, ...)
 {
   #not sure what this function is needed for, the following shourld do the same
   #data.table:::print.data.table(.dt_class(x))
@@ -1263,7 +1275,7 @@ as.md3.array = function(x,...) {
     printdots = FALSE
   }
   toprint = data.table:::format.data.table(toprint, na.encode = FALSE, timezone = timezone,
-                              ...)
+                                           ...)
   #data.table:::require_bit64_if_needed(x)
   if (isTRUE(row.names))
     rownames(toprint) = paste0(format(rn, right = TRUE, scientific = FALSE),
@@ -1347,7 +1359,7 @@ as.md3.array = function(x,...) {
   y = data.table:::`[.data.table`(x,j=!(colnames(x) %in% dims2drop), with =FALSE)
   attr(y,'dcstruct') = attr(x,'dcstruct')[setdiff(names(xdim),dims2drop)]
   #if (NROW(y)==1) {
-    #if (NROW(y)<=prod(sapply(attr(y,'dcstruct'),length))) return(as.numeric(y[[1L]]))
+  #if (NROW(y)<=prod(sapply(attr(y,'dcstruct'),length))) return(as.numeric(y[[1L]]))
   #}
   .md3_class(y,force=TRUE)
 }
@@ -1409,7 +1421,7 @@ dim.md3=function(x) {
   if (.md3_is(x)) {
     return(data.table:::dim.data.table(x)[1])
   }
-    NROW(na.omit(x))
+  NROW(na.omit(x))
 }
 
 
@@ -1440,7 +1452,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     print.default(temp,...,max=max)
   } else {
     print.default(.md3get(x, as = as, drop = FALSE),
-                ..., max = max)
+                  ..., max = max)
   }
 }
 
@@ -1488,11 +1500,11 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
- #  setwd('U:/Data/Development/MD3')
- #  euhpq=as.md3(fread('prc_hpi_q.csv'))
- #
- #data(mhp, package = 'MD0');fwrite(data.table(MD0:::as.data.frame.md0(mhp)),'prc_hpi_qa.csv')
- #euhpm=as.md3(fread('prc_hpi_qa.csv'))
+#  setwd('U:/Data/Development/MD3')
+#  euhpq=as.md3(fread('prc_hpi_q.csv'))
+#
+#data(mhp, package = 'MD0');fwrite(data.table(MD0:::as.data.frame.md0(mhp)),'prc_hpi_qa.csv')
+#euhpm=as.md3(fread('prc_hpi_qa.csv'))
 
 
 #source("C:/Users/zeugnst/rpackages/MD3/sourceCode/md3object.R");
@@ -1567,7 +1579,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
-    lix=.match2dim(ix,xdn,TRUE)
+  lix=.match2dim(ix,xdn,TRUE)
 
 
 
@@ -1648,17 +1660,17 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
       llindividsel=lapply(names(dimval),function(j) setdiff(dimval[[j]],lix[[j]]))
       if (length(unlist(llindividsel))) {
         if (sum(lapply(llindividsel,length)>0)==1) {
-           message('The value you assign seems to contain more observations than your left-hand side selection. This affects dimension ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
+          message('The value you assign seems to contain more observations than your left-hand side selection. This affects dimension ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
         } else {
 
           swout='The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions';
           for (jj in seq_along(dimval)) { if (length(llindividsel[[jj]])) {swout=paste0(swout, ifelse(nchar(swout<120),'',',') ,' "',names(dimval)[[jj]],'" (with codes such as "',head(llindividsel[[jj]],1),'" )')}}
-            message('The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
+          message('The value you assign seems to contain more observations than your left-hand side selection. This affects dimensions ',names(dimval)[lapply(llindividsel,length)>0],', which on the right-hand side contains codes such as "', head(unlist(llindividsel),1),'".')
         }
       }
 
       lixsub=lix[setdiff(names(lix),names(dimval))]
-#message('???'); browser()
+      #message('???'); browser()
       if (length(lixsub)==1L) {
         dtlixsub=data.table(unlist(lapply(as.list(lixsub[[1L]]),rep,data.table:::dim.data.table(value)[[1]])))
         names(dtlixsub) =names(lixsub)
@@ -1671,7 +1683,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
         dtval=rbindlist(lapply(as.data.frame(t(.mdsel2codes(lixsub)),stringsAsFactors = FALSE), function(x) cbind(data.table(matrix(x,1)), .dt_class(value))))
         colnames(dtval)[1:length(lixsub)]=names(lixsub)
       } else {
-       dtval=cbind(.mdsel2codes(lixsub,aschar=FALSE),.dt_class(value))
+        dtval=cbind(.mdsel2codes(lixsub,aschar=FALSE),.dt_class(value))
       }
     } else {
       dtval=.mdsel2codes(lix,aschar = FALSE,bylast=TRUE)
@@ -1707,7 +1719,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
           #tempselremove= .mdsel2codes(lix)[ .mdsel2codes(uebrigbleiber),,on=.NATURAL]
         }
       } else {
-      tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
+        tempselremove=tempselix[!is.na(tempselix[[obs]]) & is.na(dtval[[obs]])]
       }
     }
 
@@ -1742,8 +1754,8 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
       x=x[!is.na(`_.obs_value`)]
     }
     if (length(setdiff(names(xdn),colnames(x)))) {
-        stop('Something went wrong with assigned to the left hand side, notably the following dimensions: ' ,
-        paste(setdiff(names(xdn),colnames(x)),collapse=', '), '. Try whether assigning time range by time range works')
+      stop('Something went wrong with assigned to the left hand side, notably the following dimensions: ' ,
+           paste(setdiff(names(xdn),colnames(x)),collapse=', '), '. Try whether assigning time range by time range works')
     }
     return(.md3_class(x))
     #attributes(x)[tempan] <- tempattr[tempan]
@@ -1765,13 +1777,13 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     tempselnew=tempselix[is.na(tempselix[[.md3resnames('value')]]) & !is.na(value)]
     tempselremove=tempselix[!is.na(tempselix[[.md3resnames('value')]]) & is.na(value)]
     if (NROW(tempselnew)) {
-       if (obs=='_.obs_value')  {
-          tempattr=attributes(x)[tempan]
-          x=rbind(x,tempselnew[,names(xdn),with=FALSE],fill=TRUE)
-          attributes(x)[tempan] <- tempattr[tempan]
-       } else {
-         warning('Not possible to set flags or other attributes on observations with missing values.\n If your really want to do that, then set those obs to Inf first.')
-       }
+      if (obs=='_.obs_value')  {
+        tempattr=attributes(x)[tempan]
+        x=rbind(x,tempselnew[,names(xdn),with=FALSE],fill=TRUE)
+        attributes(x)[tempan] <- tempattr[tempan]
+      } else {
+        warning('Not possible to set flags or other attributes on observations with missing values.\n If your really want to do that, then set those obs to Inf first.')
+      }
     }
 
 
@@ -1876,10 +1888,10 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     } else {
 
 
-    #dx=rbind(dx,tempselnew,fill=TRUE)
-    dx=data.table::merge.data.table(dx,tempselnew,all=TRUE,by=names(mydn))
-    #attr(dx,"dcsimp") = mydn
-    attr(dx,"dcstruct")=mydc
+      #dx=rbind(dx,tempselnew,fill=TRUE)
+      dx=data.table::merge.data.table(dx,tempselnew,all=TRUE,by=names(mydn))
+      #attr(dx,"dcsimp") = mydn
+      attr(dx,"dcstruct")=mydc
     }
 
   }
@@ -1890,21 +1902,21 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
   }
 
-   if (onlyna) {
-     subdatix=dx[datix[,names(mydn),with=FALSE],,on=.NATURAL]
-     if (anyNA(subdatix[[obs]])) {
-       if (NROW(value)>1) {
-         dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value[is.na(subdatix[[obs]])],on=.NATURAL]
-       } else {
-         dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value,on=.NATURAL]
-       }
+  if (onlyna) {
+    subdatix=dx[datix[,names(mydn),with=FALSE],,on=.NATURAL]
+    if (anyNA(subdatix[[obs]])) {
+      if (NROW(value)>1) {
+        dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value[is.na(subdatix[[obs]])],on=.NATURAL]
+      } else {
+        dx[subdatix[is.na(subdatix[[obs]]),names(mydn),with=FALSE], unlist(list(obs)):=value,on=.NATURAL]
+      }
 
-     }
+    }
 
-   } else {
+  } else {
 
-      dx[datix[,names(mydn),with=FALSE],unlist(list(obs)):=value,on=.NATURAL]
-   }
+    dx[datix[,names(mydn),with=FALSE],unlist(list(obs)):=value,on=.NATURAL]
+  }
 
   return(.md3_class(dx))
 
@@ -2507,58 +2519,58 @@ Ops.md3=function(e1,e2) {
 
     }
 
-      surplusdim1=setdiff(dn1,dn2); surplusdim2=setdiff(dn2,dn1)
-      if (length(c(surplusdim1,surplusdim2))>0 | !identical(unname(.dim(e1)),unname(.dim(e2)))) {
-        if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
-        if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=FALSE}
-        if (e2islarger) {
-          temp=copy(e2); e2=copy(e1); e2=temp
-          temp=dn2; dn1=dn2; dn2=temp
-          rm(temp)
-        }
-
-
-        xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
-        names(xx) = intersect(dn1,dn2)
-        if (any(xx>0)) {
-          if (!length(c(surplusdim1,surplusdim2))) if (!any(.dim(e1) %% .dim(e2))) {
-            #obviously this is a recycling case
-            tt=.recycle(as.array.md3(e1),as.array.md3(e2))
-            y=try(get(.Generic)(tt[[1]],tt[[2]]),silent=TRUE)
-            if (any(grepl('error',class(y)))) {
-              stop('Indexing  error.')
-            }
-            if (any(grepl('=|>|<|!',.Generic))) {return(y)}
-            if (inherits(y,'array')) {return(as.md3.array(y))}
-          }
-
-          if (sum(xx)==1L) {
-            warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
-          } else {
-            warning('In ',sum(xx>0),' dimensions, the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
-          }
-        }
-        m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
-        m1[['_.obs_value']]<-get(.Generic)(m1[[paste0('_.obs_value.',ifelse(e2islarger,'y','x'))]],m1[[paste0('_.obs_value.',ifelse(e2islarger,'x','y'))]])
-        y=m1[,colnames(.dt_class(e1)),with=FALSE]
-        #attr(y,)
-        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
-        return(.md3_class(y,dn = .getdimcodes(e1)))
-      } else if (length(intersect(dn2,dn1))==length(dn1)) {
-        dt1=.dt_class(e1); dt2=.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE]
-        if (all(.dim(e1)==.dim(e2))) {
-          #in this case there is no usenames. You wnat both things to add / substract one by one
-          dnn1=.getdimnames(e1); dnn2=.getdimnames(e2)
-          for (i in dn2) { dt2[[i]] = dnn1[[i]][match(dt2[[i]],dnn2[[i]])]}
-        }
-        m1=merge(dt1,dt2,by=dn2,all.x=TRUE)
-        m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
-        y=m1[,colnames(dt1),with=FALSE]
-        #attr(y,)
-        if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y,dn = .getdimcodes(e1))))}
-        return(.md3_class(y,dn = .getdimcodes(e1)))
-
+    surplusdim1=setdiff(dn1,dn2); surplusdim2=setdiff(dn2,dn1)
+    if (length(c(surplusdim1,surplusdim2))>0 | !identical(unname(.dim(e1)),unname(.dim(e2)))) {
+      if (length(surplusdim1) & length(surplusdim2)) warning('dimensions differ between the two md3 objects')
+      if (!length(surplusdim1) & length(surplusdim2)) {e2islarger=TRUE} else {e2islarger=FALSE}
+      if (e2islarger) {
+        temp=copy(e2); e2=copy(e1); e2=temp
+        temp=dn2; dn1=dn2; dn2=temp
+        rm(temp)
       }
+
+
+      xx=unlist(lapply(as.list(intersect(dn1,dn2)), function(x) length(setdiff(dimnames(e2)[[x]],dimnames(e1)[[x]]))))
+      names(xx) = intersect(dn1,dn2)
+      if (any(xx>0)) {
+        if (!length(c(surplusdim1,surplusdim2))) if (!any(.dim(e1) %% .dim(e2))) {
+          #obviously this is a recycling case
+          tt=.recycle(as.array.md3(e1),as.array.md3(e2))
+          y=try(get(.Generic)(tt[[1]],tt[[2]]),silent=TRUE)
+          if (any(grepl('error',class(y)))) {
+            stop('Indexing  error.')
+          }
+          if (any(grepl('=|>|<|!',.Generic))) {return(y)}
+          if (inherits(y,'array')) {return(as.md3.array(y))}
+        }
+
+        if (sum(xx)==1L) {
+          warning('In dimension "', names(xx)[xx>0], '", the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+        } else {
+          warning('In ',sum(xx>0),' dimensions, the right-hand side has more elements than the left-hand side. \nThese superfluous elements have been ignored. Check help(Ops.md3).')
+        }
+      }
+      m1=merge(.dt_class(e1),.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE],by=dn2,all.x=TRUE)
+      m1[['_.obs_value']]<-get(.Generic)(m1[[paste0('_.obs_value.',ifelse(e2islarger,'y','x'))]],m1[[paste0('_.obs_value.',ifelse(e2islarger,'x','y'))]])
+      y=m1[,colnames(.dt_class(e1)),with=FALSE]
+      #attr(y,)
+      if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y)))}
+      return(.md3_class(y,dn = .getdimcodes(e1)))
+    } else if (length(intersect(dn2,dn1))==length(dn1)) {
+      dt1=.dt_class(e1); dt2=.dt_class(e2)[,c(dn2,.md3resnames('value')),with=FALSE]
+      if (all(.dim(e1)==.dim(e2))) {
+        #in this case there is no usenames. You wnat both things to add / substract one by one
+        dnn1=.getdimnames(e1); dnn2=.getdimnames(e2)
+        for (i in dn2) { dt2[[i]] = dnn1[[i]][match(dt2[[i]],dnn2[[i]])]}
+      }
+      m1=merge(dt1,dt2,by=dn2,all.x=TRUE)
+      m1[['_.obs_value']]<-get(.Generic)(m1[['_.obs_value.x']],m1[['_.obs_value.y']])
+      y=m1[,colnames(dt1),with=FALSE]
+      #attr(y,)
+      if (any(grepl('=|>|<|!',.Generic))) {return(as.array.md3(.md3_class(y,dn = .getdimcodes(e1))))}
+      return(.md3_class(y,dn = .getdimcodes(e1)))
+
+    }
   }
 
 
@@ -2574,7 +2586,7 @@ Ops.md3=function(e1,e2) {
 
   y=try(get(.Generic)(o1,o2),silent=TRUE)
   if (any(grepl('error',class(y)))) {
-        stop('Indexing  error.')
+    stop('Indexing  error.')
   }
   if (any(grepl('=|>|<|!',.Generic))) {return(y)}
   if (inherits(y,'array')) {return(as.md3.array(y))}

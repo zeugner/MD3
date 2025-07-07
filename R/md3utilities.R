@@ -1707,7 +1707,7 @@ aggregate.md3 = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), 
 #' \code{FUN} determines how the aggregate series 'aggregates' the disaggregated series.
 #' So if \eqn{X_{t}} represents the annual series to be disaggregated into quarterly series codes \eqn{x_{t1}} to \eqn{x_{t4}}, then
 #'
-#' \itemize {
+#' \itemize{
 #'
 #' \item \code{mean}: \eqn{X_t} is the mean of \eqn{x_{t1}} to \eqn{x_{t4}}. \eqn{x_{t1}} is also strongly affected by \eqn{X_{t-1}}
 #' \item \code{sum}: \eqn{X_t} is the sum of \eqn{x_{t1}} to \eqn{x_{t4}}

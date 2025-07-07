@@ -587,8 +587,16 @@ as.integer64.timo = .asint64
 
 
 .timo2char_fast = function(intimo) {
+
+  hadnas=integer()
+  if (anyNA(intimo)) {
+    if (all(is.na(.asint64(intimo)))) return(rep(NA_character_,length(intimo)))
+    hadnas=which(is.na(.asint64(intimo)))
+    intimo[hadnas]= MD3:::.cttim$frqcodes[1,'timosuffix']
+  }
   myf=MD3:::.timo_frq(intimo)
   if (anyNA(myf)) myf[is.na(myf)] = ''
+
   # mformat=.cttim$frqcodes[toupper(myf),'formatc']
   # if (anyNA(mformat)) { mformat[is.na(mformat)]=""}
   # if (!length(mformat)) {if (!length(myf)) return(character()) else stop('unknown frequency')}
@@ -609,6 +617,7 @@ as.integer64.timo = .asint64
   #  cout[monthbased] =stringi::stri_c(yyy[monthbased],f2low[myf[monthbased]],subper)
    # cout[monthbased]=paste0(yyy[monthbased], f2low[myf[monthbased]], subper )
     cout[myf=='A'] = yyy[myf=='A']
+    if (length(hadnas)) {cout[hadnas] = NA_character_}
     if (all(monthbased)) return(cout)
   }
 
@@ -625,12 +634,17 @@ as.integer64.timo = .asint64
 
 
   minbased=(MD3:::.cttim$frqcodes[myf,'baseunit']=='N' | MD3:::.cttim$frqcodes[myf,'baseunit']=='B') & myf!='W'
-  if (!any(minbased)) return(cout)
+  if (!any(minbased)) {
+    if (length(hadnas)) {cout[hadnas] = NA_character_}
+    return(cout)
+  }
   dayom=as.integer((MD3:::.asint64(intimo)-mdict[mwhich]) %/% 86400 +1)
   cout[minbased] = sprintf('%04d-%02d-%02d',yyy[minbased],mmm[minbased], dayom[minbased] )
   cout[myf=='N'] = sprintf('%st%02d:%02d',cout[myf=='N'],as.integer((MD3:::.asint64(intimo)[myf=='N'] ) %% 86400 %/% 3600),
                            as.integer(MD3:::.asint64(intimo)[myf=='N']  %% 86400 %% 3600 %/% 60))
 
+
+  if (length(hadnas)) {cout[hadnas] = NA_character_}
   return(cout)
 }
 
