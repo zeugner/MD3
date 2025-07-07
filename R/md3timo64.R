@@ -588,6 +588,8 @@ as.integer64.timo = .asint64
 
 .timo2char_fast = function(intimo) {
 
+  
+  if (length(intimo)) if (any(utils::head(.asint64(intimo)[1:100])>1e12)) { return(rep(NA_character_,length(intimo)))}
   hadnas=integer()
   if (anyNA(intimo)) {
     if (all(is.na(.asint64(intimo)))) return(rep(NA_character_,length(intimo)))
