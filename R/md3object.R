@@ -1768,9 +1768,29 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
         }
       }
     }
+
+    if (allnewinexpandset) {
+      if (all(is.na(value))) {
+        return(.md3_class(x))
+      }
+    }
+
+
+
+
     tempsel=.mdsel2codes(lix,aschar=FALSE)
     value=.recycle(value,rep(NA,NROW(tempsel)))[[1L]]
     tempsel[,`_._NEW`:=value]
+
+
+    if (allnewinexpandset) {
+      tempselnew=tempsel
+      colnames(tempselnew) = gsub('^_\\._NEW$',.md3resnames('value'),colnames(tempselnew))
+      xdctemp=attr(x,'dcstruct')
+      x=rbind(x,tempselnew[!is.na(`_.obs_value`)], fill=TRUE)
+      attr(x,'dcstruct')=xdctemp
+      return(.md3_class(x))
+    }
 
     tempselix=x[tempsel,,on=.NATURAL];
 
