@@ -72,7 +72,7 @@
 #' @export
 Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), drop=NA,
                   ccode=getOption('defaultcountrycode'), flags = FALSE, silent = FALSE, ...) {
-  #EXAMPLE: Nomics('Eurostat/prc_hpi_a/A.DW_EXST.INX_A_AVG.BE+BG')
+  #EXAMPLE: Nomics('Eurostat/PRC_HPI_A/A.DW_EXST.INX_A_AVG.BE+BG')
   # ww=Nomics('ECB/EXR/A..EUR.SP00.A',as="m",drop=TRUE)
 
   as=.asget(as)
@@ -97,12 +97,16 @@ Nomics = function(query, as=c("md3","2d","1d","array","zooreg","pdata.frame"), d
     paste0(baseurl,query,"?format=json&","observations=",tolower(observations),"&metadata=",tolower(metadata))
   }
 
-  myquery=.adjquery(query,checkProv = TRUE)
-  if (tolower(gsub('/.*$','',myquery[1])) %in% tolower(.altnicksNomicsProviders)) {
-    myquery=paste0(names(.altnicksNomicsProviders)[tolower(.altnicksNomicsProviders)==tolower(gsub('/.*$','',myquery))], '/',gsub('^[^/]*/','',myquery))
+  myquery=.adjquery(query[1],checkProv = TRUE, sepProvider = TRUE)
+  if (tolower(myquery['provider']) %in% tolower(.altnicksNomicsProviders)) {
+    myquery['provider']=names(.altnicksNomicsProviders)[tolower(.altnicksNomicsProviders)==tolower(myquery['provider'])]
   }
+  if (tolower(myquery['provider'])=='eurostat') {
+    myquery['query']= paste0(toupper(gsub('/.*$','',myquery['query'])),'/',gsub('^.*/','',myquery['query']))
+  }
+  #myurl = makeDBeconURL(.adjquery(query,checkProv = TRUE))
+  myurl = makeDBeconURL(paste0(myquery[1],'/',myquery[2]))
 
-  myurl = makeDBeconURL(.adjquery(query,checkProv = TRUE))
   if (!silent) message("Retrieving data...")
   #mycon=url(myurl,method='libcurl')
   #on.exit(close(mycon))
