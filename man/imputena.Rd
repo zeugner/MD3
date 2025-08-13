@@ -56,7 +56,7 @@ imputena(w1,maxgap=10) #note the difference 'maxgap'  makes for CY here
 
 
 
-using a lower-dimensional proxy
+#using a lower-dimensional proxy
 \dontrun{imputena(w1, euhpq['TOTAL.I10_Q.AT:CY.y2005:y2008'])}
 
 #with trend
@@ -64,10 +64,23 @@ imputena(w1, 1:16)
 
 
 temp=euhpq['TOTAL.I15_Q.AT.']
+
 temp['2022:']=NA # make a vector with NAs at front and end
+temp # see the gap at the end
+
 imputena(temp,euhpq["TOTAL.I15_Q.SK."])
+
+#graphic represetnation:
+plot(euhpq['TOTAL.I15_Q.AT.'],type="n")
+lines(imputena(temp,euhpq["TOTAL.I15_Q.SK."]),col='red',lty=2)
+lines(temp)
+
+
+#just imputing forward (note that data pre 2010 remains empty)
 imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="forward" )
 
+#just imputing backward (note that data post 2021 remains empty)
+imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="backward" )
 
 }
 \seealso{

@@ -1529,7 +1529,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
   frqshifter=NULL
   #xdn=.fixhihi(attr(x,"hihi"))
   xdn=.getdimnames(x,TRUE); xdc=attr(x,'dcstruct')
-  x=.dt_class(x)
+  x=.dt_class(.fixemptywithflag(x))
   ix=.dotsaslist(...)
   obs=.md3resnames(.obs[[1L]])
 
@@ -2786,13 +2786,31 @@ str.md3 = function (object,...) {
 
 
 .md3fromfactvers = function(x) {
-  y=MD3:::.dt_class(x)
+  y=.dt_class(x)
   ndn=names(attr(x,'dcstruct'))
 
   for (cc in setdiff(ndn,'TIME')) {
     y[[cc]]=as.character(y[[cc]])
   }
-  MD3:::.md3_class(y)
+  .md3_class(y)
+}
+
+
+
+.fixemptywithflag = function(omd3, warn=TRUE) {
+  x=.dt_class(omd3)
+  cnvalandflags=grep('^_\\.',colnames(x),value=TRUE)
+  obs=.md3resnames('obs_value')
+  if (identical(cnvalandflags,obs)) return(omd3)
+  #so, must have flags
+
+  if (!anyNA(x[[obs]])) return(omd3)
+  #so, must have flags with empty obs
+
+  x[is.na(x[[obs]]),`:=`(unlist(list(obs)),Inf)]
+  message('MD3 object contains empty observations with flags. The value for those observations has been set to Inf')
+  return(.md3_class(x))
+
 }
 
 

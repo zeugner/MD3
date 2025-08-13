@@ -189,14 +189,14 @@ as.integer64.timo = .asint64
   dictinteger= c(0:9,0:55)
   names(dictinteger)= c(0:9,sprintf('%02d',0:55))
 
-  aa=MD3:::.cttim[['yearstartposixfrom1800']]()
-  ww=(7-as.integer(format(MD3:::as.Date.timo(aa),'%u')))*86400+aa
+  aa=.cttim[['yearstartposixfrom1800']]()
+  ww=(7-as.integer(format(as.Date.timo(aa),'%u')))*86400+aa
 
   gurgl=1800L:2200L; names(gurgl)=gurgl
   #kurkl=c(1L:12L,1L:4L); names(kurkl) = c(sprintf('%02d',1:12),1:4)
-  fdict=c('Q'='q','S'='s','H'='s','M'='m','W'='w','0'=NA,'1'=NA); fdict2= fdict; names(fdict2)=tolower(names(fdict)); fdict=c(fdict,fdict2); rm(fdict2)
+  fdict=c('Q'='q','S'='s','H'='s','B'='s','M'='m','W'='w','0'=NA,'1'=NA); fdict2= fdict; names(fdict2)=tolower(names(fdict)); fdict=c(fdict,fdict2); rm(fdict2)
 
-  monthbased=setdiff(MD3:::.cttim[['frqcodes']][MD3:::.cttim[['frqcodes']][,'baseunit']=='M','fcode'],'A')
+  monthbased=setdiff(.cttim[['frqcodes']][.cttim[['frqcodes']][,'baseunit']=='M','fcode'],'A')
 
 
   if (!length(frq)) {
@@ -218,9 +218,9 @@ as.integer64.timo = .asint64
   } else {
     if (length(frq) ==1) frq=rep(frq,length(x))
     if (length(frq) !=length(x)) stop('argument frq has to have the same length as x, or be a singleton')
-    permissiblef =rep(tolower(MD3:::.cttim[['frqcodes']][,'fcode']),2); names(permissiblef) =c(tolower(MD3:::.cttim[['frqcodes']][,'fcode']),toupper(MD3:::.cttim[['frqcodes']][,'fcode']))
+    permissiblef =rep(tolower(.cttim[['frqcodes']][,'fcode']),2); names(permissiblef) =c(tolower(.cttim[['frqcodes']][,'fcode']),toupper(.cttim[['frqcodes']][,'fcode']))
     frq=permissiblef[frq]
-    if (anyNA(frq)) stop('argument frq has to be a character vector containing elements ',paste(MD3:::.cttim[['frqcodes']][,'fcode'], collapse = ', '))
+    if (anyNA(frq)) stop('argument frq has to be a character vector containing elements ',paste(.cttim[['frqcodes']][,'fcode'], collapse = ', '))
     #strrest=gsub('^[-A-z ]*','',substr(x,5,50))
     #strrest=substr(x,5,50)
     #strrest=ifelse (substr(strrest,0,1)==' ' | substr(strrest,0,1)=='-', substr(strrest,2,49), strrest)
@@ -232,7 +232,7 @@ as.integer64.timo = .asint64
 
 
   #frq2u=toupper(frq)
-  f2U = MD3:::.cttim[['frqcodes']][,"fcode"]; names(f2U) = tolower(f2U)
+  f2U = .cttim[['frqcodes']][,"fcode"]; names(f2U) = tolower(f2U)
   frq2u=f2U[frq]
   ixmb= frq %in% tolower(monthbased)
   ixyb= frq=='a'
@@ -241,52 +241,52 @@ as.integer64.timo = .asint64
   if (any(ixyb)) {
 
     ix=(yy[ixyb] - 1800L +1L)
-    z[ixyb]=(aa[ix] + MD3:::.cttim[['frqcodes']]['A','timosuffix'])
-    if (all(ixyb)) {return(MD3:::.timo_class(z))}
+    z[ixyb]=(aa[ix] + .cttim[['frqcodes']]['A','timosuffix'])
+    if (all(ixyb)) {return(.timo_class(z))}
   }
 
   if (any(ixmb)) {
-    ix=(dictinteger[strrest[ixmb]]-1)*MD3:::.cttim[['frqcodes']][frq2u[ixmb],'multiple'] + 1 + (yy[ixmb] - 1900)*12
-    mm=MD3:::.cttim[['monthstartposixfrom1900']]()
-    z[ixmb]=(mm[ix] + MD3:::.cttim[['frqcodes']][frq2u[ixmb],'timosuffix'])
-    if (all(ixyb|ixmb)) {return(MD3:::.timo_class(z))}
+    ix=(dictinteger[strrest[ixmb]]-1)*.cttim[['frqcodes']][frq2u[ixmb],'multiple'] + 1 + (yy[ixmb] - 1900)*12
+    mm=.cttim[['monthstartposixfrom1900']]()
+    z[ixmb]=(mm[ix] + .cttim[['frqcodes']][frq2u[ixmb],'timosuffix'])
+    if (all(ixyb|ixmb)) {return(.timo_class(z))}
   }
 
 
   if (any(ixhf)) {
     if (any(frq=='w')) {
-      z[frq=='w'] = ww[yy[frq=='w']-1800 + 1L ] + dictinteger[strrest[frq=='w']]*86400L*7L  + MD3:::.cttim$frqcodes['W','timosuffix']
+      z[frq=='w'] = ww[yy[frq=='w']-1800 + 1L ] + dictinteger[strrest[frq=='w']]*86400L*7L  + .cttim$frqcodes['W','timosuffix']
     }
     ixd=frq %in% c('d','b')
     if (any(ixd)) {
-      temp =  list(sec=MD3:::.cttim$frqcodes['D','timosuffix'], min=0, hour=0, mday=as.integer(gsub('^[^- ]*[- ]','',strrest[ixd])), mon=as.integer(substr(strrest[ixd],0,2))-1, year=yy[ixd]-1900,
+      temp =  list(sec=.cttim$frqcodes['D','timosuffix'], min=0, hour=0, mday=as.integer(gsub('^[^- ]*[- ]','',strrest[ixd])), mon=as.integer(substr(strrest[ixd],0,2))-1, year=yy[ixd]-1900,
                    wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA)
       class(temp) = 'POSIXlt'
       z[ixd] = bit64::as.integer64(as.POSIXct.POSIXlt(temp,tz = 'UTC'))
     }
     if (any(frq=='n')) {
       temp=strsplit(gsub(':','-',x[frq=='n']),split='[A-z -]')
-      ltemp=lapply(temp,function(q) { p=list(sec=MD3:::.cttim$frqcodes['N','timosuffix'], min=as.integer(q[5]), hour=as.integer(q[4]), mday=as.integer(q[3]), mon=as.integer(q[2])-1, year=as.integer(q[1])-1900,
+      ltemp=lapply(temp,function(q) { p=list(sec=.cttim$frqcodes['N','timosuffix'], min=as.integer(q[5]), hour=as.integer(q[4]), mday=as.integer(q[3]), mon=as.integer(q[2])-1, year=as.integer(q[1])-1900,
                                              wday=NA_integer_,yday=NA_integer_,isdst=0,zone='UTC',gmtoff=NA); class(p)='POSIXlt'; p})
-      z[frq=='n']=MD3:::.unlist_keepclass(lapply(ltemp,function(r) MD3:::as.timo.POSIXct(as.POSIXct.POSIXlt(r))))
+      z[frq=='n']=.unlist_keepclass(lapply(ltemp,function(r) as.timo.POSIXct(as.POSIXct.POSIXlt(r))))
     }
 
   }
-  MD3:::.timo_class(z)
+  .timo_class(z)
 }
 
 
 .asmd3f = function(md3c) {
-  dx=MD3:::.dt_class(md3c)
-  mydc=MD3:::.getdimcodes(md3c)
-  mydn = lapply(mydc,\(x) if(MD3:::.timo_is(x)) return(x) else return(x[,1,drop=TRUE]))
+  dx=.dt_class(md3c)
+  mydc=.getdimcodes(md3c)
+  mydn = lapply(mydc,\(x) if(.timo_is(x)) return(x) else return(x[,1,drop=TRUE]))
   for (i in setdiff(names(mydn),'TIME')) {
     temp=match(dx[[i]], mydn[[i]])
     attr(temp,'levels') <- mydn[[i]]
     class(temp)='factor'
     dx[[i]] = temp
   }
-  MD3:::.md3_class(dx)
+  .md3_class(dx)
 }
 
 
@@ -572,12 +572,12 @@ as.integer64.timo = .asint64
 .timo2char = function(intimo, possperiods=NULL) {
 
   if (length(possperiods)) {
-    possperiods=MD3:::.asint64(possperiods)
+    possperiods=.asint64(possperiods)
   } else {
-    possperiods=unique(MD3:::.asint64(intimo))
+    possperiods=unique(.asint64(intimo))
   }
   if (anyNA(possperiods)) return(.timo2char_native(possperiods))
-  ixperiods=match(MD3:::.asint64(intimo),possperiods)
+  ixperiods=match(.asint64(intimo),possperiods)
 
   tout=.timo2char_fast(possperiods)[ixperiods]
   if (!anyNA(tout)) return(tout)
@@ -594,27 +594,27 @@ as.integer64.timo = .asint64
   if (anyNA(intimo)) {
     if (all(is.na(.asint64(intimo)))) return(rep(NA_character_,length(intimo)))
     hadnas=which(is.na(.asint64(intimo)))
-    intimo[hadnas]= MD3:::.cttim$frqcodes[1,'timosuffix']
+    intimo[hadnas]= .cttim$frqcodes[1,'timosuffix']
   }
-  myf=MD3:::.timo_frq(intimo)
+  myf=.timo_frq(intimo)
   if (anyNA(myf)) myf[is.na(myf)] = ''
 
   # mformat=.cttim$frqcodes[toupper(myf),'formatc']
   # if (anyNA(mformat)) { mformat[is.na(mformat)]=""}
   # if (!length(mformat)) {if (!length(myf)) return(character()) else stop('unknown frequency')}
   #intimoct=as.POSIXct.timo(intimo)
-  mdict=MD3:::.cttim$monthstartposixfrom1900()
+  mdict=.cttim$monthstartposixfrom1900()
   mwhich=findInterval(intimo,mdict)
-  monthbased=MD3:::.cttim$frqcodes[myf,'baseunit']=='M'
+  monthbased=.cttim$frqcodes[myf,'baseunit']=='M'
   yyy=(mwhich-1) %/% 12 + 1900
   mmm=(mwhich-1) %% 12  + 1
   cout =rep(NA_character_,length(intimo))
   if (any (monthbased)) {
-    qqss=MD3:::.cttim$frqcodes[myf[monthbased],'baseunit']=='M' & myf[monthbased]!='M'
+    qqss=.cttim$frqcodes[myf[monthbased],'baseunit']=='M' & myf[monthbased]!='M'
     subper=mmm[monthbased]
-    subper[qqss] = (mmm[monthbased][qqss]-1) %/% MD3:::.cttim$frqcodes[myf[monthbased][qqss],'multiple'] +1
+    subper[qqss] = (mmm[monthbased][qqss]-1) %/% .cttim$frqcodes[myf[monthbased][qqss],'multiple'] +1
     subper[!qqss] = sprintf('%02d',   subper[!qqss] )
-    f2low=names(MD3:::.cttim$fcode); names(f2low) = toupper(f2low)
+    f2low=names(.cttim$fcode); names(f2low) = toupper(f2low)
     cout[monthbased] =sprintf('%04d%s%s',yyy[monthbased],f2low[myf[monthbased]],subper)
   #  cout[monthbased] =stringi::stri_c(yyy[monthbased],f2low[myf[monthbased]],subper)
    # cout[monthbased]=paste0(yyy[monthbased], f2low[myf[monthbased]], subper )
@@ -628,22 +628,22 @@ as.integer64.timo = .asint64
   if (any (doybased)) {
     startday=mdict[(yyy-1899)*12-11]
 
-    dayoy=(MD3:::.asint64(intimo)-startday +1) %/% 86400 +1
+    dayoy=(.asint64(intimo)-startday +1) %/% 86400 +1
     wdict=c(0,6:1); names(wdict)=1:7
-    www=(dayoy-wdict[(format.Date(MD3:::as.Date.timo(startday),'%u'))]) %/% 7 +1
+    www=(dayoy-wdict[(format.Date(as.Date.timo(startday),'%u'))]) %/% 7 +1
     cout[doybased] = sprintf('%04dw%02d',yyy[doybased],as.integer(www))
   }
 
 
-  minbased=(MD3:::.cttim$frqcodes[myf,'baseunit']=='N' | MD3:::.cttim$frqcodes[myf,'baseunit']=='B') & myf!='W'
+  minbased=(.cttim$frqcodes[myf,'baseunit']=='N' | .cttim$frqcodes[myf,'baseunit']=='B') & myf!='W'
   if (!any(minbased)) {
     if (length(hadnas)) {cout[hadnas] = NA_character_}
     return(cout)
   }
-  dayom=as.integer((MD3:::.asint64(intimo)-mdict[mwhich]) %/% 86400 +1)
+  dayom=as.integer((.asint64(intimo)-mdict[mwhich]) %/% 86400 +1)
   cout[minbased] = sprintf('%04d-%02d-%02d',yyy[minbased],mmm[minbased], dayom[minbased] )
-  cout[myf=='N'] = sprintf('%st%02d:%02d',cout[myf=='N'],as.integer((MD3:::.asint64(intimo)[myf=='N'] ) %% 86400 %/% 3600),
-                           as.integer(MD3:::.asint64(intimo)[myf=='N']  %% 86400 %% 3600 %/% 60))
+  cout[myf=='N'] = sprintf('%st%02d:%02d',cout[myf=='N'],as.integer((.asint64(intimo)[myf=='N'] ) %% 86400 %/% 3600),
+                           as.integer(.asint64(intimo)[myf=='N']  %% 86400 %% 3600 %/% 60))
 
 
   if (length(hadnas)) {cout[hadnas] = NA_character_}
@@ -911,7 +911,7 @@ as.timo.numeric = function (x, frq=NULL, ...) {
   if (any(is.infinite(mm))) return(.timo_class(rep(bit64:::NA_integer64_,length(x))))
   if (all(abs(mm) > 0 & abs(mm) < 1e-300)) { return(.timo_class(.asint64(x))) }
   if (mm[[1]]> 900 & mm[[2]] < 2500) {
-  return(MD3:::.timo_class(.cttim$yearstartposixfrom1800()[as.integer(x)-1799]+.cttim$fcode['a'])) } #return(.char2timo(as.character(x),frq=myfq('a')))
+  return(.timo_class(.cttim$yearstartposixfrom1800()[as.integer(x)-1799]+.cttim$fcode['a'])) } #return(.char2timo(as.character(x),frq=myfq('a')))
   #if (mm[[1]]> 900 & mm[[2]] < 2500) { return(.char2timo(as.character(x),frq=myfq('a')))}
   if (mm[[1]]> -26000 & mm[[2]] < 30000) { class(x) = 'Date'; return(as.timo.default(as.character(x),myfq('d')))}
   if (mm[[1]]> 1.8e7 & mm[[2]] < 2.2e7) {  return(.timo_num2class(.vec2POSIXct(Y=as.numeric(substr(x,0,4)),m=as.numeric(substr(x,5,6)),d=as.numeric(substr(x,7,8)),S=.cttim$fcode['d'])))}
@@ -925,7 +925,14 @@ as.timo.numeric = function (x, frq=NULL, ...) {
 #' @export
 as.timo.character = function (x, frq=NULL,...){
   if (is.null(frq)) return(.char2timo(x,guess = TRUE))
-  if (length(frq)) if (is.character(frq)) if (any(frq=='H'|frq=='h')) { frq[tolower(frq)=='h']<-'S'}
+  if (length(frq)) if (is.character(frq)) {
+    if (any(frq=='H'|frq=='h')) { frq[tolower(frq)=='h']<-'S'}
+    if (any(frq=='B'|frq=='b')) {
+      if (length(frq)==1) { frq=rep(frq,length(x))}
+      xb=x[tolower(frq)=='b']
+      if (all(nchar(head(xb,100))<8)) { frq[tolower(frq)=='b']<-'S' }
+    }
+  }
   as.timo.default(.char2timo(x, frq), frq)
 }
 

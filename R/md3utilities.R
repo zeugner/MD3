@@ -113,6 +113,9 @@ as.xts = function(x,...) {
 #' This function is focused on applying functions from the zoo package, such as rollmean
 #' @param bigmd3 an md3 object, array, or anything that may be converted to an md3
 #' @param \dots a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})
+#' @param k the number of lags over which to sum, average etc.
+#' @param na.pad setting this to \code{FALSE} returns a result that has \code{k} less observations than bigmd3. Setting this to \code{TRUE} returns series with the same length as the input
+#' @param align can be either \code{right},  \code{center} or  \code{left} (only the first element of  \code{align} taken).  When you do a rollsum over \code{2022q1} to \code{2022q4}, then \code{right} puts the result into \code{2022q4}, while left puts it into  \code{2022q1}
 #' @return an md3 object (or an array if bigmd3 is an array)
 #' @seealso \code{\link{aggregate.md3}}, \link{indexMD3}, \code{\link{imputena}}, \code{\link{zapply}}, \code{\link[zoo]{rollapply}}, , \code{\link{rollmean.md3}}
 #' @examples
@@ -122,9 +125,10 @@ as.xts = function(x,...) {
 #'
 #' zapply(euhpq[1,1,1:4,],rollmean, k=2)
 #'
-#' rollmean.md3(euhpq[1,1,1:4,],k=4)
-#' rollsum.md3(euhpq[1,1,1:4,],k=4)
-#' rollmedian.md3(euhpq[1,1,1:4,],k=3)
+#' rollmean(euhpq[1,1,1:4,],k=4)
+#' rollsum(euhpq[1,1,1:4,],k=4)
+#' rollsum(euhpq[1,1,1:4,],k=4, align="left")
+#' rollmedian(euhpq[1,1,1:4,],k=3)
 #'
 #' @export
 zapply = function (X, FUN, ..., apply2indiv=TRUE)
@@ -200,7 +204,8 @@ zapply = function (X, FUN, ..., apply2indiv=TRUE)
 #' @rdname zapply
 #' @export rollmean.md3
 #' @export
-rollmean.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+rollmean.md3 = function (x, k, na.pad = TRUE, align = c("right", "center", "left"), ...) {
+  if (length(align)>1L) align=align[1L]
   zapply(x,rollmean, k=k, na.pad=na.pad, align=align,...)
 }
 
@@ -212,21 +217,24 @@ movav=rollmean.md3
 #' @rdname zapply
 #' @export rollsum.md3
 #' @export
-rollsum.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+rollsum.md3 = function (x, k, na.pad = TRUE, align = c( "right", "center", "left"), ...) {
+  if (length(align)>1L) align=align[1L]
   zapply(x,rollsum, k=k, na.pad=na.pad, align=align,...)
 }
 
 #' @rdname zapply
 #' @export rollmax.md3
 #' @export
-rollmax.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+rollmax.md3 = function (x, k, na.pad = TRUE, align = c( "right", "center", "left"), ...) {
+  if (length(align)>1L) align=align[1L]
   zapply(x,rollmax, k=k, na.pad=na.pad, align=align,...)
 }
 
 #' @rdname zapply
 #' @export rollmedian.md3
 #' @export
-rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("center", "left", "right"), ...) {
+rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("right", "center", "left"), ...) {
+  if (length(align)>1L) align=align[1L]
   zapply(x,rollmedian, k=k, na.pad=na.pad, align=align,...)
 }
 
@@ -1103,7 +1111,7 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value', ignoreNA=FALSE) {
 #'
 #'
 #'
-#' using a lower-dimensional proxy
+#' #using a lower-dimensional proxy
 #' \dontrun{imputena(w1, euhpq['TOTAL.I10_Q.AT:CY.y2005:y2008'])}
 #'
 #' #with trend
@@ -1111,10 +1119,23 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value', ignoreNA=FALSE) {
 #'
 #'
 #' temp=euhpq['TOTAL.I15_Q.AT.']
+#'
 #' temp['2022:']=NA # make a vector with NAs at front and end
+#' temp # see the gap at the end
+#'
 #' imputena(temp,euhpq["TOTAL.I15_Q.SK."])
+#'
+#' #graphic represetnation:
+#' plot(euhpq['TOTAL.I15_Q.AT.'],type="n")
+#' lines(imputena(temp,euhpq["TOTAL.I15_Q.SK."]),col='red',lty=2)
+#' lines(temp)
+#'
+#'
+#' #just imputing forward (note that data pre 2010 remains empty)
 #' imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="forward" )
 #'
+#' #just imputing backward (note that data post 2021 remains empty)
+#' imputena(temp,euhpq["TOTAL.I15_Q.SK."],direction="backward" )
 #'
 #' @export
 imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c('both','forward','backward'), usenames=NULL) {

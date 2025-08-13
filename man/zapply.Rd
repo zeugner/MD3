@@ -11,18 +11,24 @@
 \usage{
 zapply(X, FUN, ..., apply2indiv = TRUE)
 
-\method{rollmean}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+\method{rollmean}{md3}(x, k, na.pad = TRUE, align = c("right", "center", "left"), ...)
 
-movav(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+movav(x, k, na.pad = TRUE, align = c("right", "center", "left"), ...)
 
-\method{rollsum}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+\method{rollsum}{md3}(x, k, na.pad = TRUE, align = c("right", "center", "left"), ...)
 
-\method{rollmax}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+\method{rollmax}{md3}(x, k, na.pad = TRUE, align = c("right", "center", "left"), ...)
 
-\method{rollmedian}{md3}(x, k, na.pad = TRUE, align = c("center", "left", "right"), ...)
+\method{rollmedian}{md3}(x, k, na.pad = TRUE, align = c("right", "center", "left"), ...)
 }
 \arguments{
 \item{\dots}{a numeric, array, or md3 with which to fill out all values of bigmd3. Alternatively, the indexing reference to a subset of the md3 (see \link{indexMD3})}
+
+\item{k}{the number of lags over which to sum, average etc.}
+
+\item{na.pad}{setting this to \code{FALSE} returns a result that has \code{k} less observations than bigmd3. Setting this to \code{TRUE} returns series with the same length as the input}
+
+\item{align}{can be either \code{right},  \code{center} or  \code{left} (only the first element of  \code{align} taken).  When you do a rollsum over \code{2022q1} to \code{2022q4}, then \code{right} puts the result into \code{2022q4}, while left puts it into  \code{2022q1}}
 
 \item{bigmd3}{an md3 object, array, or anything that may be converted to an md3}
 }
@@ -39,9 +45,10 @@ zapply(euhpq[1,1,1:4,],mean)
 
 zapply(euhpq[1,1,1:4,],rollmean, k=2)
 
-rollmean.md3(euhpq[1,1,1:4,],k=4)
-rollsum.md3(euhpq[1,1,1:4,],k=4)
-rollmedian.md3(euhpq[1,1,1:4,],k=3)
+rollmean(euhpq[1,1,1:4,],k=4)
+rollsum(euhpq[1,1,1:4,],k=4)
+rollsum(euhpq[1,1,1:4,],k=4, align="left")
+rollmedian(euhpq[1,1,1:4,],k=3)
 
 }
 \seealso{
