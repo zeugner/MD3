@@ -1885,8 +1885,9 @@ as.vector.timord = function(x,mode='any') {
 
 #' @export
 unique.timo = function (x, incomparables = FALSE, distinctstartend=FALSE,... ) {
-  if (distinctstartend) return(.timo_class(bit64:::unique.integer64(x, incomparables=incomparables, ...)))
-  return(.timo_class( bit64:::unique.integer64(.timo_within(x,referstoend=FALSE), incomparables=incomparables, ...)))
+  y=unique(.asint64(x))
+  if (distinctstartend) return(.timo_class(unique(y, incomparables=incomparables, ...)))
+  return(.timo_class( bit64:::unique.integer64(.timo_within(.timo_class(y),referstoend=FALSE), incomparables=incomparables, ...)))
 }
 
 
