@@ -108,7 +108,7 @@ as.md3.array = function(x,...) {
 
 
       if (data.table:::anyDuplicated.data.table(x[,dix, with=FALSE])) stop ('duplicates in obs identifiers')
-      dcsimp =lapply(as.list(x)[1:(vix-1)],unique)
+      dcsimp =lapply(as.list(x)[1:(vix-1)],unique,distinctstartend=TRUE)
       if (!is.na(tix)) { dcsimp[[tix]] = .timo_class(dcsimp[[tix]]); dcsimp[[tix]]=sort(dcsimp[[tix]]) }
       attr(x, 'dcsimp') = dcsimp
       attr(x, 'dcstruct') = .dimcodesrescue(dcsimp)
@@ -2329,12 +2329,17 @@ dimnames.md3=function(x) {  .getdimnames(x) }
   hihiclasses=unlist(lapply(ohihi,function(x) class(x)[[1L]]))
   .mdgetlang = function() {ifelse(Sys.getenv("LANGUAGE")!="",tolower(Sys.getenv("LANGUAGE")),"en")}
   rescuevector=function(ohihi,olddc) {
+    for (i in seq_along(ohihi)) {
+    if (anyNA(ohihi[[i]])) { ohihi[[i]][is.na(ohihi[[i]])]=gsub('\\.','',make.names(rep('NA',sum(is.na(ohihi[[i]])),unique = TRUE))) }
+    }
     outhihi=ohihi
     for (i in names(ohihi)) {
       if (i %in% names(olddc)) { temp=olddc[[i]] } else { temp = ohihi[[i]]}
       if (.timo_is(ohihi[[i]])) { outhihi[[i]]=ohihi[[i]]; next; }
       if (!is.data.frame(temp)) {
-        dim(temp)=c(length(temp),1); temp=as.data.frame(temp,stringsAsFactors=FALSE); colnames(temp)="code"; rownames(temp)=temp[,1]
+        dim(temp)=c(length(temp),1); temp=as.data.frame(temp,stringsAsFactors=FALSE); colnames(temp)="code";
+        if (anyNA(temp[,1])) { temp[is.na(temp[,1]),1]=gsub('\\.','',make.names(rep('NA',sum(is.na(temp[,1]))),unique = TRUE)) }
+        rownames(temp)=temp[,1]
       }
       if (ncol(temp)==1L) {temp=data.frame(temp,temp,stringsAsFactors=FALSE); colnames(temp)[[2]]=paste0("label:",.mdgetlang())}
       things2add=setdiff(ohihi[[i]],temp[,1])
