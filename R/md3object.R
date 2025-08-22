@@ -313,6 +313,8 @@ as.md3.array = function(x,...) {
           if (!is.null(ohihi)) {
             if (any(grepl(':$',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]>=.char2timo(gsub(':$','',temp[[i]]))]}
             if (any(grepl('^:',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]<=.char2timo(gsub('^:','',temp[[i]]))]}
+            if (any(grepl('[0-9]:[0-9]',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]<=.char2timo(gsub('^.*:','',temp[[i]])) & ohihi[[i]]>=.char2timo(gsub(':.*$','',temp[[i]]))]}
+
             if (length(frqshifter)) { temp[[i]] = temp[[i]][.timo_frq(temp[[i]]) %in% frqshifter]}
           } else {
             if (any(grepl(':$',temp[[i]]))) { myper=.char2timo(gsub(':$','',temp[[i]]));  temp[[i]] = seq.timo(myper, tail(ohihi[[i]],1), frq=frqshifter) }
