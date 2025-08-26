@@ -1063,7 +1063,16 @@ unflag = function(omd3,asDT=FALSE,attr2keep='obs_value', ignoreNA=FALSE) {
 
     dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
   } else {
-    if (!ignoreNA) if (anyNA(dx[[.md3resnames(attr2keep)]])) {stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')}
+    if (!ignoreNA) if (anyNA(dx[[.md3resnames(attr2keep)]])) {
+      if (.md3resnames(attr2keep)==.md3resnames('value' )) {
+        dx=dx[!is.na(dx[[.md3resnames(attr2keep)]]),]
+        warning('Despite sparse storage, MD3 object contained internal attribution of NAs. These have been expunged now')
+      } else {
+        stop('omd3 is a faulty md3 object. Do as.md3(as.data.table(omd3)) to repair it')
+      }
+
+
+    }
   }
   if (.md3resnames(attr2keep)!=.md3resnames('value' )) asDT=TRUE
   if (is.na(asDT)) {return(dx)}
