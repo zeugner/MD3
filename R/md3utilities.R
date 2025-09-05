@@ -387,6 +387,7 @@ rollmedian.md3 = function (x, k, na.pad = TRUE, align = c("right", "center", "le
   #browser()
   lix = list()
   ixvalstacked = utils::head(which(unlist(lapply(dd,function(x) class(x)[1]))=='numeric'),1)
+  if (!length(ixvalstacked)) { if (!any(unlist(lapply(mapd_long,is.numeric)))) { stop('none of the input columns is numeric')}}
   if (ixvalstacked <= length(id.vars)) { dd=cbind(dd[,-ixval,drop=FALSE],dd[,ixval])}
   for (i in seq_along(tempdn)) {
     lix[[tempdn[[i]]]] = unique(dd[, i])

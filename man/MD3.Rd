@@ -16,7 +16,7 @@ Use function \code{Nomics} and function \code{helpNomics} to load data
 
 
 This package is still under development; there are certainly some bugs lurking around
-Build date: 2025-05-05
+Build date: 2025-08-13
 
 
 Conversion to and from \code{data.table}, tibble, and \code{pdata.frame} is to be added

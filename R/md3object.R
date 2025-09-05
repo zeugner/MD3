@@ -110,6 +110,11 @@ as.md3.array = function(x,...) {
       if (data.table:::anyDuplicated.data.table(x[,dix, with=FALSE])) stop ('duplicates in obs identifiers')
       dcsimp =lapply(as.list(x)[1:(vix-1)],unique,distinctstartend=TRUE)
       if (!is.na(tix)) { dcsimp[[tix]] = .timo_class(dcsimp[[tix]]); dcsimp[[tix]]=sort(dcsimp[[tix]]) }
+
+      if (any(unlist(lapply(dcsimp,function(q) any(!nchar(q     )))))) { stop('ID column/dimension ',names(dcsimp)[unlist(lapply(dcsimp,function(q) any(!nchar(q     ))))][1],' contains zero-string ("") elements.')}
+      if (any(unlist(lapply(dcsimp,function(q) any(grepl('\\s',q)))))) { stop('ID column/dimension ',names(dcsimp)[unlist(lapply(dcsimp,function(q) any(grepl('\\s',q))))][1],' contains element names with whitespace.')}
+
+
       attr(x, 'dcsimp') = dcsimp
       attr(x, 'dcstruct') = .dimcodesrescue(dcsimp)
       x=x[!is.na(x[[.md3resnames('value')]]),]
