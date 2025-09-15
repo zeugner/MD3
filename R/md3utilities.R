@@ -1250,14 +1250,16 @@ imputena = function(x,proxy=NULL,method=c('dlog','diff'), maxgap=6, direction=c(
 
 
 
-  hh=merge(merge(merge(dx,.dt_class(as.md3.array(aforward)),by = dimlab,all = TRUE),.dt_class(as.md3.array(abackward)),by = dimlab,all = TRUE),idgap2,by = dimlab,all = TRUE)
+  hh=merge(merge(dx,.dt_class(as.md3.array(aforward)),by = dimlab,all = TRUE),.dt_class(as.md3.array(abackward)),by = dimlab,all = TRUE)
   colnames(hh)[length(dimlab)+1:3]=paste0('_val_',c('d','f','b'))
+
+  if (NROW(idgap2)) hh=suppressWarnings(merge(hh,idgap2,by = dimlab,all = TRUE))
 
     if (dirbackw) { hh[is.na(`_val_d`) & !is.na(`_val_b`),`_val_d`:=`_val_b`] }
     if (dirforw) { hh[is.na(`_val_d`) & !is.na(`_val_f`),`_val_d`:=`_val_f`] }
     #if (!dirforw) {hh[!is.na(fact),fact:=1]} else if  (!dirbackw) {hh[,fact:=0]}
-    if (!all(is.na(hh[,fact]))) {
-      hh[!is.na(fact),`_val_d`:=(1-fact)*`_val_f`+fact*`_val_b`]
+    if (match('fact',colnames(hh),nomatch = 0)) if (!all(is.na(hh[,fact]))) {
+      hh[!is.na(fact) & !is.na(`_val_f`) &!is.na(`_val_b`),"_val_d"]=hh[!is.na(fact) & !is.na(`_val_f`) &!is.na(`_val_b`),(1-fact)*`_val_f`+fact*`_val_b`]
     }
     dout=hh[,seq_len(length(dimlab)+1),with=FALSE]
     colnames(dout)[NCOL(dout)]=.md3resnames('value')
