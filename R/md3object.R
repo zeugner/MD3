@@ -318,7 +318,19 @@ as.md3.array = function(x,...) {
           if (!is.null(ohihi)) {
             if (any(grepl(':$',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]>=.char2timo(gsub(':$','',temp[[i]]))]}
             if (any(grepl('^:',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]<=.char2timo(gsub('^:','',temp[[i]]))]}
-            if (any(grepl('[0-9]:[0-9]',temp[[i]]))) { temp[[i]] = ohihi[[i]][ohihi[[i]]<=.char2timo(gsub('^.*:','',temp[[i]])) & ohihi[[i]]>=.char2timo(gsub(':.*$','',temp[[i]]))]}
+            if (any(grepl('[0-9]:[0-9]',temp[[i]]))) {
+              tsq=.timo_seq(.char2timo(gsub(':.*$','',temp[[i]])),.char2timo(gsub('^.*:','',temp[[i]])))
+              tsix=ohihi[[i]]<=tsq[NROW(tsq)] & ohihi[[i]]>=tsq[1]
+              tsq=tsq[.timo_frq(tsq)%in%.timo_frq(ohihi[[i]])]
+              if (!any(tsix) & length(tsq)) {
+                temp[[i]] = tsq
+              } else {
+                temp[[i]] = sort(union(tsq,ohihi[[i]][tsix]))
+              }
+
+
+
+            }
 
             if (length(frqshifter) & length(temp[[i]])!=1) { temp[[i]] = temp[[i]][.timo_frq(temp[[i]]) %in% frqshifter]}
           } else {

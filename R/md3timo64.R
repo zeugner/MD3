@@ -318,7 +318,8 @@ as.integer64.timo = .asint64
 
   xs=strsplit(x,split="[^0-9]")
   xs=lapply(xs,function(x) x[nchar(x)>0])
-  if (is.null(frq)) ff=tolower(substr(x,5,5)) else ff=tolower(frq)
+  if (is.null(frq)) ff=tolower(substr(gsub('-','',x),5,5)) else ff=tolower(frq)
+  if (any(ff=='h')) { ff[ff=='h']='s'}
 
   slen=nchar(xstring); fvec=character()
   if (!is.null(frq)) {
