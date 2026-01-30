@@ -2011,8 +2011,8 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 #' @param ... indexes, see 'Details' below
 #' @param drop whether to drop singleton dimensions (see \code{\link{drop.md3}})
 #' @param as how to return the result, see also \code{\link{as.data.table.md3}}
-#' @param onlyna only update those elements that are NA
-#' @param justval only update those elements that are not NA
+#' @param onlyna only update those elements that are NA in \code{x}
+#' @param justval only update those elements that are not NA in object y, i.e. that are not NA in the object that is used to modify \code{x}
 #' @param usenames when replacing parts of x, update x by using the dimension codes, rather than the order, of elements in value
 #' @param .obs used when extracting or replacing not the observation values, but observation attributes such as flags (see below)
 #' @return an md3, array, numeric, zoo, or data.table, data.frame depending on parameter \code{as}

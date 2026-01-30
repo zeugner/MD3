@@ -90,11 +90,20 @@ as.ts.md3 = function(x,...,.obs = "value") {
 
 
   tsfrq=c(N=1140,D=1,B=1,W=1/7,.namedvecfrommat(.cttim$basetbl(),'frqzoo'))[ixf]
+  missingperiods=setdiff(.timo_seq(min(x[[ixt]]),to = max(x[[ixt]]),frq = ixf),dxts[['TIME']])
+  if (length(missingperiods)) {
+    dxts=rbind(dxts,list(TIME=missingperiods),fill=TRUE)
+    dxts=suppressWarnings(data.table::fsort(dxts,verbose =FALSE))
+  }
+
   if (any(names(tsfrq) %in% c('N','B','D','W'))) {
     tsstart= as.Date.timo(min(x[[ixt]]))
   } else{
     tsstart = as.numeric(strsplit(as.character.timo(min(x[[ixt]])),split='[A-z]')[[1L]])
   }
+
+
+
   y=stats::ts(as.matrix(dxts[,-1,with=FALSE]), frequency=tsfrq, start=tsstart)
   #attr(y,'oclass') = 'md3'
   y
