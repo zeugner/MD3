@@ -25,9 +25,9 @@
 
 \item{.obs}{used when extracting or replacing not the observation values, but observation attributes such as flags (see below)}
 
-\item{onlyna}{only update those elements that are NA}
+\item{onlyna}{only update those elements that are NA in \code{x}}
 
-\item{justval}{only update those elements that are not NA}
+\item{justval}{only update those elements that are not NA in object y, i.e. that are not NA in the object that is used to modify \code{x}}
 
 \item{usenames}{when replacing parts of x, update x by using the dimension codes, rather than the order, of elements in value}
 }

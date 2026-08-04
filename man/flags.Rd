@@ -2,22 +2,49 @@
 % Please edit documentation in R/md3object.R
 \name{flags}
 \alias{flags}
+\alias{flagset}
 \title{get or set observation attributes}
 \usage{
 flags(x, ...)
+
+flagset(x, value, envir = parent.frame())
 }
 \arguments{
 \item{x}{an md3 object}
+
+\item{value}{the value to be set in case of \code{flagset}. Usually, a one-letter string.}
+
+\item{envir}{environment for a call to \code{flagset}. Only there to handle exceptional cases}
 
 \item{\ldots}{identifiers (see \link{indexMD3})}
 }
 \description{
 puts flags like B for break, or confidentiality status
 }
+\section{Functions}{
+\itemize{
+\item \code{flagset()}: Setting \code{flags} for MD3 objects
+
+}}
 \examples{
-testmd=euhpq['TOTAL.I15_Q.AT:BG.']
+testmd=euhpq['TOTAL.I15_Q.AT:BG.2021:']
+flags(testmd) # shows pre built flags
+testmd[.obs='status'] # shows pre built flags the same way
+
+#this shows flags for sub-selections:
+testmd['AT+BG.',.obs='status']
+testmd['AT+BG.',.obs='flag'] #'flag' is another word for 'status'
+testmd[c('AT','BG'),,.obs='flag']
+flags(testmd['AT+BG.'])
+
+#this way you can set flags
+testmd['.2021', .obs='flag'] <- 'Q' #fail-safe way
+
+flagset(testmd['.2021'], 'X') #convenient but might not always work due to the way
+testmd['AT.2021q2', .obs='flag'] <-'z'
+
+#see the result:
 flags(testmd)
-flags(testmd['.2015']) <- 'T'
 
 as.data.table(testmd)
 

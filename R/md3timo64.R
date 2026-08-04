@@ -290,6 +290,17 @@ as.integer64.timo = .asint64
 }
 
 
+.md3index=function(omd3) {
+         #converts a multidim index to stacked index according to dimnames
+         #.md3index(euhp_aq)
+         
+         mdim = .dim(omd3)
+         din=.dt_class(omd3)
+         dx=lapply(seq_along(names(mdim)), \(x) match(din[[x]],dimnames(omd3)[[x]],nomatch=0))
+         
+         ivec=bit64::as.integer64(c(1,cumprod(mdim[-length(mdim)])))
+         Reduce('+',lapply(seq_along(ivec),\(x) bit64::as.integer64(dx[[x]])*ivec[[x]])) - sum(ivec[-1])
+}
 
 
 

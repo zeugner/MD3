@@ -2349,7 +2349,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
   .mdgetlang = function() {ifelse(Sys.getenv("LANGUAGE")!="",tolower(Sys.getenv("LANGUAGE")),"en")}
   rescuevector=function(ohihi,olddc) {
     for (i in seq_along(ohihi)) {
-    if (anyNA(ohihi[[i]])) { ohihi[[i]][is.na(ohihi[[i]])]=gsub('\\.','',make.names(rep('NA',sum(is.na(ohihi[[i]])),unique = TRUE))) }
+      if (anyNA(ohihi[[i]])) { ohihi[[i]][is.na(ohihi[[i]])]=gsub('\\.','',make.names(rep('NA',sum(is.na(ohihi[[i]])),unique = TRUE))) }
     }
     outhihi=ohihi
     for (i in names(ohihi)) {
@@ -2698,17 +2698,35 @@ Summary.md3 = function(x,...) {
 
 }
 
+
 #' get or set observation attributes
 #'
 #' puts flags like B for break, or confidentiality status
 #' @param x an md3 object
 #' @param \ldots identifiers (see \link{indexMD3})
+#' @param value the value to be set in case of \code{flagset}. Usually, a one-letter string.
+#' @param envir environment for a call to \code{flagset}. Only there to handle exceptional cases
 #'
 #' @seealso \code{\link{indexMD3}}
 #' @examples
-#' testmd=euhpq['TOTAL.I15_Q.AT:BG.']
+#' testmd=euhpq['TOTAL.I15_Q.AT:BG.2021:']
+#' flags(testmd) # shows pre built flags
+#' testmd[.obs='status'] # shows pre built flags the same way
+#'
+#' #this shows flags for sub-selections:
+#' testmd['AT+BG.',.obs='status']
+#' testmd['AT+BG.',.obs='flag'] #'flag' is another word for 'status'
+#' testmd[c('AT','BG'),,.obs='flag']
+#' flags(testmd['AT+BG.'])
+#'
+#' #this way you can set flags
+#' testmd['.2021', .obs='flag'] <- 'Q' #fail-safe way
+#'
+#' flagset(testmd['.2021'], 'X') #convenient but might not always work due to the way
+#' testmd['AT.2021q2', .obs='flag'] <-'z'
+#'
+#' #see the result:
 #' flags(testmd)
-#' flags(testmd['.2015']) <- 'T'
 #'
 #' as.data.table(testmd)
 #'
@@ -2719,9 +2737,25 @@ flags = function(x,... ) {
 
 #' @export
 `flags<-` = function(x,value) {
-
-  .md3set(x,value=value,.obs='status')
+  stop('Assigning flags in this way has been deprecated. Either use the .obs argumetn along with [, or use flagset. See help(flagset) for further help.')
 }
+
+#' @describeIn flags Setting \code{flags} for MD3 objects
+#' @export
+flagset = function(x,value,envir = parent.frame()) {
+  xmc=match.call()
+  xmc2=deparse(substitute(xmc)['x']); rm(xmc)
+
+  if (!any(grepl('\\[',xmc2))) {
+    return(invisible(do.call(.md3set,list(testmd,value=value,.obs='status'),envir = envir)))
+  } else {
+
+    xselect= gsub('^["\']|["\']$', '',gsub('\\].*$','',strsplit(xmc2,split='\\[')[[1]][2]))
+    return(invisible(do.call(.md3set,list(testmd,xselect,value=value,.obs='status'),envir = envir)))
+  }
+
+}
+
 
 #' @export
 str.md3 = function (object,...) {
