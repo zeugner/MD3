@@ -2722,13 +2722,16 @@ Summary.md3 = function(x,...) {
 #' #this way you can set flags
 #' testmd['.2021', .obs='flag'] <- 'Q' #fail-safe way
 #'
-#' flagset(testmd['.2021'], 'X') #convenient but might not always work due to the way
+#' flagset(testmd['.2021'], 'X') #convenient, but might face issues with identifying the correct encapsulating environment
 #' testmd['AT.2021q2', .obs='flag'] <-'z'
 #'
 #' #see the result:
 #' flags(testmd)
 #'
-#' as.data.table(testmd)
+#' testdd=as.data.table(testmd) #convert to data.table
+#' testdd[ TIME=='2022q4', obs_status:='m']
+#' testmd2=as.md3(testdd) #converting back to md3
+#' flags(testmd2)
 #'
 #' @export
 flags = function(x,... ) {
@@ -2747,11 +2750,11 @@ flagset = function(x,value,envir = parent.frame()) {
   xmc2=deparse(substitute(xmc)['x']); rm(xmc)
 
   if (!any(grepl('\\[',xmc2))) {
-    return(invisible(do.call(.md3set,list(testmd,value=value,.obs='status'),envir = envir)))
+    return(invisible(do.call(.md3set,list(x,value=value,.obs='status'),envir = envir)))
   } else {
 
     xselect= gsub('^["\']|["\']$', '',gsub('\\].*$','',strsplit(xmc2,split='\\[')[[1]][2]))
-    return(invisible(do.call(.md3set,list(testmd,xselect,value=value,.obs='status'),envir = envir)))
+    return(invisible(do.call(.md3set,list(x,xselect,value=value,.obs='status'),envir = envir)))
   }
 
 }

@@ -40,13 +40,16 @@ flags(testmd['AT+BG.'])
 #this way you can set flags
 testmd['.2021', .obs='flag'] <- 'Q' #fail-safe way
 
-flagset(testmd['.2021'], 'X') #convenient but might not always work due to the way
+flagset(testmd['.2021'], 'X') #convenient, but might face issues with identifying the correct encapsulating environment
 testmd['AT.2021q2', .obs='flag'] <-'z'
 
 #see the result:
 flags(testmd)
 
-as.data.table(testmd)
+testdd=as.data.table(testmd) #convert to data.table
+testdd[ TIME=='2022q4', obs_status:='m']
+testmd2=as.md3(testdd) #converting back to md3
+flags(testmd2)
 
 }
 \seealso{
