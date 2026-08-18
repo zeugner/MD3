@@ -1543,6 +1543,34 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
   #onlyna: only update where x is NA
   #justval: only update where value is not na
 
+
+  if (tolower(.obs[[1L]])=='all') {
+      if (is(value,'data.table')) {
+        .obs = intersect(gsub('^_\\.','',base::colnames(x)), gsub('^_\\.','',MD3:::.md3resnames()))
+        .obs = c(.obs,intersect(gsub('^_\\.','',base::colnames(x)), gsub('^_\\.','',MD3:::.md3resnames())))
+        .obs = unique(.obs)
+      } else {
+        warning('setting .obs="all" only helps in case the right hand side is an MD3 object or stacked data.table. Assuming .obs="value" for this case.')
+      }
+
+  }
+
+
+  if (length(.obs) > 1) {
+    if (any(grepl('value',.obs))) {
+      myix=grepl('value',.obs);.obs=c(.obs[myix], .obs[!myix]); rm(myix)
+    }
+    for (oo in .obs[-length(.obs)]) {
+      x=.md3set(x,...,value=value,onlyna=onlyna,justval=justval,usenames=usenames, .obs=oo)
+    }
+
+  }
+
+  obs=.md3resnames(.obs[[length(.obs)]])
+
+
+
+
   #!!!DO TIME that partially exists and parially doesnt .md3set(euhpq,'TOTAL.I15_Q.BE.2013:2023q3',value=1)
   #do md3setelem
   frqshifter=NULL
@@ -1550,7 +1578,8 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
   xdn=.getdimnames(x,TRUE); xdc=attr(x,'dcstruct')
   x=.dt_class(.fixemptywithflag(x))
   ix=.dotsaslist(...)
-  obs=.md3resnames(.obs[[1L]])
+
+
 
   if (length(ix)==1L) {
     if (missing(..1)) {
@@ -1721,7 +1750,9 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
     tempselix=x[dtval[,names(xdn),with=FALSE],,on=.NATURAL]
-    tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
+    if (obs==MD3:::.md3resnames('value')) {
+      tempselnew=tempselix[is.na(tempselix[[obs]]) & !is.na(dtval[[obs]])]
+    } else tempselnew=NULL
     tempselremove =NULL
     if (onlyna | justval) {
       tempselremove=tempselix[0,]
@@ -2023,6 +2054,31 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 #'
 #' or in an SDMX API-like notation (\code{euhpq["TOTAL.I15_Q.BE+FR.2021q1:"]} resp \code{euhpq["TOTAL..SI.2021q1:"]}),
 #' or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
+#' @section .obs, flags, data attributes:
+#' The parameter \code{.obs} can be used to get or set attributes for data. These attributes have to be atomic singletons per observations, typically these are small strings
+#' Typical attributes are \code{"obs_status"} (with the synonym \code{"flag"}) to set flags such as  \code{"p"} for preliminary or \code{"b"} for structural breaks
+#' other frequent attributes are \code{"obs_conf"} for confidentiality, \code{"obs_type"} for data type, or \code{"obs_footnote"}
+#' These data attributes correspond to reserved names listed in \code{MD3:::.md3resnames()}
+#'
+#' Check\code{\link{flags}} for more explanations and examples to set data attributes
+#'
+#' Note that in assigning on from one MD3 to another such as \code{euhpq["TOTAL.RCH_A.SK."] <-euhpq["TOTAL.RCH_A.FR.",]}
+#' by default only the data value will be assigned.
+#'
+#' Selecting a specific .obs assigns that specific .obs only
+#'  \code{euhpq["TOTAL.RCH_A.SK.",.obs="flag"] <-euhpq["TOTAL.RCH_A.FR.",.obs="flag"]}
+#'
+#' But \code{.obs} can also be a vector to assign values and multiple attributes at once, such as in
+#'
+#' \code{euhpq["TOTAL.RCH_A.SK.",.obs=c("value","flag")] <-euhpq["TOTAL.RCH_A.FR."]}
+#'
+#' or by setting \code{.obs="all"}
+#'
+#' \code{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
+#'
+#' Finally, note that data attribtues can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+#'
+#'
 #' @seealso \code{\link{dimcodes}}
 #' @examples
 #' #data(euhpq) #house prices for EU countries
@@ -2732,6 +2788,29 @@ Summary.md3 = function(x,...) {
 #' testdd[ TIME=='2022q4', obs_status:='m']
 #' testmd2=as.md3(testdd) #converting back to md3
 #' flags(testmd2)
+#'
+#'
+#' # Note that in assigning on from one MD3 to another such as euhpq["TOTAL.RCH_A.SK."] <-euhpq["TOTAL.RCH_A.FR.",]
+#' # by default only the data value will be assigned.
+#'
+#' #Selecting a specific .obs assigns that specific .obs only:
+#' \dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="flag"] <-euhpq["TOTAL.RCH_A.FR.",.obs="flag"]}
+#'
+#' #show the result:
+#' \dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="flag"]}
+#'
+#' #But .obs can also be a vector to assign values and multiple attributes at once, such as in
+#'
+#' \dontrun{euhpq["TOTAL.RCH_A.SK.",.obs=c("value","flag")] <-euhpq["TOTAL.RCH_A.FR."]}
+#'
+#' #or by setting .obs="all"
+#'
+#' \dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
+#'
+#' #Finally, note that data attributes can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+#'
+#'
+#'
 #'
 #' @export
 flags = function(x,... ) {

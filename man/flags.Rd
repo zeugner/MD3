@@ -51,6 +51,29 @@ testdd[ TIME=='2022q4', obs_status:='m']
 testmd2=as.md3(testdd) #converting back to md3
 flags(testmd2)
 
+
+# Note that in assigning on from one MD3 to another such as euhpq["TOTAL.RCH_A.SK."] <-euhpq["TOTAL.RCH_A.FR.",]
+# by default only the data value will be assigned.
+
+#Selecting a specific .obs assigns that specific .obs only:
+\dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="flag"] <-euhpq["TOTAL.RCH_A.FR.",.obs="flag"]}
+
+#show the result:
+\dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="flag"]}
+
+#But .obs can also be a vector to assign values and multiple attributes at once, such as in
+
+\dontrun{euhpq["TOTAL.RCH_A.SK.",.obs=c("value","flag")] <-euhpq["TOTAL.RCH_A.FR."]}
+
+#or by setting .obs="all"
+
+\dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
+
+#Finally, note that data attributes can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+
+
+
+
 }
 \seealso{
 \code{\link{indexMD3}}

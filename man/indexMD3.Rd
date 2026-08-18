@@ -47,6 +47,32 @@ or in an SDMX API-like notation (\code{euhpq["TOTAL.I15_Q.BE+FR.2021q1:"]} resp 
 or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 }
 
+\section{.obs, flags, data attributes}{
+
+The parameter \code{.obs} can be used to get or set attributes for data. These attributes have to be atomic singletons per observations, typically these are small strings
+Typical attributes are \code{"obs_status"} (with the synonym \code{"flag"}) to set flags such as  \code{"p"} for preliminary or \code{"b"} for structural breaks
+other frequent attributes are \code{"obs_conf"} for confidentiality, \code{"obs_type"} for data type, or \code{"obs_footnote"}
+These data attributes correspond to reserved names listed in \code{MD3:::.md3resnames()}
+
+Check\code{\link{flags}} for more explanations and examples to set data attributes
+
+Note that in assigning on from one MD3 to another such as \code{euhpq["TOTAL.RCH_A.SK."] <-euhpq["TOTAL.RCH_A.FR.",]}
+by default only the data value will be assigned.
+
+Selecting a specific .obs assigns that specific .obs only
+ \code{euhpq["TOTAL.RCH_A.SK.",.obs="flag"] <-euhpq["TOTAL.RCH_A.FR.",.obs="flag"]}
+
+But \code{.obs} can also be a vector to assign values and multiple attributes at once, such as in
+
+\code{euhpq["TOTAL.RCH_A.SK.",.obs=c("value","flag")] <-euhpq["TOTAL.RCH_A.FR."]}
+
+or by setting \code{.obs="all"}
+
+\code{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
+
+Finally, note that data attribtues can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+}
+
 \examples{
 #data(euhpq) #house prices for EU countries
 
