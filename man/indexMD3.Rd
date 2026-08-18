@@ -47,37 +47,40 @@ or in an SDMX API-like notation (\code{euhpq["TOTAL.I15_Q.BE+FR.2021q1:"]} resp 
 or a mix thereof (\code{euhpq[3,2,"BE+FR","2021q1:"]})
 }
 
-\section{.obs, flags, data attributes}{
+\section{Data attributes and flags}{
+ the argument .obs
+The parameter \code{.obs} can be used to get or set attributes for data. These attributes have to be atomic singletons per observations, and typically are small strings.
+The most frequently used attribute is \code{"obs_status"} (with the synonym \code{"flag"}) to set flags such as \code{"p"} for preliminary or \code{"b"} for structural breaks.
+Other frequent attributes are \code{"obs_conf"} for confidentiality, \code{"obs_type"} for data type, or \code{"obs_footnote"}.
+These data attributes correspond to the reserved names listed in \code{MD3:::.md3resnames()}. Statistical data loaded by the function \code{mds} in package \code{MDstats} typically includes such \code{obs_status} flags.
 
-The parameter \code{.obs} can be used to get or set attributes for data. These attributes have to be atomic singletons per observations, typically these are small strings
-Typical attributes are \code{"obs_status"} (with the synonym \code{"flag"}) to set flags such as  \code{"p"} for preliminary or \code{"b"} for structural breaks
-other frequent attributes are \code{"obs_conf"} for confidentiality, \code{"obs_type"} for data type, or \code{"obs_footnote"}
-These data attributes correspond to reserved names listed in \code{MD3:::.md3resnames()}
-
-Check\code{\link{flags}} for more explanations and examples to set data attributes
+Check \code{\link{flags}} for more explanations and examples about getting and setting data attributes.
 
 Note that in assigning on from one MD3 to another such as \code{euhpq["TOTAL.RCH_A.SK."] <-euhpq["TOTAL.RCH_A.FR.",]}
 by default only the data value will be assigned.
 
-Selecting a specific .obs assigns that specific .obs only
+Selecting a specific \code{.obs} assigns that specific  \code{.obs} only, such as in this example:
+
  \code{euhpq["TOTAL.RCH_A.SK.",.obs="flag"] <-euhpq["TOTAL.RCH_A.FR.",.obs="flag"]}
 
-But \code{.obs} can also be a vector to assign values and multiple attributes at once, such as in
+
+But \code{.obs} can also be a vector to assign values and multiple attributes at once, such as in this example:
 
 \code{euhpq["TOTAL.RCH_A.SK.",.obs=c("value","flag")] <-euhpq["TOTAL.RCH_A.FR."]}
 
-or by setting \code{.obs="all"}
+
+... or by setting \code{.obs="all"}, such as in this example. Here all values and attributes will be copied from right to left.
 
 \code{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
 
-Finally, note that data attribtues can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+Finally, note that data attributes can only be carried if the value of that observation is not \code{NA} or \code{NaN}. The value of the observation can be \code{Inf}, however.
 }
 
 \examples{
 #data(euhpq) #house prices for EU countries
 
 #Retrieving values
-#Austrian & Slovak HP growth year-on-year
+#Austrian & Slovak house price growth year-on-year
 #these five commands are equivalent:
 euhpq["TOTAL","RCH_A",c("AT","SK"),]
 euhpq["TOTAL.RCH_A.AT+SK."]
@@ -131,5 +134,5 @@ mm[c('GG','FF'),]
 #Argument usenames, onlyna and justval still to be described
 }
 \seealso{
-\code{\link{dimcodes}}
+\code{\link{dimcodes}}, \code{\link{flags}}
 }

@@ -69,7 +69,7 @@ flags(testmd2)
 
 \dontrun{euhpq["TOTAL.RCH_A.SK.",.obs="all"] <-euhpq["TOTAL.RCH_A.HU."]}
 
-#Finally, note that data attributes can only be carried if the value of that observation is not NA. The value of the observation can be \code{Inf}, however.
+#Finally, note that data attributes can only be carried if the value of that observation is not NA or NaN. The value of the observation can be Inf, however.
 
 
 
