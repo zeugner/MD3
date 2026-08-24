@@ -1560,9 +1560,23 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
     if (any(grepl('value',.obs))) {
       myix=grepl('value',.obs);.obs=c(.obs[myix], .obs[!myix]); rm(myix)
     }
-    for (oo in .obs[-length(.obs)]) {
-      x=.md3set(x,...,value=value,onlyna=onlyna,justval=justval,usenames=usenames, .obs=oo)
+    if (onlyna==TRUE & any(grepl('value',.obs))) {
+      if (length(usenames)) if (!as.logical(usenames[[1L]])) stop('usenames=FALSE cannot work with multiple .obs and onlyna==TRUE')
+      y=.md3set(x,...,value=value,onlyna=TRUE,justval=justval,usenames=usenames, .obs=.md3resnames('value'))
+      xtraids=data.table::fsetdiff(.dt_class(y)[,names(attr(y,'dcstruct')),with=FALSE],MD3:::.dt_class(x)[,names(attr(x,'dcstruct')),with=FALSE])
+      if (.md3_is(value)) { xtraidsinval = xtraids[,names(attr(value,'dcstruct')), with =FALSE]} else xtraidsinval=xtraids[,colnames(value),with=FALSE]
+      x=y; rm(y)
+      for (oo in .obs[-1]) {
+        x=.md3set(x,xtraids,value=value[xtraidsinval,.obs=oo],onlyna=FALSE,justval=justval,usenames=usenames, .obs=oo)
+      }
+
+    } else {
+
+      for (oo in .obs) {
+        x=.md3set(x,...,value=value,onlyna=onlyna,justval=justval,usenames=usenames, .obs=oo)
+      }
     }
+    return(x)
 
   }
 
@@ -1571,7 +1585,7 @@ print.md3 = function (x, ..., max = NULL, maxcols=NULL, as=c('array','data.table
 
 
 
-  #!!!DO TIME that partially exists and parially doesnt .md3set(euhpq,'TOTAL.I15_Q.BE.2013:2023q3',value=1)
+  #!!!DO TIME that partially exists and partially doesnt .md3set(euhpq,'TOTAL.I15_Q.BE.2013:2023q3',value=1)
   #do md3setelem
   frqshifter=NULL
   #xdn=.fixhihi(attr(x,"hihi"))
