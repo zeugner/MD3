@@ -293,11 +293,11 @@ as.integer64.timo = .asint64
 .md3index=function(omd3) {
          #converts a multidim index to stacked index according to dimnames
          #.md3index(euhp_aq)
-         
+
          mdim = .dim(omd3)
          din=.dt_class(omd3)
          dx=lapply(seq_along(names(mdim)), \(x) match(din[[x]],dimnames(omd3)[[x]],nomatch=0))
-         
+
          ivec=bit64::as.integer64(c(1,cumprod(mdim[-length(mdim)])))
          Reduce('+',lapply(seq_along(ivec),\(x) bit64::as.integer64(dx[[x]])*ivec[[x]])) - sum(ivec[-1])
 }
@@ -382,8 +382,8 @@ as.integer64.timo = .asint64
     tempix=head(which(vmon>(.cttim$frqcodes[toupper(fvec),'maxminor'])-1));
     warning('Characters like ', paste(paste(.cttim$frqcodes[toupper(fvec[tempix]),'desc'],x[tempix],sep=': '), collapse=', '), ' seem strange' )
   }
-  vmonmult=c(q=3,s=6,m=1,"-"=1,w=NA,'/'=1,'.'=1,d=1,b=1,n=1)[ff];
-  vmon=vmon*vmonmult +1; vmon[is.na(vmon)]=1
+  vmonmult=c(q=3,s=6,m=1,"-"=1,w=NA,'/'=1,'.'=1,d=1,b=1,n=1);
+  vmon=vmon*vmonmult[fvec] +1; vmon[is.na(vmon)]=1
   vday=as.integer(unlist(lapply(xs,'[',3))); vday[is.na(vday)]=1
   vhour=as.integer(unlist(lapply(xs,'[',4))); vhour[is.na(vhour)]=0
   vmin=as.integer(unlist(lapply(xs,'[',5))); vmin[is.na(vmin)]=0
