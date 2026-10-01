@@ -1825,7 +1825,7 @@ disaggregate = function(x, frq_grp, along='TIME', FUN = c(sum,mean,end,start), .
 frequency.md3 = function(x, ...) {
   #if (!is.md3(x)) stop('x needs to be an md3 object')
   dn=.getdimnames(x)
-  ixt=MD3:::.dn_findtime(dn)
+  ixt=.dn_findtime(dn)
   if (ixt==0) {return(character())}
   unique(.timo_frq(dn[[ixt]]))
 }
@@ -1840,7 +1840,7 @@ frequency.md3 = function(x, ...) {
   if (length(refersto)==1) {refersto2=c(TRUE,FALSE)[pmatch(tolower(trimws(refersto[[1]])),c('end','start','middle'))]} else { refersto2 = (tolower(refersto)=='end')}
 
   dn=.getdimnames(x)
-  ixt=MD3:::.dn_findtime(dn)
+  ixt=.dn_findtime(dn)
   if (ixt==0) {return(character())}
   if (length(unique(.timo_frq(dn[[ixt]])))>1) stop('setting a new frequncy in this manner does not work for mixed-frequency objects')
   dc=.getdimcodes(x)
@@ -1860,8 +1860,8 @@ frequency.md3 = function(x, ...) {
 
 #'  @export
 mean.md3  = function(x, na.rm=FALSE,...) {
- if (na.rm==TRUE) { return(mean(MD3:::.dt_class(x)[[MD3:::.md3resnames('value')]],...))}
- mean(MD3:::.md3get(x, as = "array", drop = FALSE),...)
+ if (na.rm==TRUE) { return(mean(.dt_class(x)[[.md3resnames('value')]],...))}
+ mean(.md3get(x, as = "array", drop = FALSE),...)
 }
 
 #'  @export
@@ -1907,7 +1907,7 @@ ctc<- function(x,..., row.names=TRUE,col.names=TRUE,na='') {
   #copy table to Excel
   if (col.names & row.names) { col.names=NA }
   if (!length(na)) { na='=NA()'}
-  if (MD3:::.md3_is(x)) {
+  if (.md3_is(x)) {
     x=as.array(x)
   }
   write.table(x,file="clipboard-32768", sep="\t", row.names=row.names, col.names=col.names,na = na,...)
@@ -1925,3 +1925,48 @@ ctc<- function(x,..., row.names=TRUE,col.names=TRUE,na='') {
 #'
 #' @export
 `%&%` <- paste0
+
+
+
+#' Repair faulty md3 objects that contain actual NAs by mistake
+#'
+#' This removes faulty NA observation values from an MD3 or associated data.table
+#' @param omd3 an md3 object
+#' @param verbose logical. Default \code{FALSE} makes the rooutine shut up \code{TRUE} posts some messages if NAs are found
+#' @return an md3 object
+#' @seealso \code{\link{is.na.md3}},  \code{\link{unflag}},  \code{\link{as.data.table}}
+#' @examples
+#'
+#'
+#'
+#' a1=repairnas(euhpq)
+#' @export
+repairnas = function(omd3,verbose=TRUE) {
+  if (!anyNA(getS3method('[[',class = 'data.frame')(omd3,.md3resnames('value')))) return(omd3)
+  dx=.dt_class(omd3)
+  cix=gsub('_\\.','',colnames(dx)) %in% .md3resnames()
+  if (length(cix)==1) if( .md3resnames(colnames(dx)[cix])=='_.obs_value') {
+    rix=is.na(dx[,.md3resnames('value'),with=FALSE])
+    if (verbose & any(rix)) { message('There have been ', sum(rix),' NAs found and removed') }
+    return(.md3_class(dx[!rix]))
+  }
+
+
+  rix=as.logical(apply(dx[,cix,with=FALSE],1,\(x) all(is.na(x))))
+
+  if (any(rix)) {
+    if (verbose) { message('There have been ', sum(rix),' NAs found and removed') }
+    dx=dx[!rix,]
+  }
+  if (!anyNA(dx[,.md3resnames('value'),with=FALSE])) {return(.md3_class(dx))}
+
+  rix=is.na(dx[,.md3resnames('value'),with=FALSE])
+
+
+  dx[[.md3resnames('value')]] =Inf
+  if (verbose) { message('There have been ',sum(rix),' NAs changed to Inf') }
+
+  return(.md3_class(dx))
+
+
+}

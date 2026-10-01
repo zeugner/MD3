@@ -698,7 +698,12 @@ as.md3.array = function(x,...) {
         }
         lix[[i]]=c(as.vector(na.omit(lix[[i]])),
                    ix[[i]][!(ix[[i]] %in% xdn[[i]])])
-        if (mode(ix[[i]])!="character") {warning("part of ",mode(ix[[i]])," indexes ", "cannot be found. Better use character codes to create new elements. \nFor now, I created elements with names such as '",tail(lix[[i]],1),"'")}
+        if (mode(ix[[i]])!="character") {
+          warning("part of ",mode(ix[[i]])," indexes ", "cannot be found. Better use character codes to create new elements. \nFor now, I created elements with names such as '",tail(lix[[i]],1),"'")
+        } else {
+          if (!identical(lix[[i]],ix[[i]]) & !length(setdiff(lix[[i]],ix[[i]]))) { lix[[i]] = ix[[i]]}
+        }
+
       }
     } else {
       #lix[[i]]=.subset(xdn[[i]])
@@ -2454,7 +2459,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
     }
   }
   if (anyDuplicated(toupper(names(ohihi)))) {
-    warning('duplicate names not allowed for dimension names.names were adjsuted to make them unique')
+    warning('Duplicate names not allowed for dimension names. These names were adjusted to make them unique')
     names(ohihi) = gsub('\\.','_',make.names(names(ohihi),unique = TRUE))
   }
 
@@ -2493,7 +2498,7 @@ dimnames.md3=function(x) {  .getdimnames(x) }
 
       if (as.logical(length(grep("^V[0-9]$",colnames(idc))))) colnames(idc)=NULL
       if (is.null(colnames(idc))) {
-        if (ncol(idc)>2) { warning("language of dimension descriptions has not been defined")}
+        if (ncol(idc)>2) { warning("Language of dimension descriptions has not been defined")}
         colnames(idc) = c("code",ifelse(Sys.getenv("LANGUAGE")!="",tolower(Sys.getenv("LANGUAGE")),"en"), rep(NA, ncol(idc)-2))
       }
 
